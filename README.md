@@ -1,1 +1,1 @@
-# certifiedGPT
+# CertifiedGPT
