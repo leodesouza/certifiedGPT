@@ -9,13 +9,11 @@
 class Registry:
     mapping = {
         "builder_name_mapping": {},
-        "task_name_mapping": {},
         "processor_name_mapping": {},
-        "model_name_mapping": {},
-        "lr_scheduler_name_mapping": {},
         "runner_name_mapping": {},
         "state": {},
         "paths": {},
+        "agent_name_mapping": {}
     }
 
     @classmethod
@@ -32,7 +30,7 @@ class Registry:
         """
 
         def wrap(builder_cls):
-            from minigpt4.datasets.builders.base_dataset_builder import BaseDatasetBuilder
+            from datasets.builders.base_dataset_builder import BaseDatasetBuilder
 
             assert issubclass(
                 builder_cls, BaseDatasetBuilder
@@ -51,60 +49,31 @@ class Registry:
         return wrap
 
     @classmethod
-    def register_task(cls, name):
-        r"""Register a task to registry with key 'name'
+    def register_agent(cls, name):
+        r"""Register a agent to registry with key 'name'
 
         Args:
-            name: Key with which the task will be registered.
+            name: Key with which the agent will be registered.
 
         Usage:
 
-            from minigpt4.common.registry import registry
+            from common.registry import registry
         """
 
-        def wrap(task_cls):
-            from minigpt4.tasks.base_task import BaseTask
+        def wrap(agent_cls):
+            from agents.base import BaseAgent
 
             assert issubclass(
-                task_cls, BaseTask
-            ), "All tasks must inherit BaseTask class"
-            if name in cls.mapping["task_name_mapping"]:
+                agent_cls, BaseAgent
+            ), "All agents must inherit BaseAgent class"
+            if name in cls.mapping["agent_name_mapping"]:
                 raise KeyError(
                     "Name '{}' already registered for {}.".format(
-                        name, cls.mapping["task_name_mapping"][name]
+                        name, cls.mapping["agent_name_mapping"][name]
                     )
                 )
-            cls.mapping["task_name_mapping"][name] = task_cls
-            return task_cls
-
-        return wrap
-
-    @classmethod
-    def register_model(cls, name):
-        r"""Register a task to registry with key 'name'
-
-        Args:
-            name: Key with which the task will be registered.
-
-        Usage:
-
-            from minigpt4.common.registry import registry
-        """
-
-        def wrap(model_cls):
-            from minigpt4.models import BaseModel
-
-            assert issubclass(
-                model_cls, BaseModel
-            ), "All models must inherit BaseModel class"
-            if name in cls.mapping["model_name_mapping"]:
-                raise KeyError(
-                    "Name '{}' already registered for {}.".format(
-                        name, cls.mapping["model_name_mapping"][name]
-                    )
-                )
-            cls.mapping["model_name_mapping"][name] = model_cls
-            return model_cls
+            cls.mapping["agent_name_mapping"][name] = agent_cls
+            return agent_cls
 
         return wrap
 
@@ -121,7 +90,7 @@ class Registry:
         """
 
         def wrap(processor_cls):
-            from minigpt4.processors import BaseProcessor
+            from processors.base_processor import BaseProcessor
 
             assert issubclass(
                 processor_cls, BaseProcessor
@@ -138,70 +107,6 @@ class Registry:
         return wrap
 
     @classmethod
-    def register_lr_scheduler(cls, name):
-        r"""Register a model to registry with key 'name'
-
-        Args:
-            name: Key with which the task will be registered.
-
-        Usage:
-
-            from minigpt4.common.registry import registry
-        """
-
-        def wrap(lr_sched_cls):
-            if name in cls.mapping["lr_scheduler_name_mapping"]:
-                raise KeyError(
-                    "Name '{}' already registered for {}.".format(
-                        name, cls.mapping["lr_scheduler_name_mapping"][name]
-                    )
-                )
-            cls.mapping["lr_scheduler_name_mapping"][name] = lr_sched_cls
-            return lr_sched_cls
-
-        return wrap
-
-    @classmethod
-    def register_runner(cls, name):
-        r"""Register a model to registry with key 'name'
-
-        Args:
-            name: Key with which the task will be registered.
-
-        Usage:
-
-            from minigpt4.common.registry import registry
-        """
-
-        def wrap(runner_cls):
-            if name in cls.mapping["runner_name_mapping"]:
-                raise KeyError(
-                    "Name '{}' already registered for {}.".format(
-                        name, cls.mapping["runner_name_mapping"][name]
-                    )
-                )
-            cls.mapping["runner_name_mapping"][name] = runner_cls
-            return runner_cls
-
-        return wrap
-
-    @classmethod
-    def register_path(cls, name, path):
-        r"""Register a path to registry with key 'name'
-
-        Args:
-            name: Key with which the path will be registered.
-
-        Usage:
-
-            from minigpt4.common.registry import registry
-        """
-        assert isinstance(path, str), "All path must be str."
-        if name in cls.mapping["paths"]:
-            raise KeyError("Name '{}' already registered.".format(name))
-        cls.mapping["paths"][name] = path
-
-    @classmethod
     def register(cls, name, obj):
         r"""Register an item to registry with key 'name'
 
@@ -210,7 +115,7 @@ class Registry:
 
         Usage::
 
-            from minigpt4.common.registry import registry
+            from common.registry import registry
 
             registry.register("config", {})
         """
@@ -224,53 +129,29 @@ class Registry:
 
         current[path[-1]] = obj
 
-    # @classmethod
-    # def get_trainer_class(cls, name):
-    #     return cls.mapping["trainer_name_mapping"].get(name, None)
-
     @classmethod
     def get_builder_class(cls, name):
         return cls.mapping["builder_name_mapping"].get(name, None)
 
     @classmethod
-    def get_model_class(cls, name):
-        return cls.mapping["model_name_mapping"].get(name, None)
+    def get_agent_class(cls, name):
+        return cls.mapping["agent_name_mapping"].get(name, None)
 
     @classmethod
-    def get_task_class(cls, name):
-        return cls.mapping["task_name_mapping"].get(name, None)
+    def get_configuration_class(cls, name):
+        return cls.mapping["state"].get(name, None)
 
     @classmethod
     def get_processor_class(cls, name):
         return cls.mapping["processor_name_mapping"].get(name, None)
 
     @classmethod
-    def get_lr_scheduler_class(cls, name):
-        return cls.mapping["lr_scheduler_name_mapping"].get(name, None)
-
-    @classmethod
     def get_runner_class(cls, name):
         return cls.mapping["runner_name_mapping"].get(name, None)
 
     @classmethod
-    def list_runners(cls):
-        return sorted(cls.mapping["runner_name_mapping"].keys())
-
-    @classmethod
-    def list_models(cls):
-        return sorted(cls.mapping["model_name_mapping"].keys())
-
-    @classmethod
-    def list_tasks(cls):
-        return sorted(cls.mapping["task_name_mapping"].keys())
-
-    @classmethod
     def list_processors(cls):
         return sorted(cls.mapping["processor_name_mapping"].keys())
-
-    @classmethod
-    def list_lr_schedulers(cls):
-        return sorted(cls.mapping["lr_scheduler_name_mapping"].keys())
 
     @classmethod
     def list_datasets(cls):
@@ -301,9 +182,9 @@ class Registry:
                 break
 
         if (
-            "writer" in cls.mapping["state"]
-            and value == default
-            and no_warning is False
+                "writer" in cls.mapping["state"]
+                and value == default
+                and no_warning is False
         ):
             cls.mapping["state"]["writer"].warning(
                 "Key {} is not present in registry, returning default value "

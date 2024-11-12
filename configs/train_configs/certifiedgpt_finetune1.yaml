@@ -9,3 +9,18 @@ datasets:
       train:
         name: "blip_caption"
     sample_ratio: 115
+
+run:
+  agent: image_text_finetune
+  max_epoch: 4
+  num_workers: 4
+  warmup_steps: 5000
+  iters_per_epoch: 5000
+  seed: 42
+  output_dir: "output/minigpt4_stage1_pretrain"
+  amp: True
+  resume_ckpt_path: null
+  evaluate: False
+  train_splits: [ "train" ]
+  device: "cuda"
+  world_size: 1

@@ -1,10 +1,36 @@
+"""
+ Copyright (c) 2022, salesforce.com, inc.
+ All rights reserved.
+ SPDX-License-Identifier: BSD-3-Clause
+ For full license text, see the LICENSE_Lavis file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+"""
+
 import logging
+
+from common.registry import registry
 
 
 class BaseAgent:
-    def __init__(self, config):
-        self.config = config
+    def __init__(self):
+        self.datasets = None
+        self.config = registry.get_configuration_class("configuration")
         self.logger = logging.getLogger("Agent")
+
+    @classmethod
+    def setup_agent(cls, **kwargs):
+        return cls()
+
+    def build_datasets(self, config):
+        self.datasets = dict()
+        datasets_config = config.datasets
+        for name in datasets_config:
+            dataset_config = datasets_config[name]
+            builder = registry.get_builder_class(name)[dataset_config]
+            dataset = builder.build_datasets()
+            dataset["train"].name = name
+            self.datasets["train"] = dataset
+
+        return self.datasets
 
     def load_checkpoint(self, file_name):
         raise NotImplementedError
