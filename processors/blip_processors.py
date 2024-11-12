@@ -4,8 +4,12 @@
  SPDX-License-Identifier: BSD-3-Clause
  For full license text, see the LICENSE_Lavis file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 """
+import re
+
+from omegaconf import OmegaConf
 from torchvision.transforms.functional import InterpolationMode
 
+from common.registry import registry
 from processors.base_processor import BaseProcessor
 from torchvision import transforms
 
@@ -20,6 +24,7 @@ class BlipImageBaseProcessor(BaseProcessor):
         self.normalize = transforms.Normalize(mean, std)
 
 
+@registry.register_processor("blip2_image_train")
 class Blip2ImageTrainProcessor(BlipImageBaseProcessor):
     def __init__(self, image_zise=224, mean=None, std=None, min_scale=0.5, max_scale=1.0):
         super().__init__(mean=mean, std=std)
@@ -89,3 +94,41 @@ class Blip2ImageEvalProcessor(BlipImageBaseProcessor):
                 std=std
             )
 
+
+@registry.register_processor("blip_caption")
+class BlipCaptionProcessor(BaseProcessor):
+    def __init__(self,prompt="", max_words=50):
+        self.prompt = prompt
+        self.max_words = max_words
+
+    def __call__(self, caption):
+        caption = self.prompt + self.pre_caption(caption)
+
+    @classmethod
+    def from_config(cls, config=None):
+        if config is None:
+            config = OmegaConf.create()
+        prompt = config.get("prompt", "")
+        max_words = config.get("max_words", "")
+        return cls(prompt=prompt, max_words=prompt)
+
+    def pre_caption(self, caption):
+        caption = re.sub(
+            r"([.!\"()*#:;~])",
+            " ",
+            caption.lower(),
+        )
+        caption = re.sub(
+            r"\s{2,}",
+            " ",
+            caption,
+        )
+        caption = caption.rstrip("\n")
+        caption = caption.strip(" ")
+
+        # truncate caption
+        caption_words = caption.split(" ")
+        if len(caption_words) > self.max_words:
+            caption = " ".join(caption_words[: self.max_words])
+
+        return caption
