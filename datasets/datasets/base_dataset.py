@@ -12,7 +12,7 @@ from torch.utils.data.dataloader import default_collate
 class BaseDataset(Dataset):
 
     def __init__(self, vis_processor=None, text_processor=None, vis_path=None, annotation_path=[]):
-        self.vis_root = vis_path
+        self.vis_path = vis_path
         self.annotations = []
 
         for ann_path in annotation_path:

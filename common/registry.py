@@ -130,6 +130,17 @@ class Registry:
         current[path[-1]] = obj
 
     @classmethod
+    def register_path(cls, name, path):
+        assert isinstance(path, str), "All path must be str."
+        if name in cls.mapping["paths"]:
+            raise KeyError("Name '{}' already registered.".format(name))
+        cls.mapping["paths"][name] = path
+
+    @classmethod
+    def get_path(cls, name):
+        return cls.mapping["paths"].get(name, None)
+
+    @classmethod
     def get_builder_class(cls, name):
         return cls.mapping["builder_name_mapping"].get(name, None)
 

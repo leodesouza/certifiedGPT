@@ -6,13 +6,21 @@
 """
 
 import argparse
+import os
 import random
+import sys
+
 import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
+from omegaconf import OmegaConf
 
 import agents
 from common.config import Config
+from common.registry import registry
+
+# to register builsers
+from datasets.builders import *
 
 
 def parse_args():
@@ -33,10 +41,19 @@ def setup_seeds(config):
     cudnn.deterministic = True
 
 
+def register_variables():
+    root_dir = os.path.dirname(os.path.abspath(__file__))
+    registry.register_path("library_root", root_dir)
+    registry.register("MAX_INT", sys.maxsize)
+    registry.register("SPLIT_NAMES", ["train", "val", "test"])
+
+
 def main():
     args = parse_args()
     config = Config(args)
     setup_seeds(config)
+
+    register_variables()
 
     agent = agents.setup_agent(config)
     agent.run()

@@ -15,9 +15,9 @@ from datasets.datasets.vqav2_dataset import VQAv2Dataset
 class VQAv2Builder(BaseDatasetBuilder):
     train_datasets_cls = VQAv2Dataset
 
-    def __init__(self):
-        database_config_path = get_database_config_path("vqav2")
-        super().__init__(database_config_path)
+    DATASET_CONFIG_DICT = {
+        "default": "configs/datasets/vqav2/defaults_vqa.yaml"
+    }
 
     def build(self):
         self.build_processors()

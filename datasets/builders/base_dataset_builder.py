@@ -10,6 +10,7 @@ from tarfile import data_filter
 from omegaconf import OmegaConf
 import logging
 
+from common import utils
 from processors.base_processor import BaseProcessor
 
 
@@ -22,8 +23,8 @@ def load_dataset_config(config_path):
 class BaseDatasetBuilder:
     train_datasets_cls, val_datasets_cls, eval_datasets_cls = None, None, None
 
-    def __init__(self, config_path):
-        self.config = load_dataset_config(config_path)
+    def __init__(self):
+        self.config = load_dataset_config(self.default_config_path())
         self.vis_processor = {"train": BaseProcessor(), "eval": BaseProcessor()}
         self.text_processor = {"train": BaseProcessor(), "eval": BaseProcessor()}
 
@@ -77,8 +78,7 @@ class BaseDatasetBuilder:
     def build_proc_from_config(self, config):
         pass
 
+    def default_config_path(self, key="default"):
+        return utils.get_abs_path(self.DATASET_CONFIG_DICT[key])
 
-if __name__ == "__main__":
-    config_path = "/home/leonardosouza/projects/certifiedGPT/configs/datasets/vqav2/defaults_vqa.yaml"
-    databuilder = BaseDatasetBuilder(config_path)
-    databuilder.build_datasets()
+

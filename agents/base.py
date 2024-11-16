@@ -24,8 +24,8 @@ class BaseAgent:
         self.datasets = dict()
         datasets_config = config.datasets
         for name in datasets_config:
-            dataset_config = datasets_config[name]
-            builder = registry.get_builder_class(name)[dataset_config]
+            builder = registry.get_builder_class(name)
+            builder()
             dataset = builder.build_datasets()
             dataset["train"].name = name
             self.datasets["train"] = dataset
@@ -39,7 +39,7 @@ class BaseAgent:
         raise NotImplementedError
 
     def run(self):
-        raise NotImplementedError
+        datasets = self.build_datasets(self.config)
 
     def train(self):
         raise NotImplementedError
