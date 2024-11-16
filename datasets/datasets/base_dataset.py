@@ -11,22 +11,22 @@ from torch.utils.data.dataloader import default_collate
 
 class BaseDataset(Dataset):
 
-    def __init__(self, vis_processor=None, text_processor=None, vis_path=None, annotation_path=[]):
-        self.vis_path = vis_path
+    def __init__(self,
+                 vis_processor=None, text_processor=None,
+                 vis_paths=None, annotation_paths=[],
+                 split="train"):
+        self.vis_paths = vis_paths
         self.annotations = []
 
-        for ann_path in annotation_path:
-            ann = json.load(open(ann_path), "r")
+        for ann_path in annotation_paths:
+            ann = json.load(open(ann_path, "r"))
             if isinstance(ann, dict):
                 self.annotations.extend(json.load(open(ann_path, "r"))["annotations"])
-            else:
-                self.annotations.extend(json.load(open(ann_path, "r")))
-
         self.vis_processor = vis_processor
         self.text_processor = text_processor
 
     def __len__(self):
-        return len(self.annotations)
+        return len(self.train_annotations) + len(self.val_annotations)
 
     def collater(self, samples):
         return default_collate(samples)

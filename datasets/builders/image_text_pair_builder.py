@@ -19,23 +19,4 @@ class VQAv2Builder(BaseDatasetBuilder):
         "default": "configs/datasets/vqav2/defaults_vqa.yaml"
     }
 
-    def build(self):
-        self.build_processors()
 
-        build_info = self.config.build_info
-        datasets = dict()
-        dataset_config = "train"
-
-        datasets[dataset_config] = self.train_datasets_cls(
-            vis_processor=self.vis_processor,
-            text_processor=self.text_processor
-        )
-
-        return datasets
-
-
-if "__name__" == "__main__":
-    datasets = dict()
-    vqa_builder = VQAv2Builder()
-    dataset = vqa_builder.build_datasets()
-    datasets["vqav2"] = dataset

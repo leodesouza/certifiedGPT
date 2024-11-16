@@ -45,7 +45,7 @@ class BaseDatasetBuilder:
             if dataset_info not in ["train", "val", "test"]:
                 continue
 
-            is_train = dataset_info == "train"
+            is_train = True if dataset_info in ["train", "val", "test"] else False
 
             vis_processor = (
                 self.vis_processor["train"]
@@ -60,17 +60,18 @@ class BaseDatasetBuilder:
             )
 
             annotation_paths = annotations_info.get(dataset_info).path
-            vis_paths = images_info.get(dataset_info).path
+            vis_paths = images_info.get(dataset_info).path[0]
 
             dataset_cls = self.train_datasets_cls if is_train else self.eval_datasets_cls
             datasets[dataset_info] = dataset_cls(
                 vis_processor=vis_processor,
                 text_processor=text_processor,
                 annotation_paths=annotation_paths,
-                vis_paths=vis_paths
+                vis_paths=vis_paths,
+                split=dataset_info
             )
 
-            return datasets
+        return datasets
 
     def build_processors(self):
         pass
@@ -80,5 +81,3 @@ class BaseDatasetBuilder:
 
     def default_config_path(self, key="default"):
         return utils.get_abs_path(self.DATASET_CONFIG_DICT[key])
-
-

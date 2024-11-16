@@ -13,11 +13,15 @@ datasets:
         train:
           path:
               - /home/leonardosouza/projects/datasets/vqav2/annotations/train/v2_mscoco_train2014_annotations.json
+        val:
+          path:
               - /home/leonardosouza/projects/datasets/vqav2/annotations/val/v2_mscoco_val2014_annotations.json
-
       images:
         train:
           path:
-            - /home/leonardosouza/projects/datasets/vqav2/images/train2014/all
+            - /home/leonardosouza/projects/datasets/vqav2/images/train2014/all/
+        val:
+          path:
             - /home/leonardosouza/projects/datasets/vqav2/images/val2014/
+
   

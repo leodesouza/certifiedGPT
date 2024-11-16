@@ -1,4 +1,5 @@
 model:
+  arch: minigpt4
   max_txt_len: 160
   end_sym: "###"
   prompt_path: "prompts/alignment.txt"

@@ -9,19 +9,21 @@ from datasets.datasets.base_dataset import BaseDataset
 
 
 class VQAv2Dataset(BaseDataset):
-    def __init__(self, vis_processor, text_processor, vis_path, annotation_paths):
+    def __init__(self, vis_processor, text_processor, vis_paths, annotation_paths, split="train"):
         super().__init__(
             vis_processor=vis_processor, text_processor=text_processor,
-            vis_path=vis_path,
+            vis_paths=vis_paths,
             annotation_paths=annotation_paths
         )
 
-        exis_annotation = []
+        exist_annotation = []
         for annotation in self.annotations:
-            image_path = os.path.join(self.vis_path, annotation["imagem"].split('/')[-1])
+            image_id = annotation["image_id"]
+            file_name = f"COCO_{split}2014_{image_id:012d}.jpg"
+            image_path = os.path.join(self.vis_paths, file_name)
             if os.path.exists(image_path):
-                exis_annotation.append(annotation)
-        self.annotations = exis_annotation
+                exist_annotation.append(annotation)
+        self.annotations = exist_annotation
 
     def get_data(self, index):
         return NotImplementedError
@@ -31,10 +33,10 @@ class VQAv2Dataset(BaseDataset):
 
 
 class VQAv2EvalDataset(BaseDataset):
-    def __init__(self, vis_processor, text_processor, vis_path, annotation_paths):
+    def __init__(self, vis_processor, text_processor, vis_paths, annotation_paths):
         super().__init__(
             vis_processor=vis_processor, text_processor=text_processor,
-            vis_path=vis_path,
+            vis_paths=vis_paths,
             annotation_paths=annotation_paths
         )
 
