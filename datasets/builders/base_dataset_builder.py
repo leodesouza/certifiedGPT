@@ -38,7 +38,9 @@ class BaseDatasetBuilder:
         self.build_processors()
 
         build_info = self.config.build_info
+        questions_info = build_info.questions
         annotations_info = build_info.annotations
+
         images_info = build_info.images
         datasets = dict()
         for dataset_info in annotations_info.keys():
@@ -59,6 +61,7 @@ class BaseDatasetBuilder:
                 else self.text_processor["eval"]
             )
 
+            questions_path = questions_info.get(dataset_info).path
             annotation_paths = annotations_info.get(dataset_info).path
             vis_paths = images_info.get(dataset_info).path[0]
 
@@ -66,10 +69,13 @@ class BaseDatasetBuilder:
             datasets[dataset_info] = dataset_cls(
                 vis_processor=vis_processor,
                 text_processor=text_processor,
+                questions_paths=questions_path,
                 annotation_paths=annotation_paths,
                 vis_paths=vis_paths,
                 split=dataset_info
             )
+            dset = datasets[dataset_info]
+            d = dset[0]
 
         return datasets
 

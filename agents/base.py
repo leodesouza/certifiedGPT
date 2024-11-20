@@ -17,7 +17,7 @@ class BaseAgent:
         self.logger = logging.getLogger("Agent")
         self.datasets = None
         self.config = registry.get_configuration_class("configuration")
-        self._model = registry.get_model_class(self.config.arch)
+        self._model = None  # registry.get_model_class(self.config.arch)
         self._device = None
         self._dataloaders = None
         self._start_epoch = 0
@@ -66,6 +66,10 @@ class BaseAgent:
             self.datasets = dataset
 
         return self.datasets
+
+    # def create_dataloaders(self) -> dict:
+    #
+    #     if self._dataloaders is None:
 
     def train(self):
         raise NotImplementedError

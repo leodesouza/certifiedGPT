@@ -14,9 +14,19 @@ class BaseDataset(Dataset):
 
     def __init__(self,
                  vis_processor=None, text_processor=None,
+                 questions_paths=[],
                  vis_paths=None, annotation_paths=[],
                  split="train"):
+
         self.vis_paths = vis_paths
+
+        self.questions = []
+
+        for question_path in questions_paths:
+            question = json.load(open(question_path, "r"))
+            if isinstance(question, dict):
+                self.questions.extend(json.load(open(question_path, "r"))["questions"])
+
         self.annotations = []
 
         for ann_path in annotation_paths:
@@ -27,7 +37,7 @@ class BaseDataset(Dataset):
         self.text_processor = text_processor
 
     def __len__(self):
-        return len(self.train_annotations) + len(self.val_annotations)
+        return len(self.questions)
 
     def collater(self, samples):
         return default_collate(samples)
@@ -35,6 +45,3 @@ class BaseDataset(Dataset):
     def set_processor(self, vis_processor, text_processor):
         self.vis_processor = vis_processor
         self.text_processor = text_processor
-
-
-

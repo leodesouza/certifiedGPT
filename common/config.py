@@ -26,3 +26,7 @@ class Config:
     def run(self):
         return self.config.run
 
+    @property
+    def arch(self):
+        return self.config.model.arch
+

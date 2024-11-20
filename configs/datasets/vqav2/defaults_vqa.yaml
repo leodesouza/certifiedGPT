@@ -7,8 +7,14 @@ datasets:
   coco_vqa:
     # data_dir: ${env.data_dir}/datasets
     data_type: images # [images|videos|features]
-
     build_info:
+      questions:
+        train:
+          path:
+              - /home/leonardosouza/projects/datasets/vqav2/questions/train/v2_OpenEnded_mscoco_train2014_questions.json
+        val:
+          path:
+              - /home/leonardosouza/projects/datasets/vqav2/questions/val/v2_OpenEnded_mscoco_val2014_questions.json
       annotations:
         train:
           path:
