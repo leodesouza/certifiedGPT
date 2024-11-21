@@ -8,11 +8,16 @@ model:
 
 datasets:
   vqav2:
+    sample_size: 200 # if equals 0, all databset will be loaded
     batch_size: 64
     vis_processor:
       train:
         name: "blip2_image_train"
         image_size: 224
+        mean: (0.48145466, 0.4578275, 0.40821073)
+        std: (0.26862954, 0.26130258, 0.27577711)
+        min_scale: 0.5
+        max_scale: 1.0
     text_processor:
       train:
         name: "blip_caption"

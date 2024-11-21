@@ -23,6 +23,9 @@ from common.registry import registry
 # to register builsers
 from datasets.builders import *
 
+# to register processors
+from processors import blip_processors
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Training")

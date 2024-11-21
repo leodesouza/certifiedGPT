@@ -44,7 +44,9 @@ class VQAv2Dataset(BaseDataset):
         seed = config.run.seed
         random.seed(seed)
 
-        self.annotations = random.sample(self.annotations, 200)
+        sample_size = config.datasets.vqav2.sample_size
+        if sample_size is not None or sample_size != 0:
+            self.annotations = random.sample(self.annotations, sample_size)
 
         self.questions = [questions_dict[ann['question_id']] for ann in self.annotations
                           if ann['question_id'] in questions_dict]
@@ -60,8 +62,7 @@ class VQAv2Dataset(BaseDataset):
 
         question_id = annotation["question_id"]
         question = next(filter(lambda q: q['question_id'] == question_id, self.questions), None)
-        question = question['question']
-        question = self.text_processor(question)
+        question = self.text_processor(question['question'])
 
         all_answers = annotation["answers"]
         num_answer = len(all_answers)
@@ -83,6 +84,7 @@ class VQAv2Dataset(BaseDataset):
         return {
             "image": image,
             "question": question,
+            "question_id": question_id,
             "answer": anwser
         }
 
@@ -94,6 +96,7 @@ class VQAv2Dataset(BaseDataset):
         return {
             "image": data['image'],
             "instruction": instruction,
+            "question_id": data['question_id'],
             "answer": self.text_processor(data['answer'])
         }
 

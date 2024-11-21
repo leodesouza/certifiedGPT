@@ -6,6 +6,7 @@
 #
 
 import re
+import ast
 
 from omegaconf import OmegaConf
 from torchvision.transforms.functional import InterpolationMode
@@ -15,54 +16,54 @@ from processors.base_processor import BaseProcessor
 from torchvision import transforms
 
 
-class BlipImageBaseProcessor(BaseProcessor):
-    def __init__(self, mean=None, std=None):
-        # if mean is None:
-        #     mean = (0.48145466, 0.4578275, 0.40821073)
-        # if std is None:
-        #     std = (0.26862954, 0.26130258, 0.27577711)
-
-        self.normalize = transforms.Normalize(mean, std)
-
-
 @registry.register_processor("blip2_image_train")
-class Blip2ImageTrainProcessor(BlipImageBaseProcessor):
-    def __init__(self, image_zise=224, mean=None, std=None, min_scale=0.5, max_scale=1.0):
-        super().__init__(mean=mean, std=std)
+class Blip2ImageTrainProcessor(BaseProcessor):
+    def __init__(self, image_size=224, mean=None, std=None, min_scale=0.5, max_scale=1.0):
+        super().__init__()
+
+        normalize = transforms.Normalize(mean, std)
 
         self.transform = transforms.Compose(
             [
                 transforms.Resize(
-                    (image_zise, image_zise),
+                    (image_size, image_size),
                     interpolation=InterpolationMode.BICUBIC
                 ),
+                # transforms.RandomResizedCrop(
+                #     (image_zise, image_zise),
+                #     (min_scale, max_scale),
+                #     interpolation=InterpolationMode.BICUBIC
+                # ),
                 transforms.ToTensor(),
-                self.normalize
+                normalize
             ]
         )
 
-        def __call__(self, item):
-            return transforms(item)
+    def __call__(self, item):
+        return self.transform(item)
 
-        @classmethod
-        def from_config(cls, config=None):
-            image_size = config.get("imagem_size", 224)
+    @classmethod
+    def from_config(cls, config=None):
+        image_size = config.get("imagem_size", 224)
 
-            mean = config.get("mean", None)
-            std = config.get("std", None)
-            min_scale = config.get("min_scale", None)
-            max_scale = config.get("max_scale", None)
+        mean = config.get("mean", None)
+        mean = ast.literal_eval(mean)
 
-            return cls(
-                image_size=image_size,
-                mean=mean,
-                std=std,
-                min_scale=min_scale,
-                max_scale=max_scale
-            )
+        std = config.get("std", None)
+        std = ast.literal_eval(std)
+        min_scale = config.get("min_scale", None)
+        max_scale = config.get("max_scale", None)
+
+        return cls(
+            image_size=image_size,
+            mean=mean,
+            std=std,
+            min_scale=min_scale,
+            max_scale=max_scale
+        )
 
 
-class Blip2ImageEvalProcessor(BlipImageBaseProcessor):
+class Blip2ImageEvalProcessor(BaseProcessor):
     def __init__(self, image_zise=224, mean=None, std=None, min_scale=0.5, max_scale=1.0):
         super().__init__(mean=mean, std=std)
 
@@ -104,14 +105,15 @@ class BlipCaptionProcessor(BaseProcessor):
 
     def __call__(self, caption):
         caption = self.prompt + self.pre_caption(caption)
+        return caption
 
     @classmethod
     def from_config(cls, config=None):
         if config is None:
             config = OmegaConf.create()
         prompt = config.get("prompt", "")
-        max_words = config.get("max_words", "")
-        return cls(prompt=prompt, max_words=prompt)
+        max_words = config.get("max_words", 100)
+        return cls(prompt=prompt, max_words=max_words)
 
     def pre_caption(self, caption):
         caption = re.sub(
