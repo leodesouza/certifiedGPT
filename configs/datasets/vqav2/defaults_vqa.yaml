@@ -5,29 +5,28 @@
 
 datasets:
   coco_vqa:
-    # data_dir: ${env.data_dir}/datasets
     data_type: images # [images|videos|features]
     build_info:
       questions:
         train:
           path:
-              - /home/leonardosouza/projects/datasets/vqav2/questions/train/v2_OpenEnded_mscoco_train2014_questions.json
+              - ${env:DATA_DIR}/questions/train/v2_OpenEnded_mscoco_train2014_questions.json
         val:
           path:
-              - /home/leonardosouza/projects/datasets/vqav2/questions/val/v2_OpenEnded_mscoco_val2014_questions.json
+              - ${env:DATA_DIR}/questions/val/v2_OpenEnded_mscoco_val2014_questions.json
       annotations:
         train:
           path:
-              - /home/leonardosouza/projects/datasets/vqav2/annotations/train/v2_mscoco_train2014_annotations.json
+              - ${env:DATA_DIR}/annotations/train/v2_mscoco_train2014_annotations.json
         val:
           path:
-              - /home/leonardosouza/projects/datasets/vqav2/annotations/val/v2_mscoco_val2014_annotations.json
+              - ${env:DATA_DIR}/annotations/val/v2_mscoco_val2014_annotations.json
       images:
         train:
           path:
-            - /home/leonardosouza/projects/datasets/vqav2/images/train2014/all/
+            - ${env:DATA_DIR}/images/train2014/all/
         val:
           path:
-            - /home/leonardosouza/projects/datasets/vqav2/images/val2014/
+            - ${env:DATA_DIR}/images/val2014/
 
   

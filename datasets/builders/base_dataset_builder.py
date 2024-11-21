@@ -13,11 +13,18 @@ import logging
 from common import utils
 from processors.base_processor import BaseProcessor
 
+import os
+
+# Register a resolver for the `env` type
+OmegaConf.register_resolver("env", lambda key: os.environ.get(key, None))
+
 
 def load_dataset_config(config_path):
-    config = OmegaConf.load(config_path).datasets
-    config = config[list(config.keys())[0]]
-    return config
+    config = OmegaConf.load(config_path)
+    OmegaConf.resolve(config)
+    config_datasets = config.datasets
+    config_datasets = config_datasets[list(config_datasets.keys())[0]]
+    return config_datasets
 
 
 class BaseDatasetBuilder:

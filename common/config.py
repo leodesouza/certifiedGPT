@@ -6,7 +6,6 @@
 #
 
 from omegaconf import OmegaConf
-
 from common.registry import registry
 
 
@@ -29,4 +28,3 @@ class Config:
     @property
     def arch(self):
         return self.config.model.arch
-

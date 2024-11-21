@@ -6,6 +6,7 @@
 #
 
 import json
+import random
 from torch.utils.data import Dataset
 from torch.utils.data.dataloader import default_collate
 
@@ -33,6 +34,7 @@ class BaseDataset(Dataset):
             ann = json.load(open(ann_path, "r"))
             if isinstance(ann, dict):
                 self.annotations.extend(json.load(open(ann_path, "r"))["annotations"])
+
         self.vis_processor = vis_processor
         self.text_processor = text_processor
 

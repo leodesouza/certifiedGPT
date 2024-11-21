@@ -10,6 +10,7 @@ import random
 
 from datasets.datasets.base_dataset import BaseDataset
 from PIL import Image
+from common.registry import registry
 
 
 class VQAv2Dataset(BaseDataset):
@@ -37,10 +38,16 @@ class VQAv2Dataset(BaseDataset):
             image_path = os.path.join(self.vis_paths, file_name)
             if os.path.exists(image_path):
                 exist_annotation.append(annotation)
-                question = questions_dict.get(annotation["question_id"])
-                exist_questions.append(question)
         self.annotations = exist_annotation
-        self.questions = exist_questions
+
+        config = registry.get_configuration_class("configuration")
+        seed = config.run.seed
+        random.seed(seed)
+
+        self.annotations = random.sample(self.annotations, 200)
+
+        self.questions = [questions_dict[ann['question_id']] for ann in self.annotations
+                          if ann['question_id'] in questions_dict]
 
     def get_data(self, index):
         annotation = self.annotations[index]
