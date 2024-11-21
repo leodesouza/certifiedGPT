@@ -60,6 +60,7 @@ class VQAv2Dataset(BaseDataset):
 
         question_id = annotation["question_id"]
         question = next(filter(lambda q: q['question_id'] == question_id, self.questions), None)
+        question = question['question']
         question = self.text_processor(question)
 
         all_answers = annotation["answers"]
@@ -76,8 +77,8 @@ class VQAv2Dataset(BaseDataset):
 
         answers = list(answer_weights.keys())
         weights = list(answer_weights.values())
-
         anwser = random.choices(answers, weights=weights, k=1)
+        anwser = anwser[0]
 
         return {
             "image": image,
