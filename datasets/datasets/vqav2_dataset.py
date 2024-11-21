@@ -59,16 +59,20 @@ class VQAv2Dataset(BaseDataset):
         image = self.vis_processor(image)
 
         question_id = annotation["question_id"]
-        question = next(filter(lambda q: q['question_id'] == question_id), None)
+        question = next(filter(lambda q: q['question_id'] == question_id, self.questions), None)
         question = self.text_processor(question)
 
         all_answers = annotation["answers"]
+        num_answer = len(all_answers)
+        weight = 1 / num_answer
         answer_weights = {}
+
         for answer in all_answers:
-            if answer in answer_weights.keys():
-                answer_weights[answer] += 1 / len(all_answers)
+            answer = answer.get("answer")
+            if answer in answer_weights:
+                answer_weights[answer] += weight
             else:
-                answer_weights[answer] = 1 / len(all_answers)
+                answer_weights[answer] = weight
 
         answers = list(answer_weights.keys())
         weights = list(answer_weights.values())
