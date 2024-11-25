@@ -25,8 +25,8 @@ datasets:
 
 run:
   agent: image_text_finetune
-  max_epoch: 4
-  num_workers: 4
+  max_epoch: 1
+  num_workers: 1
   warmup_steps: 5000
   iters_per_epoch: 5000
   seed: 42
@@ -35,5 +35,9 @@ run:
   resume_ckpt_path: null
   evaluate: False
   train_splits: [ "train" ]
+
   device: "cuda"
-  world_size: 1
+
+#  world_size: 1
+#  dist_url: "env://"
+#  distributed: False

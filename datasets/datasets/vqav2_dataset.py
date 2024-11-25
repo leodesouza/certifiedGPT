@@ -100,6 +100,10 @@ class VQAv2Dataset(BaseDataset):
             "answer": self.text_processor(data['answer'])
         }
 
+    @property
+    def split_name(self):
+        return self.split
+
 
 class VQAv2EvalDataset(BaseDataset):
     def __init__(self, vis_processor, text_processor, vis_paths, annotation_paths):

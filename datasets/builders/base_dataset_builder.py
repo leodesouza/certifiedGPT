@@ -81,9 +81,6 @@ class BaseDatasetBuilder:
                 vis_paths=vis_paths,
                 split=dataset_info
             )
-            dset = datasets[dataset_info]
-            # d = dset[0]
-
         return datasets
 
     def build_processors(self):

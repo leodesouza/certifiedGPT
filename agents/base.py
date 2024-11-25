@@ -1,12 +1,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
-# Portions of this file are derived from the "MiniGPT-4" project.
-# See LICENSE.md for the full license text or visit the repo at:
-# https://github.com/Vision-CAIR/MiniGPT-4
+# Portions of this file are derived from the "Pytorch-Project-Template" project.
+# See LICENSE_Template.md for the full license text or visit the repo at:
+# https://github.com/moemen95/Pytorch-Project-Template/
 #
 
 import logging
-
 import torch
 
 from common.registry import registry
@@ -14,15 +13,61 @@ from common.registry import registry
 
 class BaseAgent:
     def __init__(self):
-        self.logger = logging.getLogger("Agent")
-        self.datasets = None
-        self.config = registry.get_configuration_class("configuration")
-        self._model = None  # registry.get_model_class(self.config.arch)
-        self._device = None
-        self._dataloaders = None
-        self._start_epoch = 0
         self._scaler = None
-        # self.setup_output_dir()
+        self._model = None
+        self._device = None
+        self.config = registry.get_configuration_class("configuration")
+        self.logger = logging.getLogger("Agent")
+
+    def load_checkpoint(self, file_name):
+        """
+        Latest/saved checkpoint
+        :param file_name:
+        :return:
+        """
+        raise NotImplementedError
+
+    def save_checkpoint(self, file_name="checkpoint.pth.bar", is_best=0):
+        """
+
+        :param file_name:  name of the checkpoint to save
+        :param is_best:  bool indicating if the checkpoint is the best so far
+        :return:
+        """
+        raise NotImplementedError
+
+    def run(self):
+        """
+        The main operator
+        :return:
+        """
+        raise NotImplementedError
+
+    def train(self):
+        """
+        Main training loop
+        :return:
+        """
+
+    def train_one_epoch(self):
+        """
+        Execute only one training loop
+        :return:
+        """
+        raise NotImplementedError
+
+    def validate(self):
+        """
+        One cycle of model validation
+        :return:
+        """
+
+    def finalize(self):
+        """
+        Finalize all operations and dataloaders
+        :return:
+        """
+        raise NotImplementedError
 
     @property
     def device(self):
@@ -46,39 +91,3 @@ class BaseAgent:
     @classmethod
     def setup_agent(cls, **kwargs):
         return cls()
-
-    def load_checkpoint(self, file_name):
-        raise NotImplementedError
-
-    def save_checkpoint(self, file_name='checkpoint.pth.tar', is_best=0):
-        raise NotImplementedError
-
-    def run(self):
-        datasets = self.build_datasets()
-
-    def build_datasets(self):
-        self.datasets = dict()
-        datasets_config = self.config.datasets
-        for name in datasets_config:
-            builder = registry.get_builder_class(name)
-            builder_instance = builder()
-            dataset = builder_instance.build_datasets()
-            self.datasets = dataset
-
-        return self.datasets
-
-    # def create_dataloaders(self) -> dict:
-    #
-    #     if self._dataloaders is None:
-
-    def train(self):
-        raise NotImplementedError
-
-    def train_one_epoch(self):
-        raise NotImplementedError
-
-    def validate(self):
-        raise NotImplementedError
-
-    def finalize(self):
-        raise NotImplementedError
