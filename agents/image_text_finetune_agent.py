@@ -115,3 +115,9 @@ class ImageTextFinetuneAgent(BaseAgent):
                 loaders.append(loader)
 
             self._dataloaders[dataset_name] = loaders
+
+            for dataloader in self._dataloaders.values():
+                for loader in dataloader:
+                    for batch in loader:
+                        break
+
