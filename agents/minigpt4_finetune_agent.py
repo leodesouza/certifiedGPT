@@ -14,15 +14,15 @@ from common.registry import registry
 
 
 @registry.register_agent("image_text_finetune")
-class ImageTextFinetuneAgent(BaseAgent):
+class MiniGPT4FineTuneAgent(BaseAgent):
     def __init__(self):
         super().__init__()
         self.start_epoch = 0
         self.max_epoch = self.config.run.max_epoch
         self._model = None  # registry.get_model_class(self.config.arch)
         self._device = None
-        self._dataloaders = dict()
         self._start_epoch = 0
+        self._optimizer = self.create_optimizer()
         self._scaler = None
 
     def run(self):
@@ -31,20 +31,47 @@ class ImageTextFinetuneAgent(BaseAgent):
 
         # resume from checkpoint...
         # if not config.run.evaluate_only..
-        self.create_dataloaders()
 
+        self.model = self.model.to(self.config.run.device)
         for epoch in range(self.start_epoch, self.max_epoch):
+            # training step
             if not self.config.run.evaluate:
                 logging.info("Start training")
-                train_stats = self.train_epoch(epoch)
+                self.train(epoch)
+
+            # evaluation step
+
 
         # datasets = self.build_datasets()
 
-    def train(self):
-        """
-        Main training loop
-        :return:
-        """
+    def train(self, epoch):
+
+        dataloaders = self.create_dataloaders()
+        train_loader = dataloaders["train"]
+        val_loader = dataloaders["val"]
+
+        self.model.train()
+        self._optimizer.zero_grad()
+
+        if not hasattr(train_loader, "__next__"):
+            train_loader = iter(train_loader)
+
+        samples = next(train_loader)
+        samples = samples.to(self.config.run.device)
+
+        with torch.cuda.amp.autocast(enabled=self.config.run.amp):
+            loss = self.model(samples)['loss']
+
+        if self.config.run.amp:
+            self.scaler.scale(loss).backward()
+        else:
+            loss.backward()
+
+        if self.config.run.amp:
+            self.scaler.step(self._optimizer)
+            self.scaler.update()
+        else:
+            self._optimizer.step()
 
     def train_one_epoch(self):
         """
@@ -91,10 +118,11 @@ class ImageTextFinetuneAgent(BaseAgent):
         logging.info("building datasets")
         datasets = self._build_datasets()
         dataset_names = sorted(datasets.keys())
+        dataloaders = dict()
 
         for dataset_name in dataset_names:
             dataset = datasets[dataset_name]
-            loaders = []
+
             for split in dataset.values():
                 num_records = len(split)
                 if num_records >= 0:
@@ -106,18 +134,29 @@ class ImageTextFinetuneAgent(BaseAgent):
 
                 loader = DataLoader(
                     split,
-                    batch_size=self.config.datasets.vqav2.batch_size,
+                    batch_size=self.config.datasets[dataset_name].batch_size,
                     num_workers=self.config.run.num_workers,
                     pin_memory=True,
                     shuffle=True if is_train else False,
                     collate_fn=collate_fn
                 )
-                loaders.append(loader)
+                dataloaders[split.split_name] = loader
 
-            self._dataloaders[dataset_name] = loaders
+        return dataloaders
 
-            for dataloader in self._dataloaders.values():
-                for loader in dataloader:
-                    for batch in loader:
-                        break
+    def create_optimizer(self):
 
+        # optim_params = [
+        #     {
+        #         "params"
+        #     }
+        # ]
+        beta1 = self.config.run.beta1
+        beta2 = self.config.run.beta2
+
+        return torch.optim.AdamW(
+            self.model.parameters(),
+            lr=float(self.config.run.init_lr),
+            weight_decay=float(self.config.run),
+            betas=(beta1, beta2)
+        )

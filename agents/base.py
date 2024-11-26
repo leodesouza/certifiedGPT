@@ -48,6 +48,11 @@ class BaseAgent:
         Main training loop
         :return:
         """
+    def train(self, epoch):
+        """
+        train a specific epoch
+        :return:
+        """
 
     def train_one_epoch(self):
         """
@@ -83,7 +88,7 @@ class BaseAgent:
 
     @property
     def scaler(self):
-        amp = self.config.run.get("amp", False)
+        amp = self.config.run.amp
         if amp:
             self._scaler = torch.cuda.amp.GradScaler()
         return self.scaler
