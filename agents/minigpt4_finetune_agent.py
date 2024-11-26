@@ -17,39 +17,41 @@ from common.registry import registry
 class MiniGPT4FineTuneAgent(BaseAgent):
     def __init__(self):
         super().__init__()
+
         self.start_epoch = 0
         self.max_epoch = self.config.run.max_epoch
         self._model = None  # registry.get_model_class(self.config.arch)
         self._device = None
         self._start_epoch = 0
         self._optimizer = self.create_optimizer()
+        self._dataloaders = None
         self._scaler = None
 
     def run(self):
         start_time = time.time()
         best_epoch = 0
+        running_training_loss = 0
+        running_eval_loss = 0
 
-        # resume from checkpoint...
-        # if not config.run.evaluate_only..
+        if not self.config.run.evaluate_only and self.config.run.resume_ckpt_path is not None:
+            self.load_checkpoint(self.config.run.resume_ckpt_path)
 
         self.model = self.model.to(self.config.run.device)
+
+        self._dataloaders = self.create_dataloaders()
         for epoch in range(self.start_epoch, self.max_epoch):
             # training step
-            if not self.config.run.evaluate:
+            if not self.config.run.evaluate_only:
                 logging.info("Start training")
                 self.train(epoch)
 
             # evaluation step
-
+            self.eval(epoch)
 
         # datasets = self.build_datasets()
 
     def train(self, epoch):
-
-        dataloaders = self.create_dataloaders()
-        train_loader = dataloaders["train"]
-        val_loader = dataloaders["val"]
-
+        train_loader = self._dataloaders["train"]
         self.model.train()
         self._optimizer.zero_grad()
 
@@ -72,6 +74,25 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             self.scaler.update()
         else:
             self._optimizer.step()
+
+    @torch.no_grad()
+    def eval(self, epoch):
+        running_eval_loss = 0
+        val_loader = self._dataloaders["val"]
+        self.model.eval()
+
+        if not hasattr(val_loader, "__next__"):
+            val_loader = iter(val_loader)
+
+        samples = next(val_loader)
+        samples = samples.to(self.config.run.device)
+
+        with torch.cuda.amp.autocast(enabled=self.config.run.amp):
+            loss = self.model(samples)['loss']
+            running_eval_loss += loss.item()
+
+        avg_valid_loss = running_eval_loss / len(val_loader)
+        # print(f"Epoch [{epoch+1}/{}]")
 
     def train_one_epoch(self):
         """

@@ -2,6 +2,8 @@
 
 Template: https://github.com/moemen95/Pytorch-Project-Template
 
+-- to execute in MiniGPT-4 root folder 
+export PYTHONPATH=$(pwd):$PYTHONPATH
 
 Download the dataset
 
