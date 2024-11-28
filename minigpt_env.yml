@@ -1,4 +1,4 @@
-name: minigptv
+name: certifiedgpt
 channels:
   - pytorch
   - defaults
