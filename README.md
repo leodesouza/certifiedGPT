@@ -16,3 +16,6 @@ COCO VQA | <a href="https://storage.googleapis.com/sfr-vision-language-research/
 This repository is under [BSD 3-Clause License](LICENSE.md).
 Many codes are based on [MiniGPT4](https://github.com/Vision-CAIR/MiniGPT-4) with 
 BSD 3-Clause License [here](LICENSE_MiniGPT-4.md).
+
+# command to donwload vicuna checkpoints from hugging face
+# huggingface-cli download Vision-CAIR/vicuna-7b --local-dir vicuna
