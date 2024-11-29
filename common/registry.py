@@ -11,6 +11,7 @@ class Registry:
         "builder_name_mapping": {},
         "processor_name_mapping": {},
         "runner_name_mapping": {},
+        "model_name_mapping": {},
         "state": {},
         "paths": {},
         "agent_name_mapping": {}
@@ -142,7 +143,7 @@ class Registry:
         """
 
         def wrap(model_cls):
-            from graphs.models.minigpt4 import BaseModel
+            from graphs.models.minigpt4.models import BaseModel
 
             assert issubclass(
                 model_cls, BaseModel

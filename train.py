@@ -20,11 +20,15 @@ import agents
 from common.config import Config
 from common.registry import registry
 
+
 # to register builsers
 from datasets.builders import *
 
 # to register processors
 from processors import blip_processors
+
+# register
+from graphs.models import *
 
 
 def parse_args():

@@ -28,3 +28,7 @@ class Config:
     @property
     def arch(self):
         return self.config.model.arch
+
+    @property
+    def model(self):
+        return self.config.model

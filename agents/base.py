@@ -96,3 +96,12 @@ class BaseAgent:
     @classmethod
     def setup_agent(cls, **kwargs):
         return cls()
+
+    def build_model(self):
+        """
+        Return the current instance of model to train
+        :return: ModelBase
+        """
+        return NotImplementedError()
+
+

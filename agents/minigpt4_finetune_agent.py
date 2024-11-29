@@ -20,7 +20,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         self.start_epoch = 0
         self.max_epoch = self.config.run.max_epoch
-        self._model = None  # registry.get_model_class(self.config.arch)
+        self._model = self.build_model()
         self._device = None
         self._start_epoch = 0
         self._optimizer = self.create_optimizer()
@@ -181,3 +181,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             weight_decay=float(self.config.run),
             betas=(beta1, beta2)
         )
+
+    def build_model(self):
+        model_type = registry.get_model_class(self.config.arch)
+        model = model_type.from_config(self.config.model)
+        return model

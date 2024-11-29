@@ -6,8 +6,8 @@
 #
 
 
-from graphs.models.minigpt4.base_model import BaseModel
+from graphs.models.minigpt4.models import MiniGPT4
 
 __all__ = [
-    "BaseModel"
+    "MiniGPT4"
 ]
