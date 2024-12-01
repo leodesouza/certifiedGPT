@@ -50,9 +50,13 @@ class BaseDatasetBuilder:
 
         images_info = build_info.images
         datasets = dict()
+        logging.info("Building the dataset based in build options")
+        logging.info(f"Build path: {self.default_config_path()}")
+
         for dataset_info in annotations_info.keys():
             if dataset_info not in ["train", "val", "test"]:
                 continue
+            logging.info(f"Building dataset: {dataset_info}")
 
             is_train = True if dataset_info in ["train", "val", "test"] else False
 
@@ -84,14 +88,19 @@ class BaseDatasetBuilder:
         return datasets
 
     def build_processors(self):
+        logging.info("Building processors")
         train_config = registry.get_configuration_class("configuration")
+
         vis_train_config = train_config.datasets.vqav2.vis_processor.train
         text_train_config = train_config.datasets.vqav2.text_processor.train
 
         vis_processor_class = registry.get_processor_class(vis_train_config.name)
+        logging.info("Building visual processor")
         self.vis_processor["train"] = vis_processor_class.from_config(vis_train_config)
 
         text_processor_class = registry.get_processor_class(text_train_config.name)
+
+        logging.info("Building textual processor")
         self.text_processor["train"] = text_processor_class.from_config(text_train_config)
 
     def default_config_path(self, key="default"):

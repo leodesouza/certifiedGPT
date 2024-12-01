@@ -1,4 +1,5 @@
 import logging
+import os
 import random
 
 import torch
@@ -57,17 +58,17 @@ class MiniGPT4(MiniGPTBase):
 
         self.has_qformer = has_qformer
         if self.has_qformer:
-            print('Loading Q-Former')
+            logging.info('Loading Q-Former')
             self.Qformer, self.query_tokens = self.init_Qformer(
                 num_query_token, self.visual_encoder.num_features, freeze_qformer
             )
             self.load_from_pretrained(url_or_filename=q_former_model)  # load q-former weights here
 
             img_f_dim = self.Qformer.config.hidden_size
-            print('Loading Q-Former Done')
+            logging.info('Loading Q-Former Done')
         else:
             img_f_dim = self.visual_encoder.num_features * 4
-            print('Do not use Q-Former here.')
+            logging.info('Do not use Q-Former here.')
 
         self.llama_proj = nn.Linear(
             img_f_dim, self.llama_model.config.hidden_size
@@ -85,6 +86,7 @@ class MiniGPT4(MiniGPTBase):
 
     @classmethod
     def init_Qformer(cls, num_query_token, vision_width, freeze):
+        logging.info("loading Qformer from pretrained BERT")
         encoder_config = BertConfig.from_pretrained("bert-base-uncased")
         encoder_config.encoder_width = vision_width
         # insert cross-attention layer every other block
@@ -187,7 +189,7 @@ class MiniGPT4(MiniGPTBase):
 
         ckpt_path = cfg.get("ckpt", "")  # load weights of MiniGPT-4
         if ckpt_path:
-            print("Load MiniGPT-4 Checkpoint: {}".format(ckpt_path))
+            logging.info("Load MiniGPT-4 Checkpoint: {}".format(ckpt_path))
             ckpt = torch.load(ckpt_path, map_location="cpu")
             msg = model.load_state_dict(ckpt['model'], strict=False)
 

@@ -5,7 +5,7 @@
 # https://github.com/Vision-CAIR/MiniGPT-4
 #
 
-
+import logging
 import argparse
 import os
 import random
@@ -20,14 +20,13 @@ import agents
 from common.config import Config
 from common.registry import registry
 
-
 # to register builsers
 from datasets.builders import *
 
 # to register processors
 from processors import blip_processors
 
-# register
+# register models
 from graphs.models import *
 
 
@@ -37,6 +36,26 @@ def parse_args():
     args = parser.parse_args()
 
     return args
+
+
+def setup_logger():
+    logger = logging.getLogger("logger")
+    logger.setLevel(logging.ERROR)
+
+    console_handler = logging.StreamHandler()
+    file_handler = logging.FileHandler('certifiedgpt.log')
+
+    console_handler.setLevel(logging.INFO)
+    file_handler.setLevel(logging.ERROR)
+
+    console_formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+    file_formatter = logging.Formatter('%(asctime)s - % (levelname)s - %(message)s')
+
+    console_handler.setFormatter(console_formatter)
+    file_handler.setFormatter(file_formatter)
+
+    logger.addHandler(console_handler)
+    logger.addHandler(file_handler)
 
 
 def setup_seeds(config):
@@ -57,6 +76,7 @@ def register_variables():
 
 
 def main():
+    setup_logger()
     args = parse_args()
     config = Config(args)
     setup_seeds(config)

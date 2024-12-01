@@ -17,8 +17,7 @@ from common.registry import registry
 class MiniGPT4FineTuneAgent(BaseAgent):
     def __init__(self):
         super().__init__()
-
-        self.start_epoch = 0
+        self.start_epoch = 1
         self.max_epoch = self.config.run.max_epoch
         self._model = self.build_model()
         self._device = None
@@ -34,11 +33,17 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         running_eval_loss = 0
 
         if not self.config.run.evaluate_only and self.config.run.resume_ckpt_path is not None:
+            logging.info(f"Loading the checkpoint from path: {self.config.run.resume_ckpt_path}")
             self.load_checkpoint(self.config.run.resume_ckpt_path)
 
+        logging.info(f"Set model to device: {self.config.run.device}")
         self.model = self.model.to(self.config.run.device)
 
+        logging.info("Creating the dataloaders")
         self._dataloaders = self.create_dataloaders()
+
+        logging.info("Start running the training loop")
+        logging.info(f"Start epoch: {self.start_epoch}. Max epoch: {self.max_epoch}")
         for epoch in range(self.start_epoch, self.max_epoch):
             # training step
             if not self.config.run.evaluate_only:
@@ -48,7 +53,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             # evaluation step
             self.eval(epoch)
 
-        # datasets = self.build_datasets()
+        logging.info(f"Finished the training loop")
 
     def train(self, epoch):
         train_loader = self._dataloaders["train"]
@@ -166,7 +171,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         return dataloaders
 
     def create_optimizer(self):
-
+        logging.info("Creating the optimizer")
         # optim_params = [
         #     {
         #         "params"
@@ -183,6 +188,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         )
 
     def build_model(self):
+        logging.info("Start building the model")
         model_type = registry.get_model_class(self.config.arch)
         model = model_type.from_config(self.config.model)
         return model

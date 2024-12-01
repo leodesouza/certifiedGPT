@@ -4,7 +4,7 @@
 # See LICENSE.md for the full license text or visit the repo at:
 # https://github.com/Vision-CAIR/MiniGPT-4
 #
-
+import logging
 import os
 import random
 
@@ -30,8 +30,10 @@ class VQAv2Dataset(BaseDataset):
         self.split = split
         questions_dict = {q["question_id"]: q for q in self.questions}
 
+        logging.info(f"Filter annotations that contains images int the path: {vis_paths}")
         exist_questions = []
         exist_annotation = []
+
         for annotation in self.annotations:
             image_id = annotation["image_id"]
             file_name = f"COCO_{split}2014_{image_id:012d}.jpg"
@@ -46,6 +48,8 @@ class VQAv2Dataset(BaseDataset):
 
         sample_size = config.datasets.vqav2.sample_size
         if sample_size is not None or sample_size != 0:
+            logging.info("Filter annotations based on sample_size hyperparemeter ")
+            logging.info(f"sample_size={sample_size}")
             self.annotations = random.sample(self.annotations, sample_size)
 
         self.questions = [questions_dict[ann['question_id']] for ann in self.annotations

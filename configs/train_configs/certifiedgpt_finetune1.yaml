@@ -12,8 +12,9 @@ model:
   freeze_vit: true
   has_qformer: true
   freeze_qformer: true
-  low_resource: false
+  low_resource: true
   device_8bit: 0
+  llama_model: ${env:VICUNA_DIR}
 
 datasets:
   vqav2:

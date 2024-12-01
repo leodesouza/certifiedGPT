@@ -141,69 +141,85 @@ class BaseModel(nn.Module):
     def init_vision_encoder(
             cls, model_name, img_size, drop_path_rate, use_grad_checkpoint, precision, freeze
     ):
-        logging.info('Loading VIT')
 
-        assert model_name == "eva_clip_g", "vit model must be eva_clip_g for current version of MiniGPT-4"
-        if not freeze:
-            precision = "fp32"  # fp16 is not for training
+        try:
+            logging.info('Loading VIT')
 
-        visual_encoder = create_eva_vit_g(
-            img_size, drop_path_rate, use_grad_checkpoint, precision
-        )
+            assert model_name == "eva_clip_g", "vit model must be eva_clip_g for current version of MiniGPT-4"
+            if not freeze:
+                precision = "fp32"  # fp16 is not for training
 
-        ln_vision = LayerNorm(visual_encoder.num_features)
+            visual_encoder = create_eva_vit_g(
+                img_size, drop_path_rate, use_grad_checkpoint, precision
+            )
 
-        if freeze:
-            for name, param in visual_encoder.named_parameters():
-                param.requires_grad = False
-            visual_encoder = visual_encoder.eval()
-            visual_encoder.train = disabled_train
-            for name, param in ln_vision.named_parameters():
-                param.requires_grad = False
-            ln_vision = ln_vision.eval()
-            ln_vision.train = disabled_train
-            logging.info("freeze vision encoder")
+            ln_vision = LayerNorm(visual_encoder.num_features)
 
-        logging.info('Loading VIT Done')
-        return visual_encoder, ln_vision
+            if freeze:
+                for name, param in visual_encoder.named_parameters():
+                    param.requires_grad = False
+                visual_encoder = visual_encoder.eval()
+                visual_encoder.train = disabled_train
+                for name, param in ln_vision.named_parameters():
+                    param.requires_grad = False
+                ln_vision = ln_vision.eval()
+                ln_vision.train = disabled_train
+                logging.info("freeze vision encoder")
+
+            logging.info('Loading VIT Done')
+            return visual_encoder, ln_vision
+        except Exception as e:
+            logging.error("Error loading Vit", exc_info=True)
+            raise
 
     def init_llm(cls, llama_model_path, low_resource=False, low_res_device=0, lora_r=0,
                  lora_target_modules=["q_proj", "v_proj"], **lora_kargs):
-        logging.info('Loading LLAMA')
-        llama_tokenizer = LlamaTokenizer.from_pretrained(llama_model_path, use_fast=False)
-        llama_tokenizer.pad_token = "$$"
 
-        if low_resource:
-            llama_model = LlamaForCausalLM.from_pretrained(
-                llama_model_path,
-                torch_dtype=torch.float16,
-                load_in_8bit=True,
-                device_map={'': low_res_device}
-            )
-        else:
-            llama_model = LlamaForCausalLM.from_pretrained(
-                llama_model_path,
-                torch_dtype=torch.float16,
-            )
+        logging.info("Start loading the pretrained LLM")
+        try:
+            logging.info(f"Loading LLM parameters from path: {llama_model_path}")
+            logging.info("Loading tokenizers")
+            llama_tokenizer = LlamaTokenizer.from_pretrained(llama_model_path, use_fast=False)
+            llama_tokenizer.pad_token = "$$"
 
-        if lora_r > 0:
-            llama_model = prepare_model_for_int8_training(llama_model)
-            loraconfig = LoraConfig(
-                r=lora_r,
-                bias="none",
-                task_type="CAUSAL_LM",
-                target_modules=lora_target_modules,
-                **lora_kargs
-            )
-            llama_model = get_peft_model(llama_model, loraconfig)
+            if low_resource:
+                logging.info("Loading with low resource. dbtype=16 and 8bit")
+                llama_model = LlamaForCausalLM.from_pretrained(
+                    llama_model_path,
+                    torch_dtype=torch.float16,
+                    load_in_8bit=True,
+                    device_map={'': low_res_device}
+                )
+            else:
+                logging.info("Default Loading with dbtype=16")
+                llama_model = LlamaForCausalLM.from_pretrained(
+                    llama_model_path,
+                    torch_dtype=torch.float16,
+                )
 
-            llama_model.print_trainable_parameters()
+            if lora_r > 0:
+                logging.info("With lora parameter provided...")
+                logging.info("Preparing the model for parameter efficient fine-tuning")
+                llama_model = prepare_model_for_int8_training(llama_model)
+                loraconfig = LoraConfig(
+                    r=lora_r,
+                    bias="none",
+                    task_type="CAUSAL_LM",
+                    target_modules=lora_target_modules,
+                    **lora_kargs
+                )
+                llama_model = get_peft_model(llama_model, loraconfig)
 
-        else:
-            for name, param in llama_model.named_parameters():
-                param.requires_grad = False
-        logging.info('Loading LLAMA Done')
-        return llama_model, llama_tokenizer
+                llama_model.print_trainable_parameters()
+
+            else:
+                for name, param in llama_model.named_parameters():
+                    param.requires_grad = False
+            logging.info('Loading LLM Done')
+            return llama_model, llama_tokenizer
+        except Exception as e:
+            logging.error("Error on loading the LLM(LLAMA or VICUNA.", exc_info=True)
+            raise
 
     def load_from_pretrained(self, url_or_filename):
         if is_url(url_or_filename):
