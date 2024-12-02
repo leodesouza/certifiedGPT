@@ -11,6 +11,8 @@ from torch.utils.data import DataLoader, DistributedSampler
 
 from agents.base import BaseAgent
 from common.registry import registry
+from graphs.losses.cross_entropy_loss import CrossEntropyLoss
+from tqdm import tqdm
 
 
 @registry.register_agent("image_text_finetune")
@@ -25,6 +27,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self._optimizer = self.create_optimizer()
         self._dataloaders = None
         self._scaler = None
+        self.device = self.config.run.device
+        self.compute_loss = CrossEntropyLoss()
 
     def run(self):
         start_time = time.time()
@@ -42,62 +46,84 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         logging.info("Creating the dataloaders")
         self._dataloaders = self.create_dataloaders()
 
+        if not self._dataloaders.get("train") and not self.config.run.evaluate_only:
+            raise ValueError("Training dataloader is empty")
+
+        if not self._dataloaders.get("val"):
+            raise ValueError("Validation dataloader is empty")
+
         logging.info("Start running the training loop")
         logging.info(f"Start epoch: {self.start_epoch}. Max epoch: {self.max_epoch}")
         for epoch in range(self.start_epoch, self.max_epoch):
+
             # training step
             if not self.config.run.evaluate_only:
-                logging.info("Start training")
-                self.train(epoch)
+                logging.info(f"Training epoch: {epoch}")
+                train_loss = self.train(epoch)
+                logging.info(f"Epoch: {epoch}. Training loss: {train_loss}")
 
             # evaluation step
-            self.eval(epoch)
+            logging.info(f"Evaluation epoch: {epoch}")
+            val_loss = self.eval(epoch)
+            logging.info(f"Evaluation: epoch {epoch}. Evaluation loss: {val_loss}")
 
-        logging.info(f"Finished the training loop")
+        elapsed_time = time.time() - start_time
+        logging.info(f"Finished the training loop in {elapsed_time:.2f}")
 
     def train(self, epoch):
         train_loader = self._dataloaders["train"]
+        if len(train_loader) == 0:
+            return float('inf')
+
         self.model.train()
-        self._optimizer.zero_grad()
+        running_loss = 0.0
 
-        if not hasattr(train_loader, "__next__"):
-            train_loader = iter(train_loader)
+        for batch_sample in tqdm(train_loader, desc=f"Training epoch {epoch}"):
+            self._optimizer.zero_grad()
 
-        samples = next(train_loader)
-        samples = samples.to(self.config.run.device)
+            image_features = batch_sample["image"].to(self.device)
+            question = batch_sample["question"].to(self.device)
+            answer = batch_sample["answer"].to(self.device)
 
-        with torch.cuda.amp.autocast(enabled=self.config.run.amp):
-            loss = self.model(samples)['loss']
+            with torch.cuda.amp.autocast(enabled=self.config.run.amp):
+                logits = self.model(image_features, question)
+                loss = self.compute_loss(logits, answer)
 
-        if self.config.run.amp:
-            self.scaler.scale(loss).backward()
-        else:
-            loss.backward()
+            if self.config.run.amp:
+                self.scaler.scale(loss).backward()
+                self.scaler.step(self._optimizer)
+                self.scaler.update()
+            else:
+                loss.backward()
+                self._optimizer.step()
 
-        if self.config.run.amp:
-            self.scaler.step(self._optimizer)
-            self.scaler.update()
-        else:
-            self._optimizer.step()
+            running_loss += loss.item()
+
+        running_loss /= len(train_loader)
+        return running_loss
 
     @torch.no_grad()
     def eval(self, epoch):
         running_eval_loss = 0
         val_loader = self._dataloaders["val"]
+
+        if len(val_loader) == 0:
+            return float('inf')
+
         self.model.eval()
 
-        if not hasattr(val_loader, "__next__"):
-            val_loader = iter(val_loader)
+        for batch_sample in tqdm(val_loader, desc=f"Evaluating epoch {epoch}"):
+            image_features = batch_sample["image"].to(self.device)
+            question = batch_sample["question"].to(self.device)
+            answer = batch_sample["answer"].to(self.device)
 
-        samples = next(val_loader)
-        samples = samples.to(self.config.run.device)
+            with torch.cuda.amp.autocast(enabled=self.config.run.amp):
+                logits = self.model(image_features, question)
+                loss = self.compute_loss(logits, answer)
+                running_eval_loss += loss.item()
 
-        with torch.cuda.amp.autocast(enabled=self.config.run.amp):
-            loss = self.model(samples)['loss']
-            running_eval_loss += loss.item()
-
-        avg_valid_loss = running_eval_loss / len(val_loader)
-        # print(f"Epoch [{epoch+1}/{}]")
+        running_eval_loss /= len(val_loader)
+        return running_eval_loss
 
     def train_one_epoch(self):
         """
