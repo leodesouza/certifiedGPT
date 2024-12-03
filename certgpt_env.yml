@@ -1,5 +1,8 @@
 name: certifiedGPT
-channels:
+channels:  
+  - nvidia
+  - pytorch
+  - conda-forge
   - defaults
 dependencies:
   - _libgcc_mutex=0.1=main
