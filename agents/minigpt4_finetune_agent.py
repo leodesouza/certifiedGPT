@@ -13,6 +13,19 @@ from agents.base import BaseAgent
 from common.registry import registry
 from graphs.losses.cross_entropy_loss import CrossEntropyLoss
 from tqdm import tqdm
+import matplotlib.pyplot as plt
+
+
+def plot_losses(losses):
+    fig = plt.figure(figsize=(13, 5))
+    ax = fig.gca()
+    for loss_name, loss_values in losses.item():
+        ax.plot(loss_values, label=loss_name)
+    ax.legend(fontsize=16)
+    ax.set_xlabel("Iteration", fontsize="16")
+    ax.set_ylabel("Loss", fontsize="16")
+    ax.set_title("Loss vs iterations", fontsize="16")
+    plt.savefig("vqa_plot_training.png")
 
 
 @registry.register_agent("image_text_finetune")
@@ -22,16 +35,16 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self.start_epoch = 1
         self.max_epoch = self.config.run.max_epoch
         self._model = self.build_model()
-        self._device = None
         self._start_epoch = 0
         self._optimizer = self.create_optimizer()
         self._dataloaders = None
         self._scaler = None
-        self.device = self.config.run.device
         self.compute_loss = CrossEntropyLoss()
 
     def run(self):
         start_time = time.time()
+        train_losses = []
+        val_losses = []
         best_epoch = 0
         running_training_loss = 0
         running_eval_loss = 0
@@ -40,8 +53,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             logging.info(f"Loading the checkpoint from path: {self.config.run.resume_ckpt_path}")
             self.load_checkpoint(self.config.run.resume_ckpt_path)
 
-        logging.info(f"Set model to device: {self.config.run.device}")
-        self.model = self.model.to(self.config.run.device)
+        logging.info(f"Set model to device: {self.device}")
+        self.model = self.model.to(self.device)
 
         logging.info("Creating the dataloaders")
         self._dataloaders = self.create_dataloaders()
@@ -60,15 +73,23 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             if not self.config.run.evaluate_only:
                 logging.info(f"Training epoch: {epoch}")
                 train_loss = self.train(epoch)
+                train_losses.append(train_loss)
                 logging.info(f"Epoch: {epoch}. Training loss: {train_loss}")
+
+            if epoch % 10 == 0:
+                logging.info(f"Epoch: {epoch}; Train loss: {train_loss}")
 
             # evaluation step
             logging.info(f"Evaluation epoch: {epoch}")
             val_loss = self.eval(epoch)
+            val_losses.append(val_loss)
             logging.info(f"Evaluation: epoch {epoch}. Evaluation loss: {val_loss}")
 
         elapsed_time = time.time() - start_time
         logging.info(f"Finished the training loop in {elapsed_time:.2f}")
+
+        losses = {"Train loss": train_losses, "Val loss": val_losses}
+        plot_losses(losses)
 
     def train(self, epoch):
         train_loader = self._dataloaders["train"]
@@ -86,8 +107,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             answer = batch_sample["answer"].to(self.device)
 
             with torch.cuda.amp.autocast(enabled=self.config.run.amp):
-                logits = self.model(image_features, question)
-                loss = self.compute_loss(logits, answer)
+                pred = self.model(image_features, question)
+                loss = self.compute_loss(pred, answer)
 
             if self.config.run.amp:
                 self.scaler.scale(loss).backward()
@@ -99,8 +120,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
             running_loss += loss.item()
 
-        running_loss /= len(train_loader)
-        return running_loss
+        return running_loss / len(train_loader)
 
     @torch.no_grad()
     def eval(self, epoch):
@@ -118,19 +138,11 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             answer = batch_sample["answer"].to(self.device)
 
             with torch.cuda.amp.autocast(enabled=self.config.run.amp):
-                logits = self.model(image_features, question)
-                loss = self.compute_loss(logits, answer)
-                running_eval_loss += loss.item()
+                pred = self.model(image_features, question)
+                loss = self.compute_loss(pred, answer)
+            running_eval_loss += loss.item()
 
-        running_eval_loss /= len(val_loader)
-        return running_eval_loss
-
-    def train_one_epoch(self):
-        """
-        Execute only one training loop
-        :return:
-        """
-        raise NotImplementedError
+        return running_eval_loss / len(val_loader)
 
     def validate(self):
         """
