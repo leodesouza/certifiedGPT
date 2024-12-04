@@ -15,7 +15,7 @@ OmegaConf.register_resolver("env", lambda key: os.environ.get(key, None))
 
 def setup_logger():
     logger = logging.getLogger("logger")
-    logger.setLevel(logging.ERROR)
+    logger.setLevel(logging.INFO)
 
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
@@ -59,7 +59,7 @@ def generate_random_sample(build_info, split, new_file_name):
 
     images_path = build_info.images[split].path[0]
     data_dir = os.environ["DATA_DIR"]
-    new_images_path = os.path.join(data_dir, "images/images_sample", split)
+    new_images_path = os.path.join(data_dir, "images/sample", split)
 
     for annotation in json_file['annotations']:
         image_id = annotation["image_id"]
@@ -67,7 +67,6 @@ def generate_random_sample(build_info, split, new_file_name):
         image_path = os.path.join(images_path, file_name)
         if os.path.exists(image_path):
             exist_annotation.append(annotation)
-            shutil.copy(image_path, new_images_path)
 
     annotations = exist_annotation
     questions_type = [ann['question_type'] for ann in annotations]
@@ -77,6 +76,12 @@ def generate_random_sample(build_info, split, new_file_name):
         random_state=42,
         shuffle=True,
         stratify=questions_type)
+
+    for ann in train_or_val_split:
+        image_id = ann["image_id"]
+        file_name = f"COCO_{split}2014_{image_id:012d}.jpg"
+        image_path = os.path.join(images_path, file_name)
+        shutil.copy(image_path, new_images_path)
 
     json_file['annotations'] = train_or_val_split
     file_and_path = os.path.join(folder_path, new_file_name)
