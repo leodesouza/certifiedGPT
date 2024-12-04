@@ -2,14 +2,10 @@ name: certifiedgpt
 channels:
   - defaults
 dependencies:
-  - _libgcc_mutex=0.1
-  - _openmp_mutex=5.1
+  - _libgcc_mutex=0.1  
   - ca-certificates=2024.11.26
   - cudatoolkit=11.8.0
   - libffi=3.4.4
-  - libgomp=11.2.0
-  - libstdcxx-ng=11.2.0
-  - ncurses=6.4
   - openssl=3.0.15
   - pip=24.2
   - python=3.9.20
