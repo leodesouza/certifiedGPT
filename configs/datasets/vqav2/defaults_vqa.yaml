@@ -17,16 +17,16 @@ datasets:
       annotations:
         train:
           path:
-              - ${env:DATA_DIR}/annotations/train/v2_mscoco_train2014_annotations.json
+              - ${env:DATA_DIR}/annotations/train/sample_v2_mscoco_train2014_annotations.json
         val:
           path:
-              - ${env:DATA_DIR}/annotations/val/v2_mscoco_val2014_annotations.json
+              - ${env:DATA_DIR}/annotations/val/sample_v2_mscoco_val2014_annotations.json
       images:
         train:
           path:
-            - ${env:DATA_DIR}/images/train2014/all/
+            - ${env:DATA_DIR}/images/images_sample/train
         val:
           path:
-            - ${env:DATA_DIR}/images/val2014/
+            - ${env:DATA_DIR}/images/images_sample/val
 
   
