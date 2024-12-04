@@ -284,22 +284,22 @@ def save_file(data, filename, append_to_json=True, verbose=True):
         logging.info(f"Saving data to file: {filename}")
     file_ext = os.path.splitext(filename)[1]
     if file_ext in [".pkl", ".pickle"]:
-        with g_pathmgr.open(filename, "wb") as fopen:
+        with g_pathmgr.open_file(filename, "wb") as fopen:
             pickle.dump(data, fopen, pickle.HIGHEST_PROTOCOL)
     elif file_ext == ".npy":
-        with g_pathmgr.open(filename, "wb") as fopen:
+        with g_pathmgr.open_file(filename, "wb") as fopen:
             np.save(fopen, data)
     elif file_ext == ".json":
         if append_to_json:
-            with g_pathmgr.open(filename, "a") as fopen:
+            with g_pathmgr.open_file(filename, "a") as fopen:
                 fopen.write(json.dumps(data, sort_keys=True) + "\n")
                 fopen.flush()
         else:
-            with g_pathmgr.open(filename, "w") as fopen:
+            with g_pathmgr.open_file(filename, "w") as fopen:
                 fopen.write(json.dumps(data, sort_keys=True) + "\n")
                 fopen.flush()
     elif file_ext == ".yaml":
-        with g_pathmgr.open(filename, "w") as fopen:
+        with g_pathmgr.open_file(filename, "w") as fopen:
             dump = yaml.dump(data)
             fopen.write(dump)
             fopen.flush()
@@ -324,15 +324,15 @@ def load_file(filename, mmap_mode=None, verbose=True, allow_pickle=False):
 
     file_ext = os.path.splitext(filename)[1]
     if file_ext == ".txt":
-        with g_pathmgr.open(filename, "r") as fopen:
+        with g_pathmgr.open_file(filename, "r") as fopen:
             data = fopen.readlines()
     elif file_ext in [".pkl", ".pickle"]:
-        with g_pathmgr.open(filename, "rb") as fopen:
+        with g_pathmgr.open_file(filename, "rb") as fopen:
             data = pickle.load(fopen, encoding="latin1")
     elif file_ext == ".npy":
         if mmap_mode:
             try:
-                with g_pathmgr.open(filename, "rb") as fopen:
+                with g_pathmgr.open_file(filename, "rb") as fopen:
                     data = np.load(
                         fopen,
                         allow_pickle=allow_pickle,
@@ -352,19 +352,19 @@ def load_file(filename, mmap_mode=None, verbose=True, allow_pickle=False):
                 logging.info("Successfully loaded without g_pathmgr")
             except Exception:
                 logging.info("Could not mmap without g_pathmgr. Trying without mmap")
-                with g_pathmgr.open(filename, "rb") as fopen:
+                with g_pathmgr.open_file(filename, "rb") as fopen:
                     data = np.load(fopen, allow_pickle=allow_pickle, encoding="latin1")
         else:
-            with g_pathmgr.open(filename, "rb") as fopen:
+            with g_pathmgr.open_file(filename, "rb") as fopen:
                 data = np.load(fopen, allow_pickle=allow_pickle, encoding="latin1")
     elif file_ext == ".json":
-        with g_pathmgr.open(filename, "r") as fopen:
+        with g_pathmgr.open_file(filename, "r") as fopen:
             data = json.load(fopen)
     elif file_ext == ".yaml":
-        with g_pathmgr.open(filename, "r") as fopen:
+        with g_pathmgr.open_file(filename, "r") as fopen:
             data = yaml.load(fopen, Loader=yaml.FullLoader)
     elif file_ext == ".csv":
-        with g_pathmgr.open(filename, "r") as fopen:
+        with g_pathmgr.open_file(filename, "r") as fopen:
             data = pd.read_csv(fopen)
     else:
         raise Exception(f"Reading from {file_ext} is not supported yet")
