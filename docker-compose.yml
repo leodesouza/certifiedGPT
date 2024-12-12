@@ -9,6 +9,7 @@ services:
     image: certifiedgpt
     environment:
         - PATH=/opt/conda/bin:$PATH
+        - NVIDIA_VISIBLE_DEVICES=all
     command: tail -f /dev/null # Keeps container running
 
     restart: always # restart container on failure
