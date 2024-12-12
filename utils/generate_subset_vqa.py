@@ -50,7 +50,7 @@ def open_json_file(path):
     return json_file
 
 
-def generate_random_sample(build_info, split, new_file_name):
+def sample(build_info, split, new_file_name):
     exist_annotation = []
     annotation_path = build_info.annotations[split].path[0]
     file_path = Path(annotation_path)
@@ -91,15 +91,17 @@ def generate_random_sample(build_info, split, new_file_name):
 
 def generate_random_samples():
     setup_logger()
-    config_file_path = os.environ["CONFIG_VQA_FILE"]
+    root_path = Path(__file__).resolve().parent.parent
+    root_path = str(root_path)
+    config_file_path = os.path.join(root_path, "configs/datasets/vqav2/defaults_vqa.yaml")
     config = load_dataset_config(config_file_path)
     build_info = config.build_info
 
     logging.info('generate training sample')
-    generate_random_sample(build_info, 'train', "sample_v2_mscoco_train2014_annotations.json")
+    sample(build_info, 'train', "sample_v2_mscoco_train2014_annotations.json")
 
     logging.info('generate validation sample')
-    generate_random_sample(build_info, 'val', "sample_v2_mscoco_val2014_annotations.json")
+    sample(build_info, 'val', "sample_v2_mscoco_val2014_annotations.json")
 
     logging.info('process finished')
 

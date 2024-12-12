@@ -1,0 +1,19 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: dockerfile
+    volumes:
+        - ${DATA_DIR}:/dataset
+        - ${VICUNA_DIR}:/llm_model
+    image: certifiedgpt
+    environment:
+        - PATH=/opt/conda/bin:$PATH
+    command: tail -f /dev/null # Keeps container running
+
+    restart: always # restart container on failure
+#      ports:
+#        - "8080:8080"
+#    tty: true # interactive running
+#    stdin_open: true
+    # restart: always # restart container on failure

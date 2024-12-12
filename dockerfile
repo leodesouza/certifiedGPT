@@ -1,26 +1,30 @@
-# FROM pytorch/pytorch:latest
 FROM pytorch/pytorch:2.4.1-cuda11.8-cudnn9-devel
-
-# COPY /env/minigpt_env.yml /tmp/minigpt_env.yml
-
-COPY . /
 
 RUN apt-get update && apt-get install -y curl && \
     rm -rf /opt/conda && \
     curl -fsSL https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda.sh && \
     bash /tmp/miniconda.sh -b -p /opt/conda && \
     rm /tmp/miniconda.sh && \
-    /opt/conda/bin/conda init
+    /opt/conda/bin/conda init && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-ENV PATH="opt/conda/bin:$PATH"
+ENV PATH="/opt/conda/bin:$PATH"
 
-RUN conda env create -f /env/minigpt_env.yml
+COPY . /workspace/
+
+WORKDIR /workspace/
+
+RUN conda env create -f /workspace/env/minigpt_env.yml
 
 #Activate the environment by default
-RUN echo "source activate pytorch_env" >> ~/.bashrc
+RUN echo "source activate certifiedgpt" >> ~/.bashrc
 
-# set the working directory
-WORKDIR /
+# RUN mkdir -p storage \
+#     && mkdir -p storage/dataset \
+#     && mkdir -p storage/checkpoints/llm_model
+#
+# ENV DATA_DIR="/storage/dataset"
+# ENV VICUNA_DIR="/storage/checkpoints/llm_model"
 
-#make the shell interactive
+# Default command
 CMD ["bash"]
