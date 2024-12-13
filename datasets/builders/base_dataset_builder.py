@@ -5,10 +5,9 @@
 # https://github.com/Vision-CAIR/MiniGPT-4
 #
 
-from tarfile import data_filter
 
 from omegaconf import OmegaConf
-import logging
+import common
 from common import utils
 from processors.base_processor import BaseProcessor
 from common.registry import registry
@@ -36,7 +35,7 @@ class BaseDatasetBuilder:
         self.text_processor = {"train": BaseProcessor(), "eval": BaseProcessor()}
 
     def build_datasets(self):
-        logging.info("Building datasets")
+        self.logger.info("Building datasets")
         datasets = self.build()
         return datasets
 
@@ -50,13 +49,13 @@ class BaseDatasetBuilder:
 
         images_info = build_info.images
         datasets = dict()
-        logging.info("Building the dataset based in build options")
-        logging.info(f"Build path: {self.default_config_path()}")
+        self.logger.info("Building the dataset based in build options")
+        self.logger.info(f"Build path: {self.default_config_path()}")
 
         for dataset_info in annotations_info.keys():
             if dataset_info not in ["train", "val", "test"]:
                 continue
-            logging.info(f"Building dataset: {dataset_info}")
+            self.logger.info(f"Building dataset: {dataset_info}")
 
             is_train = True if dataset_info in ["train", "val", "test"] else False
 
@@ -88,20 +87,25 @@ class BaseDatasetBuilder:
         return datasets
 
     def build_processors(self):
-        logging.info("Building processors")
+        self.logger.info("Building processors")
         train_config = registry.get_configuration_class("configuration")
 
         vis_train_config = train_config.datasets.vqav2.vis_processor.train
         text_train_config = train_config.datasets.vqav2.text_processor.train
 
         vis_processor_class = registry.get_processor_class(vis_train_config.name)
-        logging.info("Building visual processor")
+        self.logger.info("Building visual processor")
         self.vis_processor["train"] = vis_processor_class.from_config(vis_train_config)
 
         text_processor_class = registry.get_processor_class(text_train_config.name)
 
-        logging.info("Building textual processor")
+        self.logger.info("Building textual processor")
         self.text_processor["train"] = text_processor_class.from_config(text_train_config)
 
     def default_config_path(self, key="default"):
         return utils.get_abs_path(self.DATASET_CONFIG_DICT[key])
+
+    @property
+    def logger(self):
+        logger = common.registry.get_configuration_class("logger")
+        return logger

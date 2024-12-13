@@ -5,11 +5,11 @@ import torch
 from torch.cuda.amp import autocast as autocast
 import torch.nn as nn
 
-from minigpt4.common.registry import registry
-from minigpt4.models.base_model import BaseModel
+from graphs.models.minigpt4.models.base_model import BaseModel
 from transformers import StoppingCriteria, StoppingCriteriaList
 
-from minigpt4.conversation.conversation import StoppingCriteriaSub
+from graphs.models.minigpt4.conversation.conversation import StoppingCriteriaSub
+
 
 class MiniGPTBase(BaseModel):
     """
@@ -17,24 +17,24 @@ class MiniGPTBase(BaseModel):
     """
 
     def __init__(
-        self,
-        vit_model="eva_clip_g",
-        img_size=224,
-        drop_path_rate=0,
-        use_grad_checkpoint=False,
-        vit_precision="fp16",
-        freeze_vit=True,
-        llama_model="",
-        max_txt_len=32,
-        max_context_len=3800,
-        prompt_template="",
-        end_sym='\n',
-        low_resource=False,  # use 8 bit and put vit in cpu
-        device_8bit=0,  # the device of 8bit model should be set when loading and cannot be changed anymore.
-        lora_r=0,  # lora_r means lora is not used
-        lora_target_modules=["q_proj", "v_proj"],
-        lora_alpha=16,
-        lora_dropout=0.05,
+            self,
+            vit_model="eva_clip_g",
+            img_size=224,
+            drop_path_rate=0,
+            use_grad_checkpoint=False,
+            vit_precision="fp16",
+            freeze_vit=True,
+            llama_model="",
+            max_txt_len=32,
+            max_context_len=3800,
+            prompt_template="",
+            end_sym='\n',
+            low_resource=False,  # use 8 bit and put vit in cpu
+            device_8bit=0,  # the device of 8bit model should be set when loading and cannot be changed anymore.
+            lora_r=0,  # lora_r means lora is not used
+            lora_target_modules=["q_proj", "v_proj"],
+            lora_alpha=16,
+            lora_dropout=0.05,
     ):
         super().__init__()
 
@@ -71,7 +71,8 @@ class MiniGPTBase(BaseModel):
         assert len(prompt_segs) == len(img_list) + 1, "Unmatched numbers of image placeholders and images."
         seg_tokens = [
             self.llama_tokenizer(
-                seg, return_tensors="pt", add_special_tokens=i==0).to(device).input_ids # only add bos to the first seg
+                seg, return_tensors="pt", add_special_tokens=i == 0).to(device).input_ids
+            # only add bos to the first seg
             for i, seg in enumerate(prompt_segs)
         ]
         seg_embs = [self.embed_tokens(seg_t) for seg_t in seg_tokens]
@@ -127,7 +128,7 @@ class MiniGPTBase(BaseModel):
             max_length = max(emb_lens) if max(emb_lens) < self.max_context_len else self.max_context_len
             wrapped_embs = pad_emb.expand(len(emb_lens), max_length, -1).clone()
             wrapped_atts = torch.zeros([len(emb_lens), max_length], dtype=torch.int, device=img_embeds.device)
-            
+
             for i, emb in enumerate(emb_lists):
                 length = emb_lens[i] if emb_lens[i] < self.max_context_len else self.max_context_len
                 wrapped_embs[i, :length] = emb[:, :length]
@@ -174,7 +175,8 @@ class MiniGPTBase(BaseModel):
             questions, answers = conv_q[batch_idx], conv_a[batch_idx]
             questions = [self.llama_tokenizer(self.llama_tokenizer.bos_token + q,
                                               return_tensors="pt",
-                                              add_special_tokens=False).to(self.device) for q in questions[1:]]  # the first question is handled in the prompt wrap function, skip it
+                                              add_special_tokens=False).to(self.device) for q in
+                         questions[1:]]  # the first question is handled in the prompt wrap function, skip it
             answers = [self.llama_tokenizer(a + self.end_sym,
                                             return_tensors="pt",
                                             add_special_tokens=False).to(self.device) for a in answers]
@@ -198,7 +200,7 @@ class MiniGPTBase(BaseModel):
         to_regress_token_ids = torch.ones([batch_size, max_len],
                                           dtype=cur_id.dtype, device=self.device) * self.llama_tokenizer.pad_token_id
         targets = torch.ones([batch_size, max_len],
-                                          dtype=cur_id.dtype, device=self.device) * -100
+                             dtype=cur_id.dtype, device=self.device) * -100
         for batch_idx in range(batch_size):
             cur_len = to_regress_token_ids_list[batch_idx].shape[1]
             to_regress_token_ids[batch_idx, :cur_len] = to_regress_token_ids_list[batch_idx][0, :max_len]
@@ -220,7 +222,7 @@ class MiniGPTBase(BaseModel):
             conv_q, conv_a = samples['conv_q'], samples['conv_a']
 
             connect_sym = samples['connect_sym'][0]
-            conv_q = [q.split(connect_sym)for q in conv_q]
+            conv_q = [q.split(connect_sym) for q in conv_q]
             conv_a = [a.split(connect_sym) for a in conv_a]
 
             conv_q = [[self.prompt_template.format(item) for item in items] for items in conv_q]
@@ -293,7 +295,7 @@ class MiniGPTBase(BaseModel):
                              dtype=torch.long).to(self.device).fill_(-100)
 
         for i, target in enumerate(part_targets):
-            targets[i, input_lens[i]+1:input_lens[i]+len(target)+1] = target  # plus 1 for bos
+            targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos
 
         with self.maybe_autocast():
             outputs = self.llama_model(
@@ -308,7 +310,7 @@ class MiniGPTBase(BaseModel):
         return {"loss": loss}
 
     def embed_tokens(self, token_ids):
-        if hasattr(self.llama_model.base_model, 'model'): ## lora wrapped model
+        if hasattr(self.llama_model.base_model, 'model'):  ## lora wrapped model
             embeds = self.llama_model.base_model.model.model.embed_tokens(token_ids)
         else:
             embeds = self.llama_model.base_model.embed_tokens(token_ids)
@@ -316,18 +318,18 @@ class MiniGPTBase(BaseModel):
 
     @torch.no_grad()
     def generate(
-        self,
-        images,
-        texts,
-        num_beams=1,
-        max_new_tokens=20,
-        min_length=1,
-        top_p=0.9,
-        repetition_penalty=1,
-        length_penalty=1,
-        temperature=1,
-        do_sample=False,
-        stop_words_ids=[2],
+            self,
+            images,
+            texts,
+            num_beams=1,
+            max_new_tokens=20,
+            min_length=1,
+            top_p=0.9,
+            repetition_penalty=1,
+            length_penalty=1,
+            temperature=1,
+            do_sample=False,
+            stop_words_ids=[2],
     ):
         '''
             function for generate test use

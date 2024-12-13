@@ -4,7 +4,6 @@
 # See LICENSE.md for the full license text or visit the repo at:
 # https://github.com/Vision-CAIR/MiniGPT-4
 #
-import logging
 import time
 import torch
 from torch.utils.data import DataLoader, DistributedSampler
@@ -49,47 +48,52 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         running_training_loss = 0
         running_eval_loss = 0
 
-        if not self.config.run.evaluate_only and self.config.run.resume_ckpt_path is not None:
-            logging.info(f"Loading the checkpoint from path: {self.config.run.resume_ckpt_path}")
-            self.load_checkpoint(self.config.run.resume_ckpt_path)
+        try:
 
-        logging.info(f"Set model to device: {self.device}")
-        self.model = self.model.to(self.device)
+            if not self.config.run.evaluate_only and self.config.run.resume_ckpt_path is not None:
+                self.logger.info(f"Loading the checkpoint from path: {self.config.run.resume_ckpt_path}")
+                self.load_checkpoint(self.config.run.resume_ckpt_path)
 
-        logging.info("Creating the dataloaders")
-        self._dataloaders = self.create_dataloaders()
+            self.logger.info(f"Set model to device: {self.device}")
+            self.model = self.model.to(self.device)
 
-        if not self._dataloaders.get("train") and not self.config.run.evaluate_only:
-            raise ValueError("Training dataloader is empty")
+            self.logger.info("Creating the dataloaders")
+            self._dataloaders = self.create_dataloaders()
 
-        if not self._dataloaders.get("val"):
-            raise ValueError("Validation dataloader is empty")
+            if not self._dataloaders.get("train") and not self.config.run.evaluate_only:
+                raise ValueError("Training dataloader is empty")
 
-        logging.info("Start running the training loop")
-        logging.info(f"Start epoch: {self.start_epoch}. Max epoch: {self.max_epoch}")
-        for epoch in range(self.start_epoch, self.max_epoch):
+            if not self._dataloaders.get("val"):
+                raise ValueError("Validation dataloader is empty")
 
-            # training step
-            if not self.config.run.evaluate_only:
-                logging.info(f"Training epoch: {epoch}")
-                train_loss = self.train(epoch)
-                train_losses.append(train_loss)
-                logging.info(f"Epoch: {epoch}. Training loss: {train_loss}")
+            self.logger.info("Start running the training loop")
+            self.logger.info(f"Start epoch: {self.start_epoch}. Max epoch: {self.max_epoch}")
+            for epoch in range(self.start_epoch, self.max_epoch):
 
-            if epoch % 10 == 0:
-                logging.info(f"Epoch: {epoch}; Train loss: {train_loss}")
+                # training step
+                if not self.config.run.evaluate_only:
+                    self.logger.info(f"Training epoch: {epoch}")
+                    train_loss = self.train(epoch)
+                    train_losses.append(train_loss)
+                    self.logger.info(f"Epoch: {epoch}. Training loss: {train_loss}")
 
-            # evaluation step
-            logging.info(f"Evaluation epoch: {epoch}")
-            val_loss = self.eval(epoch)
-            val_losses.append(val_loss)
-            logging.info(f"Evaluation: epoch {epoch}. Evaluation loss: {val_loss}")
+                if epoch % 10 == 0:
+                    self.logger.info(f"Epoch: {epoch}; Train loss: {train_loss}")
 
-        elapsed_time = time.time() - start_time
-        logging.info(f"Finished the training loop in {elapsed_time:.2f}")
+                # evaluation step
+                self.logger.info(f"Evaluation epoch: {epoch}")
+                val_loss = self.eval(epoch)
+                val_losses.append(val_loss)
+                self.logger.info(f"Evaluation: epoch {epoch}. Evaluation loss: {val_loss}")
 
-        losses = {"Train loss": train_losses, "Val loss": val_losses}
-        plot_losses(losses)
+            elapsed_time = time.time() - start_time
+            self.logger.info(f"Finished the training loop in {elapsed_time:.2f}")
+
+            losses = {"Train loss": train_losses, "Val loss": val_losses}
+            plot_losses(losses)
+
+        except Exception as e:
+            self.logger.error(f'Error on runing the agent. Details: {e}')
 
     def train(self, epoch):
         train_loader = self._dataloaders["train"]
@@ -179,7 +183,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         return datasets
 
     def create_dataloaders(self):
-        logging.info("building datasets")
+        self.logger.info("building datasets")
         datasets = self._build_datasets()
         dataset_names = sorted(datasets.keys())
         dataloaders = dict()
@@ -190,7 +194,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             for split in dataset.values():
                 num_records = len(split)
                 if num_records >= 0:
-                    logging.info("Loaded {} records for split {}".format(num_records, dataset))
+                    self.logger.info("Loaded {} records for split {}".format(num_records, dataset))
 
                 is_train = True if split.split_name in self.config.run.train_splits else False
 
@@ -209,7 +213,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         return dataloaders
 
     def create_optimizer(self):
-        logging.info("Creating the optimizer")
+        self.logger.info("Creating the optimizer")
         # optim_params = [
         #     {
         #         "params"
@@ -226,7 +230,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         )
 
     def build_model(self):
-        logging.info("Start building the model")
+        self.logger.info("Start building the model")
         model_type = registry.get_model_class(self.config.arch)
         model = model_type.from_config(self.config.model)
         return model

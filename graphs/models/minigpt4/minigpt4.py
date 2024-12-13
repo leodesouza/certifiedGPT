@@ -46,7 +46,7 @@ class MiniGPT4(MiniGPTBase):
     ):
         self.config = common.registry.registry.get_configuration_class("configuration")
         blip_flant5_pth = self.config.model.blip_flant5_pth
-        logging.info(f'Reading blip flant5 path from configuration. Path: {blip_flant5_pth}')
+        self.logger.info(f'Reading blip flant5 path from configuration. Path: {blip_flant5_pth}')
         q_former_model = blip_flant5_pth
 
         super().__init__(
@@ -72,10 +72,10 @@ class MiniGPT4(MiniGPTBase):
             self.load_from_pretrained(url_or_filename=q_former_model)  # load q-former weights here
 
             img_f_dim = self.Qformer.config.hidden_size
-            logging.info('Loading Q-Former Done')
+            self.logger.info('Loading Q-Former Done')
         else:
             img_f_dim = self.visual_encoder.num_features * 4
-            logging.info('Do not use Q-Former here.')
+            self.logger.info('Do not use Q-Former here.')
 
         self.llama_proj = nn.Linear(
             img_f_dim, self.llama_model.config.hidden_size
@@ -155,7 +155,7 @@ class MiniGPT4(MiniGPTBase):
     @classmethod
     def from_config(cls, cfg):
         vit_model = cfg.get("vit_model", "eva_clip_g")
-        q_former_model = cfg.get("q_former_model", "https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP2/blip2_pretrained_flant5xxl.pth")
+        q_former_model = cfg.get("blip_flant5_pth")
         img_size = cfg.get("image_size")
         num_query_token = cfg.get("num_query_token")
         llama_model = cfg.get("llama_model")
@@ -195,8 +195,8 @@ class MiniGPT4(MiniGPTBase):
         )
 
         ckpt_path = cfg.get("ckpt", "")  # load weights of MiniGPT-4
+
         if ckpt_path:
-            logging.info("Load MiniGPT-4 Checkpoint: {}".format(ckpt_path))
             ckpt = torch.load(ckpt_path, map_location="cpu")
             msg = model.load_state_dict(ckpt['model'], strict=False)
 

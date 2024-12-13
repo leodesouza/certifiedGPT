@@ -40,22 +40,22 @@ def parse_args():
 
 def setup_logger():
     logger = logging.getLogger("logger")
-    logger.setLevel(logging.ERROR)
+    logger.setLevel(logging.INFO)
 
     console_handler = logging.StreamHandler()
-    file_handler = logging.FileHandler('certifiedgpt.log')
-
     console_handler.setLevel(logging.INFO)
-    file_handler.setLevel(logging.ERROR)
-
     console_formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
-    file_formatter = logging.Formatter('%(asctime)s - % (levelname)s - %(message)s')
-
     console_handler.setFormatter(console_formatter)
+
+    file_handler = logging.FileHandler('certifiedgpt.log')
+    file_handler.setLevel(logging.ERROR)
+    file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     file_handler.setFormatter(file_formatter)
 
     logger.addHandler(console_handler)
     logger.addHandler(file_handler)
+
+    registry.register("logger", logger)
 
 
 def setup_seeds(config):

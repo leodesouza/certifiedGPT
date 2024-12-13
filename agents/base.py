@@ -8,6 +8,7 @@
 import logging
 import torch
 
+import common
 from common.registry import registry
 
 
@@ -17,7 +18,6 @@ class BaseAgent:
         self._model = None
         self._device = None
         self.config = registry.get_configuration_class("configuration")
-        self.logger = logging.getLogger("Agent")
 
     def load_checkpoint(self, file_name):
         """
@@ -103,5 +103,11 @@ class BaseAgent:
         :return: ModelBase
         """
         return NotImplementedError()
+
+    @property
+    def logger(self):
+        logger = common.registry.get_configuration_class("logger")
+        return logger
+
 
 

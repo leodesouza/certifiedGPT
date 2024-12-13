@@ -6,7 +6,6 @@
 """
 
 import os
-import logging
 import contextlib
 
 from omegaconf import OmegaConf
@@ -20,6 +19,7 @@ from peft import (
     prepare_model_for_int8_training,
 )
 
+import common
 from graphs.models.minigpt4.common.dist_utils import download_cached_file
 from graphs.models.minigpt4.common.utils import get_abs_path, is_url
 from graphs.models.minigpt4.models.eva_vit import create_eva_vit_g
@@ -60,8 +60,8 @@ class BaseModel(nn.Module):
 
         msg = self.load_state_dict(state_dict, strict=False)
 
-        logging.info("Missing keys {}".format(msg.missing_keys))
-        logging.info("load checkpoint from %s" % url_or_filename)
+        self.logger.info("Missing keys {}".format(msg.missing_keys))
+        self.logger.info("load checkpoint from %s" % url_or_filename)
 
         return msg
 
@@ -141,7 +141,7 @@ class BaseModel(nn.Module):
     def init_vision_encoder(
             cls, model_name, img_size, drop_path_rate, use_grad_checkpoint, precision, freeze
     ):
-
+        logging = common.registry.get_configuration_class("logger")
         try:
             logging.info('Loading VIT')
 
@@ -174,6 +174,8 @@ class BaseModel(nn.Module):
 
     def init_llm(cls, llama_model_path, low_resource=False, low_res_device=0, lora_r=0,
                  lora_target_modules=["q_proj", "v_proj"], **lora_kargs):
+
+        logging = common.registry.get_configuration_class("logger")
 
         logging.info("Start loading the pretrained LLM")
         try:
@@ -236,10 +238,14 @@ class BaseModel(nn.Module):
 
         msg = self.load_state_dict(state_dict, strict=False)
 
-        # logging.info("Missing keys {}".format(msg.missing_keys))
-        logging.info("load checkpoint from %s" % url_or_filename)
+        self.logger.info("load checkpoint from %s" % url_or_filename)
 
         return msg
+
+    @property
+    def logger(self):
+        logger = common.registry.get_configuration_class("logger")
+        return logger
 
 
 def disabled_train(self, mode=True):

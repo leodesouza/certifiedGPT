@@ -6,10 +6,11 @@
 #
 
 import json
-import logging
 import random
 from torch.utils.data import Dataset
 from torch.utils.data.dataloader import default_collate
+
+import common
 
 
 class BaseDataset(Dataset):
@@ -24,8 +25,8 @@ class BaseDataset(Dataset):
 
         self.questions = []
 
-        logging.info("Loading dataset ...")
-        logging.info("Loading questions json files")
+        self.logger.info("Loading dataset ...")
+        self.logger.info("Loading questions json files")
         for question_path in questions_paths:
             question = json.load(open(question_path, "r"))
             if isinstance(question, dict):
@@ -33,7 +34,7 @@ class BaseDataset(Dataset):
 
         self.annotations = []
 
-        logging.info("Loading annotations json files")
+        self.logger.info("Loading annotations json files")
         for ann_path in annotation_paths:
             ann = json.load(open(ann_path, "r"))
             if isinstance(ann, dict):
@@ -41,6 +42,11 @@ class BaseDataset(Dataset):
 
         self.vis_processor = vis_processor
         self.text_processor = text_processor
+
+    @property
+    def logger(self):
+        logger = common.registry.get_configuration_class("logger")
+        return logger
 
     def __len__(self):
         return len(self.questions)

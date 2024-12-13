@@ -6,7 +6,6 @@
 """
 
 import os
-import logging
 import contextlib
 
 from omegaconf import OmegaConf
@@ -20,6 +19,7 @@ from peft import (
     prepare_model_for_int8_training,
 )
 
+import common
 from graphs.models.minigpt4.common.dist_utils import download_cached_file
 from graphs.models.minigpt4.common.utils import get_abs_path, is_url
 from graphs.models.minigpt4.models.eva_vit import create_eva_vit_g
@@ -60,8 +60,8 @@ class BaseModel(nn.Module):
 
         msg = self.load_state_dict(state_dict, strict=False)
 
-        logging.info("Missing keys {}".format(msg.missing_keys))
-        logging.info("load checkpoint from %s" % url_or_filename)
+        self.logger.info("Missing keys {}".format(msg.missing_keys))
+        self.logger.info("load checkpoint from %s" % url_or_filename)
 
         return msg
 
@@ -141,7 +141,7 @@ class BaseModel(nn.Module):
     def init_vision_encoder(
             cls, model_name, img_size, drop_path_rate, use_grad_checkpoint, precision, freeze
     ):
-        logging.info('Loading VIT')
+        self.logger.info('Loading VIT')
 
         assert model_name == "eva_clip_g", "vit model must be eva_clip_g for current version of MiniGPT-4"
         if not freeze:
@@ -162,14 +162,14 @@ class BaseModel(nn.Module):
                 param.requires_grad = False
             ln_vision = ln_vision.eval()
             ln_vision.train = disabled_train
-            logging.info("freeze vision encoder")
+            self.logger.info("freeze vision encoder")
 
-        logging.info('Loading VIT Done')
+        self.logger.info('Loading VIT Done')
         return visual_encoder, ln_vision
 
     def init_llm(cls, llama_model_path, low_resource=False, low_res_device=0, lora_r=0,
                  lora_target_modules=["q_proj", "v_proj"], **lora_kargs):
-        logging.info('Loading LLAMA')
+        self.logger.info('Loading LLAMA')
         llama_tokenizer = LlamaTokenizer.from_pretrained(llama_model_path, use_fast=False)
         llama_tokenizer.pad_token = "$$"
 
@@ -202,7 +202,7 @@ class BaseModel(nn.Module):
         else:
             for name, param in llama_model.named_parameters():
                 param.requires_grad = False
-        logging.info('Loading LLAMA Done')
+        self.logger.info('Loading LLAMA Done')
         return llama_model, llama_tokenizer
 
     def load_from_pretrained(self, url_or_filename):
@@ -220,10 +220,15 @@ class BaseModel(nn.Module):
 
         msg = self.load_state_dict(state_dict, strict=False)
 
-        # logging.info("Missing keys {}".format(msg.missing_keys))
-        logging.info("load checkpoint from %s" % url_or_filename)
+        # self.logger.info("Missing keys {}".format(msg.missing_keys))
+        self.logger.info("load checkpoint from %s" % url_or_filename)
 
         return msg
+
+    @property
+    def logger(self):
+        logger = common.registry.get_configuration_class("logger")
+        return logger
 
 
 def disabled_train(self, mode=True):
