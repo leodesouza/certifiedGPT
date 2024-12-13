@@ -4,6 +4,7 @@ channels:
   - pytorch
   - defaults
   - anaconda
+  - nvidia
 dependencies:
   - python=3.9
   - cudatoolkit=12.6.3  # Specify CUDA 12.0
