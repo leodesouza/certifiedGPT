@@ -1,5 +1,6 @@
 name: certifiedgpt
-channels:
+channels:    
+  - conda-forge
   - pytorch
   - defaults
   - anaconda
