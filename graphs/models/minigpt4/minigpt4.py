@@ -5,6 +5,8 @@ import random
 import torch
 from torch.cuda.amp import autocast as autocast
 import torch.nn as nn
+
+import common.registry
 from common.registry import registry
 from graphs.models.minigpt4.models.base_model import disabled_train
 from graphs.models.minigpt4.models.minigpt_base import MiniGPTBase
@@ -25,7 +27,7 @@ class MiniGPT4(MiniGPTBase):
     def __init__(
             self,
             vit_model="eva_clip_g",
-            q_former_model="https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP2/blip2_pretrained_flant5xxl.pth",
+            q_former_model="",
             img_size=224,
             drop_path_rate=0,
             use_grad_checkpoint=False,
@@ -42,6 +44,11 @@ class MiniGPT4(MiniGPTBase):
             low_resource=False,  # use 8 bit and put vit in cpu
             device_8bit=0,  # the device of 8bit model should be set when loading and cannot be changed anymore.
     ):
+        self.config = common.registry.registry.get_configuration_class("configuration")
+        blip_flant5_pth = self.config.model.blip_flant5_pth
+        logging.info(f'Reading blip flant5 path from configuration. Path: {blip_flant5_pth}')
+        q_former_model = blip_flant5_pth
+
         super().__init__(
             vit_model=vit_model,
             img_size=img_size,

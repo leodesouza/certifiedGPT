@@ -5,6 +5,7 @@
 # https://github.com/facebookresearch/deit/
 # https://github.com/facebookresearch/dino
 # --------------------------------------------------------'
+import logging
 import math
 from functools import partial
 
@@ -15,6 +16,7 @@ import torch.utils.checkpoint as checkpoint
 from timm.models.layers import drop_path, to_2tuple, trunc_normal_
 from timm.models.registry import register_model
 
+import common
 from graphs.models.minigpt4.common.dist_utils import download_cached_file
 
 
@@ -432,11 +434,18 @@ def create_eva_vit_g(img_size=224, drop_path_rate=0.4, use_checkpoint=False, pre
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
         use_checkpoint=use_checkpoint,
     )
-    url = "https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP2/eva_vit_g.pth"
-    cached_file = download_cached_file(
-        url, check_hash=False, progress=True
-    )
-    state_dict = torch.load(cached_file, map_location="cpu")
+    # url = "https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP2/eva_vit_g.pth"
+    # cached_file = download_cached_file(
+    #     url, check_hash=False, progress=True
+    # )
+
+    config = common.registry.get_configuration_class("configuration")
+    local_path = config.model.eva_vit_g_pth
+    logging.info(f"Reading eva_vit_g path from configuration path: {local_path}")
+
+    logging.info(f"Load vit g weights..")
+    state_dict = torch.load(local_path, map_location="cpu")
+
     interpolate_pos_embed(model, state_dict)
 
     incompatible_keys = model.load_state_dict(state_dict, strict=False)
