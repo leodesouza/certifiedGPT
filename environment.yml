@@ -3,11 +3,11 @@ channels:
   - conda-forge
   - pytorch
   - defaults
-  - anaconda
-  - nvidia
+  - anaconda  
+  - nvidia/label/cuda-12.1.0
 dependencies:
   - python=3.9
-  - cudatoolkit=12.1  # Specify CUDA 12.0
+  - cudatoolkit=12.1.0  # Specify CUDA 12.0
   - pip
   - pip:
     - torch==2.0.0
