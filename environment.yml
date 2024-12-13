@@ -3,14 +3,17 @@ channels:
   - conda-forge
   - pytorch
   - defaults
-  - anaconda    
+  - anaconda   
+  - nvidia
 dependencies:
-  - python=3.9  
+  - python=3.9
+  - pytorch==2.5.0
+  - torchvision==0.20.0
+  - torchaudio==2.5.0
+  - pytorch-cuda=12.4
   - pip
   - pip:
-    - torch==2.0.0+cu120
-    - torchaudio
-    - torchvision
+    - torch==2.20.0        
     - huggingface-hub==0.18.0
     - matplotlib==3.7.0
     - psutil==5.9.4
