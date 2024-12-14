@@ -12,8 +12,7 @@ dependencies:
   - torchaudio==2.5.0
   - pytorch-cuda=12.4
   - pip
-  - pip:
-    - torch==2.20.0        
+  - pip:    
     - huggingface-hub==0.18.0
     - matplotlib==3.7.0
     - psutil==5.9.4
