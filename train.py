@@ -3,11 +3,13 @@
 # Portions of this file are derived from the "MiniGPT-4" project.
 # See LICENSE.md for the full license text or visit the repo at:
 # https://github.com/Vision-CAIR/MiniGPT-4
-#
-
+#    
 import logging
 import argparse
+
 import os
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
 import random
 import sys
 
@@ -76,9 +78,7 @@ def register_variables():
 
 
 def main():
-    
-    os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
-    
+
     setup_logger()
     args = parse_args()
     config = Config(args)
