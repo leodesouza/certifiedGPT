@@ -76,6 +76,9 @@ def register_variables():
 
 
 def main():
+    
+    os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+    
     setup_logger()
     args = parse_args()
     config = Config(args)
