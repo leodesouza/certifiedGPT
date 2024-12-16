@@ -1,8 +1,3 @@
- # Copyright (c) 2022, salesforce.com, inc.
- # All rights reserved.
- # SPDX-License-Identifier: BSD-3-Clause
- # For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
-
 datasets:
   coco_vqa:
     data_type: images # [images|videos|features]
@@ -10,27 +5,25 @@ datasets:
       questions:
         train:
           path:
-              - ${env:DATA_DIR}/questions/train/v2_OpenEnded_mscoco_train2014_questions.json
+              - ${env:DATA_DIR}\\questions\\train\\v2_OpenEnded_mscoco_train2014_questions.json
         val:
           path:
-              - ${env:DATA_DIR}/questions/val/v2_OpenEnded_mscoco_val2014_questions.json
+              - ${env:DATA_DIR}\\questions\\val\\v2_OpenEnded_mscoco_val2014_questions.json
       annotations:
         train:
           path:
-               - ${env:DATA_DIR}/annotations/train/sample_v2_mscoco_train2014_annotations.json
-               # - ${env:DATA_DIR}/annotations/train/v2_mscoco_train2014_annotations.json
+               - ${env:DATA_DIR}\\annotations\\train\\sample_v2_mscoco_train2014_annotations.json
+               # - ${env:DATA_DIR}\\annotations\\train\\v2_mscoco_train2014_annotations.json
         val:
           path:
-               - ${env:DATA_DIR}/annotations/val/sample_v2_mscoco_val2014_annotations.json
-              #  - ${env:DATA_DIR}/annotations/val/v2_mscoco_val2014_annotations.json
+               - ${env:DATA_DIR}\\annotations\\val\\sample_v2_mscoco_val2014_annotations.json
+               # - ${env:DATA_DIR}\\annotations\\val\\v2_mscoco_val2014_annotations.json
       images:
         train:
           path:
-               - ${env:DATA_DIR}/images/sample/train
-            #- ${env:DATA_DIR}/images/train2014/all
+               - ${env:DATA_DIR}\\images\\sample\\train
+            # - ${env:DATA_DIR}\\images\\train2014\\all
         val:
           path:
-               - ${env:DATA_DIR}/images/sample/val
-            #- ${env:DATA_DIR}/images/val2014
-
-  
+               - ${env:DATA_DIR}\\images\\sample\\val
+            # - ${env:DATA_DIR}\\images\\val2014

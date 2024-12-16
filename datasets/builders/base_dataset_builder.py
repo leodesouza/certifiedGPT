@@ -4,7 +4,7 @@
 # See LICENSE.md for the full license text or visit the repo at:
 # https://github.com/Vision-CAIR/MiniGPT-4
 #
-
+from pathlib import Path
 
 from omegaconf import OmegaConf
 import common
@@ -73,7 +73,7 @@ class BaseDatasetBuilder:
 
             questions_path = questions_info.get(dataset_info).path
             annotation_paths = annotations_info.get(dataset_info).path
-            vis_paths = images_info.get(dataset_info).path[0]
+            vis_paths = Path(images_info.get(dataset_info).path[0])
 
             dataset_cls = self.train_datasets_cls if is_train else self.eval_datasets_cls
             datasets[dataset_info] = dataset_cls(
@@ -107,5 +107,5 @@ class BaseDatasetBuilder:
 
     @property
     def logger(self):
-        logger = common.registry.get_configuration_class("logger")
+        logger = registry.get_configuration_class("logger")
         return logger

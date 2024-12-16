@@ -83,6 +83,7 @@ class BaseAgent:
     @property
     def model(self):
         if self._model.device != self._device:
+            self.logger.info(f"Set model to device: {self.device}")
             self._model = self._model.to(self.device)
         return self._model
 

@@ -31,7 +31,7 @@ def plot_losses(losses):
 class MiniGPT4FineTuneAgent(BaseAgent):
     def __init__(self):
         super().__init__()
-        self.start_epoch = 1
+        self.start_epoch = 0
         self.max_epoch = self.config.run.max_epoch
         self._model = self.build_model()
         self._start_epoch = 0
@@ -53,9 +53,6 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             if not self.config.run.evaluate_only and self.config.run.resume_ckpt_path is not None:
                 self.logger.info(f"Loading the checkpoint from path: {self.config.run.resume_ckpt_path}")
                 self.load_checkpoint(self.config.run.resume_ckpt_path)
-
-            self.logger.info(f"Set model to device: {self.device}")
-            self.model = self.model.to(self.device)
 
             self.logger.info("Creating the dataloaders")
             self._dataloaders = self.create_dataloaders()
@@ -107,7 +104,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             self._optimizer.zero_grad()
 
             image_features = batch_sample["image"].to(self.device)
-            question = batch_sample["question"].to(self.device)
+            question = batch_sample["question_id"].to(self.device)
+            # question = batch_sample["instruction"].to(self.device)
+
             answer = batch_sample["answer"].to(self.device)
 
             with torch.cuda.amp.autocast(enabled=self.config.run.amp):
@@ -159,7 +158,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         Finalize all operations and dataloaders
         :return:
         """
-        raise NotImplementedError
+        # raise NotImplementedError
 
     @property
     def device(self):
@@ -225,7 +224,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         return torch.optim.AdamW(
             self.model.parameters(),
             lr=float(self.config.run.init_lr),
-            weight_decay=float(self.config.run),
+            weight_decay=float(self.config.run.weight_decay),
             betas=(beta1, beta2)
         )
 

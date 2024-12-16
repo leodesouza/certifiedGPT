@@ -4,7 +4,8 @@ model:
   end_sym: "###"
   prompt_path: "prompts/alignment.txt"
   prompt_template: '###Human: {} ###Assistant: '
-  ckpt: '/path/to/stage1/checkpoint/'
+#  ckpt: '/path/to/stage1/checkpoint/'
+  ckpt: null
 
   drop_path_rate: 0
   use_grad_checkpoint: false
@@ -12,6 +13,7 @@ model:
   freeze_vit: true
   has_qformer: true
   freeze_qformer: true
+  num_query_token: 32
   low_resource: true
   device_8bit: 0
   

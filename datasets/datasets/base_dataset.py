@@ -10,7 +10,7 @@ import random
 from torch.utils.data import Dataset
 from torch.utils.data.dataloader import default_collate
 
-import common
+from common.registry import  registry
 
 
 class BaseDataset(Dataset):
@@ -45,7 +45,7 @@ class BaseDataset(Dataset):
 
     @property
     def logger(self):
-        logger = common.registry.get_configuration_class("logger")
+        logger = registry.get_configuration_class("logger")
         return logger
 
     def __len__(self):

@@ -6,6 +6,7 @@
 #
 import os
 import random
+from pathlib import Path
 
 from datasets.datasets.base_dataset import BaseDataset
 from PIL import Image
@@ -86,6 +87,7 @@ class VQAv2Dataset(BaseDataset):
         weights = list(answer_weights.values())
         anwser = random.choices(answers, weights=weights, k=1)
         anwser = anwser[0]
+        anwser = self.text_processor(anwser)
 
         return {
             "image": image,
@@ -102,8 +104,9 @@ class VQAv2Dataset(BaseDataset):
         return {
             "image": data['image'],
             "instruction": instruction,
+            "question": data['question'],
             "question_id": data['question_id'],
-            "answer": self.text_processor(data['answer'])
+            "answer": data['answer']
         }
 
     @property
