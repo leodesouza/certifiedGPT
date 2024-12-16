@@ -142,7 +142,7 @@ class BaseModel(nn.Module):
     def init_vision_encoder(
             cls, model_name, img_size, drop_path_rate, use_grad_checkpoint, precision, freeze
     ):
-        logging = common.registry.get_configuration_class("logger")
+        logging = registry.get_configuration_class("logger")
         try:
             logging.info('Loading VIT')
 
