@@ -106,7 +106,7 @@ class BaseAgent:
 
     @property
     def logger(self):
-        logger = common.registry.get_configuration_class("logger")
+        logger = registry.get_configuration_class("logger")
         return logger
 
 
