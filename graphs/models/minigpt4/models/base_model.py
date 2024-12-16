@@ -24,6 +24,7 @@ from graphs.models.minigpt4.common.dist_utils import download_cached_file
 from graphs.models.minigpt4.common.utils import get_abs_path, is_url
 from graphs.models.minigpt4.models.eva_vit import create_eva_vit_g
 from graphs.models.minigpt4.models.modeling_llama import LlamaForCausalLM
+from common.registry import registry
 
 
 class BaseModel(nn.Module):
