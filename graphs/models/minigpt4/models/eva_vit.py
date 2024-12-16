@@ -18,6 +18,7 @@ from timm.models.registry import register_model
 
 import common
 from graphs.models.minigpt4.common.dist_utils import download_cached_file
+from common.registry import registry
 
 
 def _cfg(url='', **kwargs):
@@ -439,7 +440,7 @@ def create_eva_vit_g(img_size=224, drop_path_rate=0.4, use_checkpoint=False, pre
     #     url, check_hash=False, progress=True
     # )
 
-    config = common.registry.get_configuration_class("configuration")
+    config = registry.get_configuration_class("configuration")
     local_path = config.model.eva_vit_g_pth
     logging.info(f"Reading eva_vit_g path from configuration path: {local_path}")
 
