@@ -175,7 +175,7 @@ class BaseModel(nn.Module):
     def init_llm(cls, llama_model_path, low_resource=False, low_res_device=0, lora_r=0,
                  lora_target_modules=["q_proj", "v_proj"], **lora_kargs):
 
-        logging = common.registry.get_configuration_class("logger")
+        logging = registry.get_configuration_class("logger")
 
         logging.info("Start loading the pretrained LLM")
         try:
@@ -244,7 +244,7 @@ class BaseModel(nn.Module):
 
     @property
     def logger(self):
-        logger = common.registry.get_configuration_class("logger")
+        logger = registry.get_configuration_class("logger")
         return logger
 
 
