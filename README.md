@@ -1,4 +1,4 @@
-# CertifiedGPT
+# CertifiedGPT: Adversarial Robustness of Vision And Language Models Against Targeted Black Box Attacks
 
 ## License
 This repository is under [BSD 3-Clause License](LICENSE.md).
