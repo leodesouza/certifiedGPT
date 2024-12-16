@@ -2,9 +2,9 @@
 
 This repository contains the code and trained models developed for my master's dissertation, **Adversarial Robustness of Vision and Language Models Against Targeted Black Box Attacks**, under the supervision of **Pedro Nuno de Souza Moura** and **Maíra Gatti de Bayser** from the **Universidade Federal do Estado do Rio de Janeiro (UNIRIO)**.
 
-The work is inspired by and builds upon concepts from the paper *Certified Adversarial Robustness via Randomized Smoothing* by Jeremy Cohen, Elan Rosenfeld, and Zico Kolter.
+The work is inspired by and builds upon concepts from the paper [*Certified Adversarial Robustness via Randomized Smoothing*](https://arxiv.org/pdf/1902.02918) by Jeremy Cohen, Elan Rosenfeld, and Zico Kolter.
 
-## Introduction
+
 ...
 ## License
 This repository is under [BSD 3-Clause License](LICENSE.md).
