@@ -7,10 +7,12 @@
 import os
 import random
 from pathlib import Path
-
 from datasets.datasets.base_dataset import BaseDataset
 from PIL import Image
 from common.registry import registry
+
+from transformers import AutoTokenizer
+
 
 
 class VQAv2Dataset(BaseDataset):
@@ -21,7 +23,7 @@ class VQAv2Dataset(BaseDataset):
             vis_paths=vis_paths,
             annotation_paths=annotation_paths
         )
-
+        self._tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
         self.instruction_template = [
             "[vqa] {}",
             "[vqa] Based on the image, respond to this question with a short answer: {}"
@@ -103,15 +105,21 @@ class VQAv2Dataset(BaseDataset):
 
         return {
             "image": data['image'],
-            "instruction": instruction,
-            "question": data['question'],
-            "question_id": data['question_id'],
-            "answer": data['answer']
+            "question_id": data["question_id"],
+            "instruction_input": instruction,
+            "answer": data['answer'],
         }
 
     @property
     def split_name(self):
         return self.split
+
+    def tokenize(self, x):
+        return self._tokenizer(x,
+                      padding="max_length",
+                      truncation=True,
+                      max_length=512,
+                      return_tensors="pt")["input_ids"].squeeze(0)
 
 
 class VQAv2EvalDataset(BaseDataset):

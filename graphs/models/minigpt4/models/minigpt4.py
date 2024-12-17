@@ -122,7 +122,8 @@ class MiniGPT4(MiniGPTBase):
             image = image.reshape(-1, *image.shape[-3:])
 
         with self.maybe_autocast():
-            image_embeds = self.ln_vision(self.visual_encoder(image)).to(device)
+            encoder = self.visual_encoder(image)
+            image_embeds = self.ln_vision(encoder).to(device)
             if self.has_qformer:
                 image_atts = torch.ones(image_embeds.size()[:-1], dtype=torch.long).to(device)
 

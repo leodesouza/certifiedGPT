@@ -14,7 +14,6 @@ from graphs.losses.cross_entropy_loss import CrossEntropyLoss
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-
 def plot_losses(losses):
     fig = plt.figure(figsize=(13, 5))
     ax = fig.gca()
@@ -92,6 +91,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         except Exception as e:
             self.logger.error(f'Error on runing the agent. Details: {e}')
 
+
     def train(self, epoch):
         train_loader = self._dataloaders["train"]
         if len(train_loader) == 0:
@@ -103,16 +103,14 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         for batch_sample in tqdm(train_loader, desc=f"Training epoch {epoch}"):
             self._optimizer.zero_grad()
 
-            image_features = batch_sample["image"].to(self.device)
-            question = batch_sample["question_id"].to(self.device)
-            # question = batch_sample["instruction"].to(self.device)
-            self.logger.info('reading batch_sample["answer"] ')
-            self.logger.info(batch_sample["answer"])
-            answer = batch_sample["answer"].to(self.device)
+            # batch = {key: value.to(self.device) for key, value in batch_sample.items()}
+            batch_sample["image"] = batch_sample["image"].to(self.device)
+            # question = batch_sample["instruction_input"].to(self.device)
+            # answer = batch_sample["answer"].to(self.device)
 
             with torch.cuda.amp.autocast(enabled=self.config.run.amp):
-                pred = self.model(image_features, question)
-                loss = self.compute_loss(pred, answer)
+                loss = self.model(batch_sample)['loss']
+                # loss = self.compute_loss(pred, answer)
 
             if self.config.run.amp:
                 self.scaler.scale(loss).backward()
