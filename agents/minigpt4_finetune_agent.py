@@ -17,8 +17,10 @@ import matplotlib.pyplot as plt
 def plot_losses(losses):
     fig = plt.figure(figsize=(13, 5))
     ax = fig.gca()
-    for loss_name, loss_values in losses.item():
+
+    for loss_name, loss_values in losses.items():
         ax.plot(loss_values, label=loss_name)
+
     ax.legend(fontsize=16)
     ax.set_xlabel("Iteration", fontsize="16")
     ax.set_ylabel("Loss", fontsize="16")
@@ -103,14 +105,10 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         for batch_sample in tqdm(train_loader, desc=f"Training epoch {epoch}"):
             self._optimizer.zero_grad()
 
-            # batch = {key: value.to(self.device) for key, value in batch_sample.items()}
             batch_sample["image"] = batch_sample["image"].to(self.device)
-            # question = batch_sample["instruction_input"].to(self.device)
-            # answer = batch_sample["answer"].to(self.device)
-
             with torch.cuda.amp.autocast(enabled=self.config.run.amp):
-                loss = self.model(batch_sample)['loss']
-                # loss = self.compute_loss(pred, answer)
+                outputs = self.model(batch_sample)
+                loss = outputs['loss']
 
             if self.config.run.amp:
                 self.scaler.scale(loss).backward()
@@ -135,13 +133,14 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self.model.eval()
 
         for batch_sample in tqdm(val_loader, desc=f"Evaluating epoch {epoch}"):
-            image_features = batch_sample["image"].to(self.device)
-            question = batch_sample["question"].to(self.device)
-            answer = batch_sample["answer"].to(self.device)
+
+            batch_sample["image"] = batch_sample["image"].to(self.device)
 
             with torch.cuda.amp.autocast(enabled=self.config.run.amp):
-                pred = self.model(image_features, question)
-                loss = self.compute_loss(pred, answer)
+                outputs = self.model(batch_sample)
+                # loss = self.compute_loss(pred, answer)
+                loss = outputs['loss']
+
             running_eval_loss += loss.item()
 
         return running_eval_loss / len(val_loader)
