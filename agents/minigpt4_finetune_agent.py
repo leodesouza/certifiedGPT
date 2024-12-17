@@ -22,9 +22,9 @@ def plot_losses(losses):
         ax.plot(loss_values, label=loss_name)
 
     ax.legend(fontsize=16)
-    ax.set_xlabel("Iteration", fontsize="16")
-    ax.set_ylabel("Loss", fontsize="16")
-    ax.set_title("Loss vs iterations", fontsize="16")
+    ax.set_xlabel("Iteration", fontsize=16)
+    ax.set_ylabel("Loss", fontsize=16)
+    ax.set_title("Loss vs iterations", fontsize=16)
     plt.savefig("vqa_plot_training.png")
 
 
