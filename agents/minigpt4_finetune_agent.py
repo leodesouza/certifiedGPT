@@ -106,7 +106,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             image_features = batch_sample["image"].to(self.device)
             question = batch_sample["question_id"].to(self.device)
             # question = batch_sample["instruction"].to(self.device)
-
+            self.logger.info('reading batch_sample["answer"] ')
+            self.logger.info(batch_sample["answer"])
             answer = batch_sample["answer"].to(self.device)
 
             with torch.cuda.amp.autocast(enabled=self.config.run.amp):
