@@ -85,15 +85,15 @@ class VQAv2Dataset(BaseDataset):
 
         answers = list(answer_weights.keys())
         weights = list(answer_weights.values())
-        anwser = random.choices(answers, weights=weights, k=1)
-        anwser = anwser[0]
-        anwser = self.text_processor(anwser)
+        answer = random.choices(answers, weights=weights, k=1)
+        answer = answer[0]
+        answer = self.text_processor(answer)
 
         return {
             "image": image,
             "question": question,
             "question_id": question_id,
-            "answer": anwser
+            "answer": answer
         }
 
     def __getitem__(self, index):
