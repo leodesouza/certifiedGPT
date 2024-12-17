@@ -4,6 +4,10 @@ This repository contains the code for CertifiedGPT, a strategy to improve the **
 
 The work is inspired by and builds upon concepts from the paper [*Certified Adversarial Robustness via Randomized Smoothing*](https://arxiv.org/pdf/1902.02918) by Jeremy Cohen, Elan Rosenfeld, and Zico Kolter.
 
+The work is inspired by and builds upon concepts from the paper [*Certified Adversarial Robustness via Randomized Smoothing*](https://arxiv.org/pdf/1902.02918) by Jeremy Cohen, Elan Rosenfeld, and Zico Kolter.
+
+
+https://arxiv.org/pdf/2310.04655
 
 ...
 ## License
