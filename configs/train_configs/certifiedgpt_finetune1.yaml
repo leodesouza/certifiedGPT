@@ -41,7 +41,7 @@ datasets:
 
 run:
   agent: image_text_finetune
-  max_epoch: 10
+  max_epoch: 1
   num_workers: 1
   warmup_steps: 5000
   iters_per_epoch: 5000
