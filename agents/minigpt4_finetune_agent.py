@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 def plot_losses(losses):
     fig = plt.figure(figsize=(13, 5))
     ax = fig.gca()
-    print(f"losses -> {losses}")
+
     for loss_name, loss_values in losses.items():
         ax.plot(loss_values, label=loss_name)
 
