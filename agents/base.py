@@ -90,7 +90,7 @@ class BaseAgent:
     def scaler(self):
         amp = self.config.run.amp
         if amp:
-            self._scaler = torch.cuda.amp.GradScaler()
+            self._scaler = torch.amp.GradScaler()
         return self.scaler
 
     @classmethod

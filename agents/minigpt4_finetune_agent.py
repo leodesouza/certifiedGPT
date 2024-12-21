@@ -84,11 +84,12 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 val_losses.append(val_loss)
                 self.logger.info(f"Evaluation: epoch {epoch}. Evaluation loss: {val_loss}")
 
+                losses = {"Train loss": train_losses, "Val loss": val_losses}
+                plot_losses(losses)
+
             elapsed_time = time.time() - start_time
             self.logger.info(f"Finished the training loop in {elapsed_time:.2f}")
 
-            losses = {"Train loss": train_losses, "Val loss": val_losses}
-            plot_losses(losses)
 
         except Exception as e:
             self.logger.error(f'Error on runing the agent. Details: {e}')
@@ -106,16 +107,20 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             self._optimizer.zero_grad()
 
             batch_sample["image"] = batch_sample["image"].to(self.device)
-            with torch.cuda.amp.autocast(enabled=self.config.run.amp):
+            with torch.amp.autocast('cuda',enabled=self.config.run.amp):
                 outputs = self.model(batch_sample)
                 loss = outputs['loss']
 
+                assert torch.isfinite(loss).item(), "Loss is NaN or Inf."
+
             if self.config.run.amp:
                 self.scaler.scale(loss).backward()
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0) # prevent exploding gradients
                 self.scaler.step(self._optimizer)
                 self.scaler.update()
             else:
                 loss.backward()
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)  # prevent exploding gradients
                 self._optimizer.step()
 
             running_loss += loss.item()
