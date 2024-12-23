@@ -23,7 +23,7 @@ model:
 
 datasets:
   vqav2:
-    batch_size: 10
+    batch_size: 1
     sample_size: 0 # if equals 0, all databset will be loaded
     vis_processor:
       train:
