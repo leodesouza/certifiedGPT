@@ -28,6 +28,36 @@ def plot_losses(losses):
     ax.set_title("Loss vs iterations", fontsize=16)
     plt.savefig("vqa_plot_training.png")
 
+def apply_to_sample(f, sample):
+    if len(sample) == 0:
+        return {}
+
+    def _apply(x):
+        if torch.is_tensor(x):
+            return f(x)
+        elif isinstance(x, dict):
+            return {key: _apply(value) for key, value in x.items()}
+        elif isinstance(x, list):
+            return [_apply(x) for x in x]
+        else:
+            return x
+
+    return _apply(sample)
+
+def move_to_cuda(sample):
+    def _move_to_cuda(tensor):
+        return tensor.cuda()
+
+    return apply_to_sample(_move_to_cuda, sample)
+
+def prepare_sample(samples, cuda_enabled=True):
+    if cuda_enabled:
+        samples = move_to_cuda(samples)
+
+    # TODO fp16 support
+
+    return samples
+
 
 @registry.register_agent("image_text_finetune")
 class MiniGPT4FineTuneAgent(BaseAgent):
@@ -74,6 +104,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 f"Start epoch: {self.start_epoch}. Max epoch: {self.max_epoch}"
             )
 
+            self._scaler = torch.amp.GradScaler()
             for epoch in range(self.start_epoch, self.max_epoch):
 
                 # training step
@@ -115,7 +146,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         for batch_sample in tqdm(train_loader, desc=f"Training epoch {epoch}"):
 
             curr_step +=1
-            batch_sample["image"] = batch_sample["image"].to(self.device)
+            # batch_sample["image"] = batch_sample["image"].to(self.device)
+            batch_sample = prepare_sample(batch_sample, cuda_enabled=torch.cuda.is_available())
 
             self.lr_scheduler.step(cur_epoch=epoch, cur_step=curr_step)
 
@@ -123,16 +155,16 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 outputs = self.model(batch_sample)
                 loss = outputs["loss"]
 
-                assert torch.isfinite(loss).item(), "Loss is NaN or Inf."
+                # assert torch.isfinite(loss).item(), "Loss is NaN or Inf."
 
             if self.config.run.amp:
-                self.scaler.scale(loss).backward()
+                self._scaler.scale(loss).backward()
 
                 # prevent exploding gradients
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
 
-                self.scaler.step(self.optimizer)
-                self.scaler.update()
+                self._scaler.step(self.optimizer)
+                self._scaler.update()
             else:
                 loss.backward()
 

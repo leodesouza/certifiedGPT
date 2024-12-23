@@ -90,12 +90,12 @@ class BaseAgent:
             self._model = self._model.to(self.device)
         return self._model
 
-    @property
-    def scaler(self):
-        amp = self.config.run.amp
-        if amp:
-            self._scaler = torch.amp.GradScaler()
-        return self.scaler
+    # @property
+    # def scaler(self):
+    #     amp = self.config.run.amp
+    #     if amp:
+    #         self._scaler = torch.amp.GradScaler()
+    #     return self.scaler
 
     @classmethod
     def setup_agent(cls, **kwargs):

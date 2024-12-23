@@ -411,3 +411,5 @@ class MiniGPTBase(BaseModel):
                 all_losses[i, num_cand[i]:] = 9999
         output_class_ranks = torch.argsort(all_losses, dim=-1)
         return output_class_ranks.tolist()
+
+
