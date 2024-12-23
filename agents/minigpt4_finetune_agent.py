@@ -156,6 +156,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 loss = outputs["loss"]
 
                 # assert torch.isfinite(loss).item(), "Loss is NaN or Inf."
+                if not torch.isfinite(loss).item():
+                    print(f"Skipping iteration due to NaN or Inf loss: {loss.item()}")
+                    continue
 
             if self.config.run.amp:
                 self._scaler.scale(loss).backward()
