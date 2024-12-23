@@ -150,13 +150,13 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             batch_sample = prepare_sample(batch_sample, cuda_enabled=torch.cuda.is_available())
 
             if torch.isnan(batch_sample["image"]).any():
-                print("NaN detected in image data")
-                
-            if torch.isnan(batch_sample["instruction_input"]).any():
-                print("NaN detected in instruction_input data")
+                print("NaN detected in image data")                     
 
-            if torch.isnan(batch_sample["answer"]).any():
-                print("NaN detected in answer data")
+            if batch_sample["instruction_input"] is None or len(batch_sample["instruction_input"]) == 0:
+                print("Invalid or empty instruction_input detected")
+    
+            if batch_sample["answer"] is None or len(batch_sample["answer"]) == 0:
+                print("Invalid or empty answer detected")
                 
 
             self.lr_scheduler.step(cur_epoch=epoch, cur_step=curr_step)
