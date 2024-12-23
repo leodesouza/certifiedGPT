@@ -9,6 +9,8 @@ import argparse
 
 import os
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:0"
+
 
 import random
 import sys
@@ -30,6 +32,9 @@ from processors import blip_processors
 
 # register models
 from graphs.models import *
+
+# register optimizer and learning rate scheduler
+from graphs.models.minigpt4.common.optims import *
 
 
 def parse_args():

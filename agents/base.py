@@ -14,10 +14,13 @@ from common.registry import registry
 
 class BaseAgent:
     def __init__(self):
+        self.lr_sched = None
+        self._optimizer = None
         self._scaler = None
         self._model = None
         self._device = None
         self.config = registry.get_configuration_class("configuration")
+        self._dataloaders = None
 
     def load_checkpoint(self, file_name):
         """
@@ -123,15 +126,15 @@ class BaseAgent:
             optim_params = [
                 {
                     "params": p_wd,
-                    "weight_decay": float(self.config.run_cfg.weight_decay),
+                    "weight_decay": float(self.config.run.weight_decay),
                 },
                 {"params": p_non_wd, "weight_decay": 0},
             ]
-            beta2 = self.config.run_cfg.get("beta2", 0.999)
+            beta2 = self.config.run.get("beta2", 0.999)
             self._optimizer = torch.optim.AdamW(
                 optim_params,
-                lr=float(self.config.run_cfg.init_lr),
-                weight_decay=float(self.config.run_cfg.weight_decay),
+                lr=float(self.config.run.init_lr),
+                weight_decay=float(self.config.run.weight_decay),
                 betas=(0.9, beta2),
             )
 
@@ -142,26 +145,26 @@ class BaseAgent:
         """
         A property to get and create learning rate scheduler by split just in need.
         """
-        if self._lr_sched is None:
-            lr_sched_cls = registry.get_lr_scheduler_class(self.config.run_cfg.lr_sched)
+        if self.lr_sched is None:
+            lr_sched_cls = registry.get_lr_scheduler_class(self.config.run.lr_sched)
 
-            max_epoch = self.max_epoch
-            min_lr = self.min_lr
-            init_lr = self.init_lr
+            max_epoch = self.config.run.max_epoch
+            min_lr = self.config.run.min_lr
+            init_lr = self.config.run.init_lr
 
             # optional parameters
-            decay_rate = self.config.run_cfg.get("lr_decay_rate", None)
-            warmup_start_lr = self.config.run_cfg.get("warmup_lr", -1)
-            warmup_steps = self.config.run_cfg.get("warmup_steps", 0)
-            iters_per_epoch = self.config.run_cfg.get("iters_per_epoch", None)
+            decay_rate = self.config.run.get("lr_decay_rate", None)
+            warmup_start_lr = self.config.run.get("warmup_lr", -1)
+            warmup_steps = self.config.run.get("warmup_steps", 0)
+            iters_per_epoch = self.config.run.get("iters_per_epoch", None)
 
             if iters_per_epoch is None:
                 try:
-                    iters_per_epoch = len(self.dataloaders["train"])
+                    iters_per_epoch = len(self._dataloaders["train"])
                 except (AttributeError, TypeError):
                     iters_per_epoch = 10000
 
-            self._lr_sched = lr_sched_cls(
+            self.lr_sched = lr_sched_cls(
                 optimizer=self.optimizer,
                 max_epoch=max_epoch,
                 iters_per_epoch=iters_per_epoch,
@@ -172,7 +175,7 @@ class BaseAgent:
                 warmup_steps=warmup_steps,
             )
 
-        return self._lr_sched
+        return self.lr_sched
 
     @property
     def logger(self):

@@ -37,8 +37,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self.max_epoch = self.config.run.max_epoch
         self._model = self.build_model()
         self._start_epoch = 0
-        self._optimizer = self.create_optimizer()
-        self._dataloaders = None
+        # self._optimizer = self.create_optimizer()
         self._scaler = None
         self.compute_loss = CrossEntropyLoss()
 
@@ -111,12 +110,14 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         self.model.train()
         running_loss = 0.0
+        curr_step = 0
 
-        for i, batch_sample in tqdm(train_loader, desc=f"Training epoch {epoch}"):
+        for batch_sample in tqdm(train_loader, desc=f"Training epoch {epoch}"):
 
+            curr_step +=1
             batch_sample["image"] = batch_sample["image"].to(self.device)
 
-            self.lr_scheduler.step(cur_epoch=epoch, cur_step=i)
+            self.lr_scheduler.step(cur_epoch=epoch, cur_step=curr_step)
 
             with torch.amp.autocast("cuda", enabled=self.config.run.amp):
                 outputs = self.model(batch_sample)
