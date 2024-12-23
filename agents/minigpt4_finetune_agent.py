@@ -113,7 +113,6 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         running_loss = 0.0
 
         for i, batch_sample in tqdm(train_loader, desc=f"Training epoch {epoch}"):
-            self._optimizer.zero_grad()
 
             batch_sample["image"] = batch_sample["image"].to(self.device)
 
@@ -127,17 +126,20 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
             if self.config.run.amp:
                 self.scaler.scale(loss).backward()
-                torch.nn.utils.clip_grad_norm_(
-                    self.model.parameters(), max_norm=1.0
-                )  # prevent exploding gradients
-                self.scaler.step(self._optimizer)
+
+                # prevent exploding gradients
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+
+                self.scaler.step(self.optimizer)
                 self.scaler.update()
             else:
                 loss.backward()
-                torch.nn.utils.clip_grad_norm_(
-                    self.model.parameters(), max_norm=1.0
-                )  # prevent exploding gradients
-                self._optimizer.step()
+
+                # prevent exploding gradients
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+
+                self.optimizer.step()
+            self.optimizer.zero_grad()
 
             running_loss += loss.item()
 
