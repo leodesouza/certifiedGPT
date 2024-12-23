@@ -14,7 +14,8 @@ class Registry:
         "model_name_mapping": {},
         "state": {},
         "paths": {},
-        "agent_name_mapping": {}
+        "agent_name_mapping": {},
+        "lr_scheduler_name_mapping": {},
     }
 
     @classmethod
@@ -160,6 +161,30 @@ class Registry:
         return wrap
 
     @classmethod
+    def register_lr_scheduler(cls, name):
+        r"""Register a learning scheduler to registry with key 'name'
+
+        Args:
+            name: Key with which the task will be registered.
+
+        Usage:
+
+            from minigpt4.common.registry import registry
+        """
+
+        def wrap(lr_sched_cls):
+            if name in cls.mapping["lr_scheduler_name_mapping"]:
+                raise KeyError(
+                    "Name '{}' already registered for {}.".format(
+                        name, cls.mapping["lr_scheduler_name_mapping"][name]
+                    )
+                )
+            cls.mapping["lr_scheduler_name_mapping"][name] = lr_sched_cls
+            return lr_sched_cls
+
+        return wrap
+
+    @classmethod
     def get_model_class(cls, name):
         return cls.mapping["model_name_mapping"].get(name, None)
 
@@ -207,6 +232,10 @@ class Registry:
         return cls.mapping["paths"].get(name, None)
 
     @classmethod
+    def get_lr_scheduler_class(cls, name):
+        return cls.mapping["lr_scheduler_name_mapping"].get(name, None)
+
+    @classmethod
     def get(cls, name, default=None, no_warning=False):
         r"""Get an item from registry with key 'name'
 
@@ -227,9 +256,9 @@ class Registry:
                 break
 
         if (
-                "writer" in cls.mapping["state"]
-                and value == default
-                and no_warning is False
+            "writer" in cls.mapping["state"]
+            and value == default
+            and no_warning is False
         ):
             cls.mapping["state"]["writer"].warning(
                 "Key {} is not present in registry, returning default value "

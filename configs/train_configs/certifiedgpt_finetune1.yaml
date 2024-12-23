@@ -42,9 +42,13 @@ run:
   agent: image_text_finetune
   max_epoch: 2
   num_workers: 1
+  
+  lr_sched: "linear_warmup_cosine_lr"
+  init_lr: 1e-5
+  min_lr: 1e-6
+  warmup_lr: 1e-6
   warmup_steps: 5000
   iters_per_epoch: 5000
-  init_lr: 1e-2
   weight_decay: 0.05
   beta1: 0.9
   beta2: 0.999

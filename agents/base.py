@@ -48,6 +48,7 @@ class BaseAgent:
         Main training loop
         :return:
         """
+
     def train(self, epoch):
         """
         train a specific epoch
@@ -105,9 +106,75 @@ class BaseAgent:
         return NotImplementedError()
 
     @property
+    def optimizer(self):
+        if self._optimizer is None:
+            num_parameters = 0
+            p_wd, p_non_wd = [], []
+            for n, p in self.model.named_parameters():
+                if not p.requires_grad:
+                    continue  # frozen weights
+                print(n)
+                if p.ndim < 2 or "bias" in n or "ln" in n or "bn" in n:
+                    p_non_wd.append(p)
+                else:
+                    p_wd.append(p)
+                num_parameters += p.data.nelement()
+            self.logger.info("number of trainable parameters: %d" % num_parameters)
+            optim_params = [
+                {
+                    "params": p_wd,
+                    "weight_decay": float(self.config.run_cfg.weight_decay),
+                },
+                {"params": p_non_wd, "weight_decay": 0},
+            ]
+            beta2 = self.config.run_cfg.get("beta2", 0.999)
+            self._optimizer = torch.optim.AdamW(
+                optim_params,
+                lr=float(self.config.run_cfg.init_lr),
+                weight_decay=float(self.config.run_cfg.weight_decay),
+                betas=(0.9, beta2),
+            )
+
+        return self._optimizer
+
+    @property
+    def lr_scheduler(self):
+        """
+        A property to get and create learning rate scheduler by split just in need.
+        """
+        if self._lr_sched is None:
+            lr_sched_cls = registry.get_lr_scheduler_class(self.config.run_cfg.lr_sched)
+
+            max_epoch = self.max_epoch
+            min_lr = self.min_lr
+            init_lr = self.init_lr
+
+            # optional parameters
+            decay_rate = self.config.run_cfg.get("lr_decay_rate", None)
+            warmup_start_lr = self.config.run_cfg.get("warmup_lr", -1)
+            warmup_steps = self.config.run_cfg.get("warmup_steps", 0)
+            iters_per_epoch = self.config.run_cfg.get("iters_per_epoch", None)
+
+            if iters_per_epoch is None:
+                try:
+                    iters_per_epoch = len(self.dataloaders["train"])
+                except (AttributeError, TypeError):
+                    iters_per_epoch = 10000
+
+            self._lr_sched = lr_sched_cls(
+                optimizer=self.optimizer,
+                max_epoch=max_epoch,
+                iters_per_epoch=iters_per_epoch,
+                min_lr=min_lr,
+                init_lr=init_lr,
+                decay_rate=decay_rate,
+                warmup_start_lr=warmup_start_lr,
+                warmup_steps=warmup_steps,
+            )
+
+        return self._lr_sched
+
+    @property
     def logger(self):
         logger = registry.get_configuration_class("logger")
         return logger
-
-
-

@@ -14,6 +14,7 @@ from graphs.losses.cross_entropy_loss import CrossEntropyLoss
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
+
 def plot_losses(losses):
     fig = plt.figure(figsize=(13, 5))
     ax = fig.gca()
@@ -51,8 +52,13 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         try:
 
-            if not self.config.run.evaluate_only and self.config.run.resume_ckpt_path is not None:
-                self.logger.info(f"Loading the checkpoint from path: {self.config.run.resume_ckpt_path}")
+            if (
+                not self.config.run.evaluate_only
+                and self.config.run.resume_ckpt_path is not None
+            ):
+                self.logger.info(
+                    f"Loading the checkpoint from path: {self.config.run.resume_ckpt_path}"
+                )
                 self.load_checkpoint(self.config.run.resume_ckpt_path)
 
             self.logger.info("Creating the dataloaders")
@@ -65,7 +71,10 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 raise ValueError("Validation dataloader is empty")
 
             self.logger.info("Start running the training loop")
-            self.logger.info(f"Start epoch: {self.start_epoch}. Max epoch: {self.max_epoch}")
+            self.logger.info(
+                f"Start epoch: {self.start_epoch}. Max epoch: {self.max_epoch}"
+            )
+
             for epoch in range(self.start_epoch, self.max_epoch):
 
                 # training step
@@ -82,7 +91,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 self.logger.info(f"Evaluation epoch: {epoch}")
                 val_loss = self.eval(epoch)
                 val_losses.append(val_loss)
-                self.logger.info(f"Evaluation: epoch {epoch}. Evaluation loss: {val_loss}")
+                self.logger.info(
+                    f"Evaluation: epoch {epoch}. Evaluation loss: {val_loss}"
+                )
 
                 losses = {"Train loss": train_losses, "Val loss": val_losses}
                 plot_losses(losses)
@@ -90,37 +101,42 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             elapsed_time = time.time() - start_time
             self.logger.info(f"Finished the training loop in {elapsed_time:.2f}")
 
-
         except Exception as e:
-            self.logger.error(f'Error on runing the agent. Details: {e}')
-
+            self.logger.error(f"Error on runing the agent. Details: {e}")
 
     def train(self, epoch):
         train_loader = self._dataloaders["train"]
         if len(train_loader) == 0:
-            return float('inf')
+            return float("inf")
 
         self.model.train()
         running_loss = 0.0
 
-        for batch_sample in tqdm(train_loader, desc=f"Training epoch {epoch}"):
+        for i, batch_sample in tqdm(train_loader, desc=f"Training epoch {epoch}"):
             self._optimizer.zero_grad()
 
             batch_sample["image"] = batch_sample["image"].to(self.device)
-            with torch.amp.autocast('cuda',enabled=self.config.run.amp):
+
+            self.lr_scheduler.step(cur_epoch=epoch, cur_step=i)
+
+            with torch.amp.autocast("cuda", enabled=self.config.run.amp):
                 outputs = self.model(batch_sample)
-                loss = outputs['loss']
+                loss = outputs["loss"]
 
                 assert torch.isfinite(loss).item(), "Loss is NaN or Inf."
 
             if self.config.run.amp:
                 self.scaler.scale(loss).backward()
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0) # prevent exploding gradients
+                torch.nn.utils.clip_grad_norm_(
+                    self.model.parameters(), max_norm=1.0
+                )  # prevent exploding gradients
                 self.scaler.step(self._optimizer)
                 self.scaler.update()
             else:
                 loss.backward()
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)  # prevent exploding gradients
+                torch.nn.utils.clip_grad_norm_(
+                    self.model.parameters(), max_norm=1.0
+                )  # prevent exploding gradients
                 self._optimizer.step()
 
             running_loss += loss.item()
@@ -133,7 +149,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         val_loader = self._dataloaders["val"]
 
         if len(val_loader) == 0:
-            return float('inf')
+            return float("inf")
 
         self.model.eval()
 
@@ -144,7 +160,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             with torch.cuda.amp.autocast(enabled=self.config.run.amp):
                 outputs = self.model(batch_sample)
                 # loss = self.compute_loss(pred, answer)
-                loss = outputs['loss']
+                loss = outputs["loss"]
 
             running_eval_loss += loss.item()
 
@@ -196,9 +212,13 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             for split in dataset.values():
                 num_records = len(split)
                 if num_records >= 0:
-                    self.logger.info("Loaded {} records for split {}".format(num_records, dataset))
+                    self.logger.info(
+                        "Loaded {} records for split {}".format(num_records, dataset)
+                    )
 
-                is_train = True if split.split_name in self.config.run.train_splits else False
+                is_train = (
+                    True if split.split_name in self.config.run.train_splits else False
+                )
 
                 collate_fn = getattr(split, "collater", None)
 
@@ -208,7 +228,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     num_workers=self.config.run.num_workers,
                     pin_memory=True,
                     shuffle=True if is_train else False,
-                    collate_fn=collate_fn
+                    collate_fn=collate_fn,
                 )
                 dataloaders[split.split_name] = loader
 
@@ -228,7 +248,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             self.model.parameters(),
             lr=float(self.config.run.init_lr),
             weight_decay=float(self.config.run.weight_decay),
-            betas=(beta1, beta2)
+            betas=(beta1, beta2),
         )
 
     def build_model(self):
