@@ -149,6 +149,16 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             # batch_sample["image"] = batch_sample["image"].to(self.device)
             batch_sample = prepare_sample(batch_sample, cuda_enabled=torch.cuda.is_available())
 
+            if torch.isnan(batch_sample["image"]).any():
+                print("NaN detected in image data")
+                
+            if torch.isnan(batch_sample["question"]).any():
+                print("NaN detected in question data")
+
+            if torch.isnan(batch_sample["answer"]).any():
+                print("NaN detected in answer data")
+                
+
             self.lr_scheduler.step(cur_epoch=epoch, cur_step=curr_step)
 
             with torch.amp.autocast("cuda", enabled=self.config.run.amp):
