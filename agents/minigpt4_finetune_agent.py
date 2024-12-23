@@ -152,8 +152,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             if torch.isnan(batch_sample["image"]).any():
                 print("NaN detected in image data")
                 
-            if torch.isnan(batch_sample["question"]).any():
-                print("NaN detected in question data")
+            if torch.isnan(batch_sample["instruction_input"]).any():
+                print("NaN detected in instruction_input data")
 
             if torch.isnan(batch_sample["answer"]).any():
                 print("NaN detected in answer data")
