@@ -49,11 +49,11 @@ class VQAv2Dataset(BaseDataset):
             seed = config.run.seed
             random.seed(seed)
 
-            # sample_size = config.datasets.vqav2.sample_size
-            # if sample_size is not None or sample_size != 0:
-                # self.logger.info("Filter annotations based on sample_size hyperparemeter ")
-                # self.logger.info(f"sample_size={sample_size}")
-                # self.annotations = random.sample(self.annotations, sample_size)
+            sample_size = config.datasets.vqav2.sample_size
+            if sample_size is not None or sample_size != 0:
+                self.logger.info("Filter annotations based on sample_size hyperparemeter ")
+                self.logger.info(f"sample_size={sample_size}")
+                self.annotations = random.sample(self.annotations, sample_size)
 
             self.questions = [questions_dict[ann['question_id']] for ann in self.annotations
                               if ann['question_id'] in questions_dict]
