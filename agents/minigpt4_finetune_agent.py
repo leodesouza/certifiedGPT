@@ -14,6 +14,8 @@ from graphs.losses.cross_entropy_loss import CrossEntropyLoss
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
+torch.autograd.set_detect_anomaly(True)
+
 
 def plot_losses(losses):
     fig = plt.figure(figsize=(13, 5))
@@ -145,19 +147,11 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         for batch_sample in tqdm(train_loader, desc=f"Training epoch {epoch}"):
 
+            self.optimizer.zero_grad(set_to_none=True)
             curr_step +=1
             # batch_sample["image"] = batch_sample["image"].to(self.device)
+
             batch_sample = prepare_sample(batch_sample, cuda_enabled=torch.cuda.is_available())
-
-            if torch.isnan(batch_sample["image"]).any():
-                print("NaN detected in image data")                     
-
-            if batch_sample["instruction_input"] is None or len(batch_sample["instruction_input"]) == 0:
-                print("Invalid or empty instruction_input detected")
-    
-            if batch_sample["answer"] is None or len(batch_sample["answer"]) == 0:
-                print("Invalid or empty answer detected")
-                
 
             self.lr_scheduler.step(cur_epoch=epoch, cur_step=curr_step)
 
@@ -165,10 +159,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 outputs = self.model(batch_sample)
                 loss = outputs["loss"]
 
-                # assert torch.isfinite(loss).item(), "Loss is NaN or Inf."
-                if not torch.isfinite(loss).item():
-                    print(f"Skipping iteration due to NaN or Inf loss: {loss.item()}")
-                    continue
+                # if not torch.isfinite(loss).item():
+                #     print(f"Skipping iteration due to NaN or Inf loss: {loss.item()}")
+                #     continue
 
             if self.config.run.amp:
                 self._scaler.scale(loss).backward()
@@ -185,7 +178,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
 
                 self.optimizer.step()
-            self.optimizer.zero_grad()
+
 
             running_loss += loss.item()
 

@@ -86,15 +86,39 @@ class LlamaForCausalLM(LlamaForCausalLMOrig):
         loss = None
         if labels is not None:
             # Shift so that tokens < n predict n
+            # shift_logits = logits[..., :-1, :].contiguous()
+            # shift_labels = labels[..., 1:].contiguous()
+            # # Flatten the tokens
+            # loss_fct = CrossEntropyLoss(reduction=reduction)
+            # shift_logits = shift_logits.view(-1, self.config.vocab_size)
+            # shift_labels = shift_labels.view(-1)
+            # # Enable model parallelism
+            # shift_labels = shift_labels.to(shift_logits.device)
+            #
+            #
+            # loss = loss_fct(shift_logits, shift_labels)
+
+            # Shift so that tokens < n predict n
             shift_logits = logits[..., :-1, :].contiguous()
             shift_labels = labels[..., 1:].contiguous()
-            # Flatten the tokens
-            loss_fct = CrossEntropyLoss(reduction=reduction)
+
+            loss_fct = CrossEntropyLoss(reduction=reduction, label_smoothing=0.1)
+
             shift_logits = shift_logits.view(-1, self.config.vocab_size)
             shift_labels = shift_labels.view(-1)
+
             # Enable model parallelism
             shift_labels = shift_labels.to(shift_logits.device)
+
+            shift_logits = shift_logits - shift_logits.max(dim=-1, keepdim=True)[0]
+            shift_logits = torch.clamp(shift_logits, min=-100, max=100)
+
             loss = loss_fct(shift_logits, shift_labels)
+
+            if torch.isnan(loss).any():
+                print('NaN detected in loss')
+                # loss = torch.tensor(0.0).to(shift_logits.device)
+
             if reduction == "none":
                 loss = loss.view(logits.size(0), -1).mean(1)
 

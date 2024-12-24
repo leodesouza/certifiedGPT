@@ -36,10 +36,10 @@ class Blip2ImageTrainProcessor(BaseProcessor):
                 #     interpolation=InterpolationMode.BICUBIC
                 # ),
                 transforms.ToTensor(),
-                # normalize
-                transforms.Lambda(
-                    lambda x: (x - x.min()) / (x.max() - x.min() + 1e-7)
-                ),  # Min-max scaling
+                normalize
+                # transforms.Lambda(
+                #     lambda x: (x - x.min()) / (x.max() - x.min() + 1e-7)
+                # ),  # Min-max scaling
             ]
         )
 
