@@ -18,7 +18,9 @@ from torchvision import transforms
 
 @registry.register_processor("blip2_image_train")
 class Blip2ImageTrainProcessor(BaseProcessor):
-    def __init__(self, image_size=224, mean=None, std=None, min_scale=0.5, max_scale=1.0):
+    def __init__(
+        self, image_size=224, mean=None, std=None, min_scale=0.5, max_scale=1.0
+    ):
         super().__init__()
 
         normalize = transforms.Normalize(mean, std)
@@ -26,8 +28,7 @@ class Blip2ImageTrainProcessor(BaseProcessor):
         self.transform = transforms.Compose(
             [
                 transforms.Resize(
-                    (image_size, image_size),
-                    interpolation=InterpolationMode.BICUBIC
+                    (image_size, image_size), interpolation=InterpolationMode.BICUBIC
                 ),
                 # transforms.RandomResizedCrop(
                 #     (image_zise, image_zise),
@@ -35,7 +36,10 @@ class Blip2ImageTrainProcessor(BaseProcessor):
                 #     interpolation=InterpolationMode.BICUBIC
                 # ),
                 transforms.ToTensor(),
-                normalize
+                # normalize
+                transforms.Lambda(
+                    lambda x: (x - x.min()) / (x.max() - x.min() + 1e-7)
+                ),  # Min-max scaling
             ]
         )
 
@@ -59,22 +63,23 @@ class Blip2ImageTrainProcessor(BaseProcessor):
             mean=mean,
             std=std,
             min_scale=min_scale,
-            max_scale=max_scale
+            max_scale=max_scale,
         )
 
 
 class Blip2ImageEvalProcessor(BaseProcessor):
-    def __init__(self, image_zise=224, mean=None, std=None, min_scale=0.5, max_scale=1.0):
+    def __init__(
+        self, image_zise=224, mean=None, std=None, min_scale=0.5, max_scale=1.0
+    ):
         super().__init__(mean=mean, std=std)
 
         self.transform = transforms.Compose(
             [
                 transforms.Resize(
-                    (image_zise, image_zise),
-                    interpolation=InterpolationMode.BICUBIC
+                    (image_zise, image_zise), interpolation=InterpolationMode.BICUBIC
                 ),
                 transforms.ToTensor(),
-                self.normalize
+                self.normalize,
             ]
         )
 
@@ -90,11 +95,7 @@ class Blip2ImageEvalProcessor(BaseProcessor):
             # min_scale = config.get("min_scale", None)
             # max_scale = config.get("max_scale", None)
 
-            return cls(
-                image_size=image_size,
-                mean=mean,
-                std=std
-            )
+            return cls(image_size=image_size, mean=mean, std=std)
 
 
 @registry.register_processor("blip_caption")
