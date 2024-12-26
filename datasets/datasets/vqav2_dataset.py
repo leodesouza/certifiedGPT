@@ -31,7 +31,8 @@ class VQAv2Dataset(BaseDataset):
             vis_paths=vis_paths,
             annotation_paths=annotation_paths,
         )
-        self._tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+
+        # self._tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
         self.instruction_template = [
             "[vqa] {}",
             "[vqa] Based on the image, respond to this question with a short answer: {}",
@@ -47,12 +48,20 @@ class VQAv2Dataset(BaseDataset):
 
         try:
 
+            self.questions = []
             for annotation in self.annotations:
+                question_id = annotation["question_id"]
+                question = questions_dict[question_id]
+                if question is None:
+                    continue
+
                 image_id = annotation["image_id"]
                 file_name = f"COCO_{split}2014_{image_id:012d}.jpg"
                 image_path = os.path.join(self.vis_paths, file_name)
                 if os.path.exists(image_path):
                     exist_annotation.append(annotation)
+                    self.questions.append(question)
+
             self.annotations = exist_annotation
 
             config = registry.get_configuration_class("configuration")
@@ -67,11 +76,6 @@ class VQAv2Dataset(BaseDataset):
                 self.logger.info(f"sample_size={sample_size}")
                 self.annotations = random.sample(self.annotations, sample_size)
 
-            self.questions = [
-                questions_dict[ann["question_id"]]
-                for ann in self.annotations
-                if ann["question_id"] in questions_dict
-            ]
         except Exception as e:
             self.logger.error(f"error on loading the dataset. Details: {e}")
 
