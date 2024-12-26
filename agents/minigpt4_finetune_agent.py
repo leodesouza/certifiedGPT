@@ -160,9 +160,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
             self.lr_scheduler.step(cur_epoch=epoch, cur_step=curr_step)
 
-            # with torch.amp.autocast("cuda", enabled=self.config.run.amp):
-            outputs = self.model(batch_sample)
-            loss = outputs["loss"]
+            with torch.amp.autocast("cuda", enabled=self.config.run.amp):
+                outputs = self.model(batch_sample)
+                loss = outputs["loss"]
 
             if self.config.run.amp:
                 self._scaler.scale(loss).backward()
