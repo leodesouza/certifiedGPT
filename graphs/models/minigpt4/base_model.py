@@ -16,7 +16,7 @@ from transformers import LlamaTokenizer
 from peft import (
     LoraConfig,
     get_peft_model,
-    prepare_model_for_int8_training,
+    # prepare_model_for_int8_training,
 )
 
 import common
@@ -187,17 +187,18 @@ class BaseModel(nn.Module):
             )
 
         if lora_r > 0:
-            llama_model = prepare_model_for_int8_training(llama_model)
-            loraconfig = LoraConfig(
-                r=lora_r,
-                bias="none",
-                task_type="CAUSAL_LM",
-                target_modules=lora_target_modules,
-                **lora_kargs
-            )
-            llama_model = get_peft_model(llama_model, loraconfig)
-
-            llama_model.print_trainable_parameters()
+            pass
+            # llama_model = prepare_model_for_int8_training(llama_model)
+            # loraconfig = LoraConfig(
+            #     r=lora_r,
+            #     bias="none",
+            #     task_type="CAUSAL_LM",
+            #     target_modules=lora_target_modules,
+            #     **lora_kargs
+            # )
+            # llama_model = get_peft_model(llama_model, loraconfig)
+            #
+            # llama_model.print_trainable_parameters()
 
         else:
             for name, param in llama_model.named_parameters():
