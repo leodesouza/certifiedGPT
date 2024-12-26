@@ -138,7 +138,8 @@ class VQAv2Dataset(BaseDataset):
                 "answer": answer,
             }
         except Exception as e:
-            print(f"Error at index:{e}")
+            print(f"Error at index:{index}{e}")
+            return None
 
     def __getitem__(self, index):
         data = self.get_data(index)
