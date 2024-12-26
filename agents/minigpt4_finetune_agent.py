@@ -30,6 +30,7 @@ def plot_losses(losses):
     ax.set_title("Loss vs iterations", fontsize=16)
     plt.savefig("vqa_plot_training.png")
 
+
 def apply_to_sample(f, sample):
     if len(sample) == 0:
         return {}
@@ -46,11 +47,13 @@ def apply_to_sample(f, sample):
 
     return _apply(sample)
 
+
 def move_to_cuda(sample):
     def _move_to_cuda(tensor):
         return tensor.cuda()
 
     return apply_to_sample(_move_to_cuda, sample)
+
 
 def prepare_sample(samples, cuda_enabled=True):
     if cuda_enabled:
@@ -148,20 +151,18 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         for batch_sample in tqdm(train_loader, desc=f"Training epoch {epoch}"):
 
             self.optimizer.zero_grad(set_to_none=True)
-            curr_step +=1
+            curr_step += 1
             # batch_sample["image"] = batch_sample["image"].to(self.device)
 
-            batch_sample = prepare_sample(batch_sample, cuda_enabled=torch.cuda.is_available())
+            batch_sample = prepare_sample(
+                batch_sample, cuda_enabled=torch.cuda.is_available()
+            )
 
             self.lr_scheduler.step(cur_epoch=epoch, cur_step=curr_step)
 
-            with torch.amp.autocast("cuda", enabled=self.config.run.amp):
-                outputs = self.model(batch_sample)
-                loss = outputs["loss"]
-
-                # if not torch.isfinite(loss).item():
-                #     print(f"Skipping iteration due to NaN or Inf loss: {loss.item()}")
-                #     continue
+            # with torch.amp.autocast("cuda", enabled=self.config.run.amp):
+            outputs = self.model(batch_sample)
+            loss = outputs["loss"]
 
             if self.config.run.amp:
                 self._scaler.scale(loss).backward()
@@ -178,7 +179,6 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
 
                 self.optimizer.step()
-
 
             running_loss += loss.item()
 
