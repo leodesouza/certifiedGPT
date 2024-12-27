@@ -75,16 +75,16 @@ class VQAv2Dataset(BaseDataset):
             self.annotations = exist_annotation
 
             config = registry.get_configuration_class("configuration")
-            # seed = config.run.seed
-            # random.seed(seed)
+            seed = config.run.seed
+            random.seed(seed)
 
-            sample_size = config.datasets.vqav2.sample_size
-            if sample_size is not None or sample_size != 0:
-                self.logger.info(
-                    "Filter annotations based on sample_size hyperparemeter "
-                )
-                self.logger.info(f"sample_size={sample_size}")
-                self.annotations = random.sample(self.annotations, sample_size)
+            # sample_size = config.datasets.vqav2.sample_size
+            # if sample_size is not None or sample_size != 0:
+            #     self.logger.info(
+            #         "Filter annotations based on sample_size hyperparemeter "
+            #     )
+            #     self.logger.info(f"sample_size={sample_size}")
+            #     self.annotations = random.sample(self.annotations, sample_size)
 
         except Exception as e:
             self.logger.error(f"error on loading the dataset. Details: {e}")
@@ -113,7 +113,7 @@ class VQAv2Dataset(BaseDataset):
             )
             question = self.text_processor(question["question"])
 
-            if question is None or "question" not in question:
+            if question is None:
                 raise ValueError(
                     f"Invalid or missing question for question_id {question_id}"
                 )
@@ -157,7 +157,6 @@ class VQAv2Dataset(BaseDataset):
 
     def __getitem__(self, index):
         data = self.get_data(index)
-        print(f"data returned: {data}")
         instruction = random.choice(self.instruction_template).format(data["question"])
         instruction = "<Img><ImageHere></Img> {} ".format(instruction)
 

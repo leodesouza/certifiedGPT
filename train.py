@@ -9,7 +9,7 @@ import argparse
 
 import os
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
-os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:100"
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:300"
 
 
 import random

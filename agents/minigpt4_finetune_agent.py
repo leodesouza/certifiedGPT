@@ -14,7 +14,7 @@ from graphs.losses.cross_entropy_loss import CrossEntropyLoss
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-torch.autograd.set_detect_anomaly(True)
+torch.autograd.set_detect_anomaly(False)
 
 
 def plot_losses(losses):
@@ -163,6 +163,10 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             with torch.amp.autocast("cuda", enabled=self.config.run.amp):
                 outputs = self.model(batch_sample)
                 loss = outputs["loss"]
+
+            if torch.isnan(loss).any():
+                print("NaN in loss")
+                continue
 
             if self.config.run.amp:
                 self._scaler.scale(loss).backward()

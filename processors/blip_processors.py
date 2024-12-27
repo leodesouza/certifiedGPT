@@ -15,6 +15,8 @@ from common.registry import registry
 from processors.base_processor import BaseProcessor
 from torchvision import transforms
 
+def min_max_scaling(x):
+    return (x - x.min()) / (x.max() - x.min() + 1e-7)
 
 @registry.register_processor("blip2_image_train")
 class Blip2ImageTrainProcessor(BaseProcessor):
@@ -36,10 +38,8 @@ class Blip2ImageTrainProcessor(BaseProcessor):
                 #     interpolation=InterpolationMode.BICUBIC
                 # ),
                 transforms.ToTensor(),
-                normalize
-                # transforms.Lambda(
-                #     lambda x: (x - x.min()) / (x.max() - x.min() + 1e-7)
-                # ),  # Min-max scaling
+                normalize,
+                transforms.Lambda(min_max_scaling)  # Min-max scaling, prevents division by zero
             ]
         )
 
