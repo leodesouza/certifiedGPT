@@ -47,12 +47,25 @@ class VQAv2Dataset(BaseDataset):
 
             self.questions = []
             for annotation in self.annotations:
-                question_id = annotation["question_id"]
-                question = questions_dict[question_id]
-                if question is None:
+                question_id = annotation.get("question_id")
+                if question_id is None:
+                    self.logger.info(
+                        f"Warning: Missing 'question_id' in annotation: {annotation}"
+                    )
                     continue
 
-                image_id = annotation["image_id"]
+                question = questions_dict.get(question_id)
+                if question is None:
+                    self.logger.info(
+                        f"Warning: Question with 'question_id' {question_id} is missing in questions_dict."
+                    )
+                    continue
+
+                image_id = annotation.get("image_id")
+                if image_id is None:
+                    print(f"Warning: Missing 'image_id' in annotation: {annotation}")
+                    continue
+
                 file_name = f"COCO_{split}2014_{image_id:012d}.jpg"
                 image_path = os.path.join(self.vis_paths, file_name)
                 if os.path.exists(image_path):
