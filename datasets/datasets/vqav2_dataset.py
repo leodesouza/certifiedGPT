@@ -11,8 +11,6 @@ from datasets.datasets.base_dataset import BaseDataset
 from PIL import Image
 from common.registry import registry
 
-from transformers import AutoTokenizer
-
 
 class VQAv2Dataset(BaseDataset):
     def __init__(
@@ -32,7 +30,6 @@ class VQAv2Dataset(BaseDataset):
             annotation_paths=annotation_paths,
         )
 
-        # self._tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
         self.instruction_template = [
             "[vqa] {}",
             "[vqa] Based on the image, respond to this question with a short answer: {}",
@@ -65,8 +62,8 @@ class VQAv2Dataset(BaseDataset):
             self.annotations = exist_annotation
 
             config = registry.get_configuration_class("configuration")
-            seed = config.run.seed
-            random.seed(seed)
+            # seed = config.run.seed
+            # random.seed(seed)
 
             sample_size = config.datasets.vqav2.sample_size
             if sample_size is not None or sample_size != 0:
@@ -89,7 +86,7 @@ class VQAv2Dataset(BaseDataset):
                 or "question_id" not in annotation
                 or "answers" not in annotation
             ):
-                raise ValueError(f"Invalid annotation at index {index}: {annotation}")
+                raise ValueError(f" Invalid annotation at index {index}: {annotation}")
 
             image_id = annotation["image_id"]
             file_name = f"COCO_{self.split}2014_{image_id:012d}.jpg"
