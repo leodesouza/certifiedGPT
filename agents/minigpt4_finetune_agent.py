@@ -145,7 +145,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self.model.train()
         running_loss = 0.0
         curr_step = 0
-        accumulated_gradients = 10
+        accumulated_gradients = 1
         for batch_sample in tqdm(train_loader, desc=f"Training epoch {epoch}"):
 
             # batch_sample["image"] = batch_sample["image"].to(self.device)
