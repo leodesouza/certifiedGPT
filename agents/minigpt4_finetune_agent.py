@@ -29,6 +29,7 @@ def plot_losses(losses):
     ax.set_ylabel("Loss", fontsize=16)
     ax.set_title("Loss vs iterations", fontsize=16)
     plt.savefig("vqa_plot_training.png")
+    plt.close()
 
 
 def apply_to_sample(f, sample):
@@ -58,9 +59,6 @@ def move_to_cuda(sample):
 def prepare_sample(samples, cuda_enabled=True):
     if cuda_enabled:
         samples = move_to_cuda(samples)
-
-    # TODO fp16 support
-
     return samples
 
 
@@ -147,11 +145,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self.model.train()
         running_loss = 0.0
         curr_step = 0
-
+        accumulated_gradients = 10
         for batch_sample in tqdm(train_loader, desc=f"Training epoch {epoch}"):
 
-            self.optimizer.zero_grad(set_to_none=True)
-            curr_step += 1
             # batch_sample["image"] = batch_sample["image"].to(self.device)
 
             batch_sample = prepare_sample(
@@ -164,26 +160,24 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 outputs = self.model(batch_sample)
                 loss = outputs["loss"]
 
-            if torch.isnan(loss).any():
-                print("NaN in loss")
-                continue
-
             if self.config.run.amp:
                 self._scaler.scale(loss).backward()
-
-                # prevent exploding gradients
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
-
-                self._scaler.step(self.optimizer)
-                self._scaler.update()
             else:
                 loss.backward()
 
-                # prevent exploding gradients
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+            # prevent exploding gradients
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
 
-                self.optimizer.step()
+            if (curr_step + 1) % accumulated_gradients == 0:
+                if self.config.run.amp:
+                    self._scaler.step(self.optimizer)
+                    self._scaler.update()
+                else:
+                    self.optimizer.step()
 
+                self.optimizer.zero_grad()
+
+            curr_step += 1
             running_loss += loss.item()
 
         return running_loss / len(train_loader)
