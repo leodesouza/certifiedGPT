@@ -72,19 +72,7 @@ class VQAv2Dataset(BaseDataset):
                     exist_annotation.append(annotation)
                     self.questions.append(question)
 
-            self.annotations = exist_annotation
-
-            config = registry.get_configuration_class("configuration")
-            seed = config.run.seed
-            random.seed(seed)
-
-            # sample_size = config.datasets.vqav2.sample_size
-            # if sample_size is not None or sample_size != 0:
-            #     self.logger.info(
-            #         "Filter annotations based on sample_size hyperparemeter "
-            #     )
-            #     self.logger.info(f"sample_size={sample_size}")
-            #     self.annotations = random.sample(self.annotations, sample_size)
+            self.annotations = exist_annotation            
 
         except Exception as e:
             self.logger.error(f"error on loading the dataset. Details: {e}")

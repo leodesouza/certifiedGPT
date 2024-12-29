@@ -33,8 +33,17 @@ datasets:
         std: (0.4985503852367401, 0.4965093731880188, 0.4907744526863098)
         min_scale: 0.5
         max_scale: 1.0
+      val:
+        name: "blip2_image_val"
+        image_size: 224
+        mean: (0.4619535207748413, 0.44102171063423157, 0.4043944478034973)
+        std: (0.4985503852367401, 0.4965093731880188, 0.4907744526863098)
+        min_scale: 0.5
+        max_scale: 1.0
     text_processor:
       train:
+        name: "blip_caption"
+      val:
         name: "blip_caption"
     sample_ratio: 115
 

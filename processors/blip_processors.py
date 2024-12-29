@@ -15,33 +15,14 @@ from common.registry import registry
 from processors.base_processor import BaseProcessor
 from torchvision import transforms
 
-def min_max_scaling(x):
-    return (x - x.min()) / (x.max() - x.min() + 1e-7)
 
 @registry.register_processor("blip2_image_train")
 class Blip2ImageTrainProcessor(BaseProcessor):
     def __init__(
         self, image_size=224, mean=None, std=None, min_scale=0.5, max_scale=1.0
     ):
-        super().__init__()
+        super().__init__(image_size, mean, std)
 
-        normalize = transforms.Normalize(mean, std)
-
-        self.transform = transforms.Compose(
-            [
-                transforms.Resize(
-                    (image_size, image_size), interpolation=InterpolationMode.BICUBIC
-                ),
-                # transforms.RandomResizedCrop(
-                #     (image_zise, image_zise),
-                #     (min_scale, max_scale),
-                #     interpolation=InterpolationMode.BICUBIC
-                # ),
-                transforms.ToTensor(),
-                normalize,
-                transforms.Lambda(min_max_scaling)  # Min-max scaling, prevents division by zero
-            ]
-        )
 
     def __call__(self, item):
         return self.transform(item)
@@ -67,35 +48,25 @@ class Blip2ImageTrainProcessor(BaseProcessor):
         )
 
 
+@registry.register_processor("blip2_image_val")
 class Blip2ImageEvalProcessor(BaseProcessor):
     def __init__(
         self, image_zise=224, mean=None, std=None, min_scale=0.5, max_scale=1.0
     ):
         super().__init__(mean=mean, std=std)
 
-        self.transform = transforms.Compose(
-            [
-                transforms.Resize(
-                    (image_zise, image_zise), interpolation=InterpolationMode.BICUBIC
-                ),
-                transforms.ToTensor(),
-                self.normalize,
-            ]
-        )
 
-        def __call__(self, item):
-            return transforms(item)
+    def __call__(self, item):
+        return transforms(item)
 
-        @classmethod
-        def from_config(cls, config=None):
-            image_size = config.get("imagem_size", 224)
+    @classmethod
+    def from_config(cls, config=None):
+        image_size = config.get("imagem_size", 224)
 
-            mean = config.get("mean", None)
-            std = config.get("std", None)
-            # min_scale = config.get("min_scale", None)
-            # max_scale = config.get("max_scale", None)
-
-            return cls(image_size=image_size, mean=mean, std=std)
+        mean = config.get("mean", None)
+        std = config.get("std", None)
+        
+        return cls(image_size=image_size, mean=mean, std=std)
 
 
 @registry.register_processor("blip_caption")
