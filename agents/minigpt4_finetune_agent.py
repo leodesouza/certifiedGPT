@@ -181,6 +181,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
             curr_step += 1
             running_loss += loss.item()
+            
+            self.save_checkpoint(self.model, self.optimizer, 
+                                 epoch, running_loss)
 
         return running_loss / len(train_loader)
 
@@ -297,3 +300,19 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         model_type = registry.get_model_class(self.config.arch)
         model = model_type.from_config(self.config.model)
         return model
+    
+    def save_checkpoint(self, model, optimizer, epoch, loss, file_name="checkpoint.pth.bar", is_best=False):
+        
+        checkpoint = {
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'loss': loss
+        }
+
+        path = self.config.run.output_dir
+        file_and_path = os.path.join(path, file_name)
+        torch.save(checkpoint, file_and_path)
+        self.logger.info(f"Checkpoint saved at path: {file_and_path}")
+    
+        

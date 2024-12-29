@@ -30,7 +30,7 @@ class BaseAgent:
         """
         raise NotImplementedError
 
-    def save_checkpoint(self, file_name="checkpoint.pth.bar", is_best=0):
+    def save_checkpoint(self, model, optimizer, epoch, loss, file_name="checkpoint.pth.bar", is_best=False):
         """
 
         :param file_name:  name of the checkpoint to save
