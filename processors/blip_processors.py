@@ -29,7 +29,7 @@ class Blip2ImageTrainProcessor(BaseProcessor):
 
     @classmethod
     def from_config(cls, config=None):
-        image_size = config.get("imagem_size", 224)
+        image_size = config.get("image_size", 224)
 
         mean = config.get("mean", None)
         mean = ast.literal_eval(mean)

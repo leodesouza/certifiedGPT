@@ -67,7 +67,7 @@ run:
   output_dir: 'e:\pesquisa_ia\projetos\checkpoints\certifiedgpt'
   amp: True
   resume_ckpt_path: null
-  evaluate_only: True
+  evaluate_only: False
   train_splits: [ "train" ]
 
   device: "cuda"
