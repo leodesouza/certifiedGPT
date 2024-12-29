@@ -70,9 +70,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self.max_epoch = self.config.run.max_epoch
         self._model = self.build_model()
         self._start_epoch = 0
-        # self._optimizer = self.create_optimizer()
         self._scaler = None
-        self.compute_loss = CrossEntropyLoss()
 
     def run(self):
         start_time = time.time()
