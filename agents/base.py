@@ -116,7 +116,7 @@ class BaseAgent:
             for n, p in self.model.named_parameters():
 
                 if "weight" in n:
-                    torch.nn.init.xavier_uniform_(p)
+                    torch.nn.init.xavier_uniform_(p) 
                 elif "bias" in n:
                     torch.nn.init.zeros_(p)
 
