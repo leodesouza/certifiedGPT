@@ -45,7 +45,7 @@ run:
   accumulated_gradients: 1
   
   lr_sched: "linear_warmup_cosine_lr"
-  init_lr: 1e-3 # 1e-2   # init_lr peak learning rate after warmup phase
+  init_lr: 1e-2 # 1e-2   # init_lr peak learning rate after warmup phase
   min_lr: 3e-5 # 5e-4 #1e-3  #  minimum learning rate reached at the end of training
   warmup_lr: 3e-5 # 5e-4 #1e-3  # starting learning rate for the warmup phase
   warmup_steps: 50
