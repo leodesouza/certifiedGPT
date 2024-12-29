@@ -78,8 +78,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         start_time = time.time()
         train_losses = []
         val_losses = []
-        best_epoch = 0
-        best_val_loss = 0
+        best_epoch = float('inf')
+        best_val_loss = float('inf')
         running_training_loss = 0
         running_eval_loss = 0
 
@@ -153,9 +153,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         curr_step = 0
         accumulated_gradients = 1
         for batch_sample in tqdm(train_loader, desc=f"Training epoch {epoch}"):
-
-            # batch_sample["image"] = batch_sample["image"].to(self.device)
-
+            
             batch_sample = prepare_sample(
                 batch_sample, cuda_enabled=torch.cuda.is_available()
             )
@@ -171,7 +169,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
             if self.config.run.amp:
                 self._scaler.scale(loss).backward()
-                # self._scaler.unscale_(self.optimizer)
+                self._scaler.unscale_(self.optimizer)
             else:
                 loss.backward()
 
@@ -204,9 +202,11 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         for batch_sample in tqdm(val_loader, desc=f"Evaluating epoch {epoch}"):
 
-            batch_sample["image"] = batch_sample["image"].to(self.device)
+            batch_sample = prepare_sample(
+                batch_sample, cuda_enabled=torch.cuda.is_available()
+            )
 
-            with torch.cuda.amp.autocast(enabled=self.config.run.amp):
+            with torch.amp.autocast("cuda", enabled=self.config.run.amp):
                 outputs = self.model(batch_sample)
                 # loss = self.compute_loss(pred, answer)
                 loss = outputs["loss"]
