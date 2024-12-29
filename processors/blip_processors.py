@@ -21,7 +21,7 @@ class Blip2ImageTrainProcessor(BaseProcessor):
     def __init__(
         self, image_size=224, mean=None, std=None, min_scale=0.5, max_scale=1.0
     ):
-        super().__init__(image_size, mean, std)
+        super().__init__( image_size=image_size,mean=mean, std=std)
 
 
     def __call__(self, item):
@@ -53,7 +53,7 @@ class Blip2ImageEvalProcessor(BaseProcessor):
     def __init__(
         self, image_size=224, mean=None, std=None, min_scale=0.5, max_scale=1.0
     ):
-        super().__init__(mean=mean, std=std)
+        super().__init__(image_size=image_size, mean=mean, std=std)
 
 
     def __call__(self, item):
