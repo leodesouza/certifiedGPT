@@ -115,20 +115,16 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 if not self.config.run.evaluate_only:
                     self.logger.info(f"Training epoch: {epoch}")
                     train_loss = self.train(epoch)
-                    train_losses.append(train_loss)
-                    self.logger.info(f"Epoch: {epoch}. Training loss: {train_loss}")
-
-                if epoch % 10 == 0:
-                    self.logger.info(f"Epoch: {epoch}; Train loss: {train_loss}")
-
+                    train_losses.append(train_loss)                   
+                
                 # evaluation step
                 self.logger.info(f"Evaluation epoch: {epoch}")
                 val_loss = self.eval(epoch)
                 val_losses.append(val_loss)
-                self.logger.info(
-                    f"Evaluation: epoch {epoch}. Evaluation loss: {val_loss}"
-                )
 
+                if epoch % 10 == 0:
+                    self.logger.info(f"Train loss: {train_loss}. Eval loss: {val_loss}")                    
+                
                 if val_loss < best_val_loss:                        
                     best_val_loss = val_loss
                     self.save_checkpoint(self.model, self.optimizer, 
@@ -151,7 +147,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self.model.train()
         running_loss = 0.0
         curr_step = 0
-        accumulated_gradients = 1
+        accumulated_gradients = self.config.run.accumulated_gradients or 1
+
         for batch_sample in tqdm(train_loader, desc=f"Training epoch {epoch}"):
             
             batch_sample = prepare_sample(
@@ -207,8 +204,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             )
 
             with torch.amp.autocast("cuda", enabled=self.config.run.amp):
-                outputs = self.model(batch_sample)
-                # loss = self.compute_loss(pred, answer)
+                outputs = self.model(batch_sample)               
                 loss = outputs["loss"]
 
             running_eval_loss += loss.item()
