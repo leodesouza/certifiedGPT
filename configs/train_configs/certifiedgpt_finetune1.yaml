@@ -40,7 +40,7 @@ datasets:
 
 run:
   agent: image_text_finetune
-  max_epoch: 1
+  max_epoch: 5
   num_workers: 1
   
   lr_sched: "linear_warmup_cosine_lr"

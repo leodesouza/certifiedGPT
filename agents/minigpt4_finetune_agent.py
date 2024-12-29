@@ -79,6 +79,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         train_losses = []
         val_losses = []
         best_epoch = 0
+        best_val_loss = 0
         running_training_loss = 0
         running_eval_loss = 0
 
@@ -128,6 +129,11 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     f"Evaluation: epoch {epoch}. Evaluation loss: {val_loss}"
                 )
 
+                if val_loss < best_val_loss:                        
+                    best_val_loss = val_loss
+                    self.save_checkpoint(self.model, self.optimizer, 
+                                         epoch, val_loss)
+                
                 losses = {"Train loss": train_losses, "Val loss": val_losses}
                 plot_losses(losses)
 
@@ -183,10 +189,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
             curr_step += 1
             running_loss += loss.item()
-            
-            self.save_checkpoint(self.model, self.optimizer, 
-                                 epoch, running_loss)
-
+                        
         return running_loss / len(train_loader)
 
     @torch.no_grad()
@@ -303,8 +306,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         model = model_type.from_config(self.config.model)
         return model
     
-    def save_checkpoint(self, model, optimizer, epoch, loss, file_name="checkpoint.pth.bar", is_best=False):
+    def save_checkpoint(self, model, optimizer, epoch, loss, is_best=False):
         
+        file_name = f'checkpoint_certifiedpt.pth'
         checkpoint = {
             'epoch': epoch,
             'model_state_dict': model.state_dict(),
