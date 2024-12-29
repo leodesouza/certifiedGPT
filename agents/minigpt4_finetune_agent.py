@@ -165,7 +165,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
             if self.config.run.amp:
                 self._scaler.scale(loss).backward()
-                self._scaler.unscale(self.optimizer)
+                self._scaler.unscale_(self.optimizer)
             else:
                 loss.backward()
 
