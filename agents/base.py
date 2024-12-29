@@ -115,11 +115,11 @@ class BaseAgent:
             p_wd, p_non_wd = [], []
             for n, p in self.model.named_parameters():
                 
-                if p.dtype in [torch.float32, torch.float64]: 
-                    if "weight" in n:
-                        torch.nn.init.xavier_uniform_(p) 
-                    elif "bias" in n:
-                        torch.nn.init.zeros_(p)
+                # if p.dtype in [torch.float32, torch.float64]: 
+                #     if "weight" in n:
+                #         torch.nn.init.xavier_uniform_(p) 
+                #     elif "bias" in n:
+                #         torch.nn.init.zeros_(p)
 
                 if not p.requires_grad:
                     continue  # frozen weights
