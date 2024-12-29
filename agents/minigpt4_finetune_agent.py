@@ -4,6 +4,7 @@
 # See LICENSE.md for the full license text or visit the repo at:
 # https://github.com/Vision-CAIR/MiniGPT-4
 #
+import os 
 import time
 import torch
 from torch.utils.data import DataLoader, DistributedSampler
@@ -13,6 +14,7 @@ from common.registry import registry
 from graphs.losses.cross_entropy_loss import CrossEntropyLoss
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+
 
 torch.autograd.set_detect_anomaly(False)
 
