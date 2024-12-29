@@ -6,7 +6,7 @@ from tqdm import tqdm
 
 
 def compute():
-    root_dir = "E:/pesquisa_ia/projetos/datasets/vqav2/images/sample/train"
+    root_dir = "E:/pesquisa_ia/projetos/datasets/vqav2/images/sample/val"
 
     transform = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
 
