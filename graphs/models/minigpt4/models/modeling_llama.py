@@ -116,7 +116,7 @@ class LlamaForCausalLM(LlamaForCausalLMOrig):
             loss = loss_fct(shift_logits, shift_labels)
 
             if torch.isnan(loss).any():
-                print('NaN detected in loss')
+                print('LlamaForCausalLM --> NaN detected in loss')
                 # loss = torch.tensor(0.0).to(shift_logits.device)
 
             if reduction == "none":

@@ -161,29 +161,29 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 outputs = self.model(batch_sample)
                 loss = outputs["loss"]
 
-            if torch.isnan(loss).any():
-                continue
-
-            if self.config.run.amp:
-                self._scaler.scale(loss).backward()
-                self._scaler.unscale_(self.optimizer)
-            else:
-                loss.backward()
-
-            # prevent exploding gradients
-            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
-
-            if (curr_step + 1) % accumulated_gradients == 0:
+            if not torch.isnan(loss).any():                
                 if self.config.run.amp:
-                    self._scaler.step(self.optimizer)
-                    self._scaler.update()
+                    self._scaler.scale(loss).backward()
+                    self._scaler.unscale_(self.optimizer)
                 else:
-                    self.optimizer.step()
+                    loss.backward()
 
-                self.optimizer.zero_grad()
+                # prevent exploding gradients
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
 
-            curr_step += 1
-            running_loss += loss.item()
+                if (curr_step + 1) % accumulated_gradients == 0:
+                    if self.config.run.amp:
+                        self._scaler.step(self.optimizer)
+                        self._scaler.update()
+                    else:
+                        self.optimizer.step()
+
+                    self.optimizer.zero_grad()
+
+                curr_step += 1
+                running_loss += loss.item()
+            else:
+                self.logger.info("NaN detected")
                         
         return running_loss / len(train_loader)
 
@@ -203,14 +203,17 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 batch_sample, cuda_enabled=torch.cuda.is_available()
             )
 
-            with torch.amp.autocast("cuda", enabled=self.config.run.amp):
-                outputs = self.model(batch_sample)               
-                loss = outputs["loss"]
+            if not torch.isnan(loss).any():                
+                with torch.amp.autocast("cuda", enabled=self.config.run.amp):
+                    outputs = self.model(batch_sample)               
+                    loss = outputs["loss"]
 
-            if torch.isnan(loss).any():
-                continue
+                if torch.isnan(loss).any():
+                    continue
 
-            running_eval_loss += loss.item()
+                running_eval_loss += loss.item()
+            else:
+                self.logger.info("NaN detected")
 
         return running_eval_loss / len(val_loader)
 
