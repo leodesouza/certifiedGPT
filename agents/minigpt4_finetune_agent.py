@@ -122,8 +122,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 val_loss = self.eval(epoch)
                 val_losses.append(val_loss)
 
-                if epoch % 10 == 0:
-                    self.logger.info(f"Train loss: {train_loss}. Eval loss: {val_loss}")                    
+                
+                self.logger.info(f"Train loss: {train_loss}. Eval loss: {val_loss}")                    
                 
                 if val_loss < best_val_loss:                        
                     best_val_loss = val_loss
@@ -202,15 +202,12 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             batch_sample = prepare_sample(
                 batch_sample, cuda_enabled=torch.cuda.is_available()
             )
+            
+            with torch.amp.autocast("cuda", enabled=self.config.run.amp):
+                outputs = self.model(batch_sample)               
+                loss = outputs["loss"]
 
             if not torch.isnan(loss).any():                
-                with torch.amp.autocast("cuda", enabled=self.config.run.amp):
-                    outputs = self.model(batch_sample)               
-                    loss = outputs["loss"]
-
-                if torch.isnan(loss).any():
-                    continue
-
                 running_eval_loss += loss.item()
             else:
                 self.logger.info("NaN detected")
