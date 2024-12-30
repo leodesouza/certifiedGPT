@@ -207,6 +207,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 outputs = self.model(batch_sample)               
                 loss = outputs["loss"]
 
+            if torch.isnan(loss).any():
+                continue
+
             running_eval_loss += loss.item()
 
         return running_eval_loss / len(val_loader)
