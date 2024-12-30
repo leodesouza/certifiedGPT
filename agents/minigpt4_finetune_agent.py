@@ -132,7 +132,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 else:
                     wait += 1
                 
-                if wait >= self.patience:
+                if wait >= patience:
                     self.logger.info(f"Early Stopping at epoch: {epoch}")
                     break
                 
