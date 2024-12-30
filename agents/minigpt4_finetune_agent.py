@@ -140,7 +140,10 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 plot_losses(losses)
 
             elapsed_time = time.time() - start_time
-            self.logger.info(f"Finished the training loop in {elapsed_time:.2f}")
+            minutes = int(elapsed_time // 60)
+            seconds = int(elapsed_time % 60)
+
+            self.logger.info(f"Finished the training loop in {minutes}:{seconds}")
 
         except Exception as e:
             self.logger.error(f"Error on runing the agent. Details: {e}")
