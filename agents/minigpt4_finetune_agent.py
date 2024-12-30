@@ -77,12 +77,11 @@ class MiniGPT4FineTuneAgent(BaseAgent):
     def run(self):
         start_time = time.time()
         train_losses = []
-        val_losses = []
-        best_epoch = float('inf')
+        val_losses = []    
         best_val_loss = float('inf')
-        running_training_loss = 0
-        running_eval_loss = 0
-
+        patience = self.config.run.patience or 3
+        wait = 0
+        
         try:
 
             if (
@@ -126,9 +125,16 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 self.logger.info(f"Train loss: {train_loss}. Eval loss: {val_loss}")                    
                 
                 if val_loss < best_val_loss:                        
-                    best_val_loss = val_loss
+                    best_val_loss = val_loss                    
+                    wait = 0
                     self.save_checkpoint(self.model, self.optimizer, 
                                          epoch, val_loss)
+                else:
+                    wait += 1
+                
+                if wait >= self.patience:
+                    self.logger.info(f"Early Stopping at epoch: {epoch}")
+                    break
                 
                 losses = {"Train loss": train_losses, "Val loss": val_losses}
                 plot_losses(losses)
@@ -140,7 +146,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             self.logger.error(f"Error on runing the agent. Details: {e}")
 
     def train(self, epoch):
+
         train_loader = self._dataloaders["train"]
+
         if len(train_loader) == 0:
             return float("inf")
 
@@ -148,7 +156,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         running_loss = 0.0
         curr_step = 0
         accumulated_gradients = self.config.run.accumulated_gradients or 1
-
+        
         for batch_sample in tqdm(train_loader, desc=f"Training epoch {epoch}"):
             
             batch_sample = prepare_sample(
