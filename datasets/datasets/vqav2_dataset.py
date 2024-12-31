@@ -157,16 +157,7 @@ class VQAv2Dataset(BaseDataset):
 
     @property
     def split_name(self):
-        return self.split
-
-    def tokenize(self, x):
-        return self._tokenizer(
-            x,
-            padding="max_length",
-            truncation=True,
-            max_length=512,
-            return_tensors="pt",
-        )["input_ids"].squeeze(0)
+        return self.split    
 
 
 class VQAv2EvalDataset(BaseDataset):

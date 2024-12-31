@@ -22,7 +22,7 @@ model:
   
 
 datasets:
-  vqav2:
+  cc_sbu:
     batch_size: 2    
     vis_processor:
       train:
@@ -31,14 +31,7 @@ datasets:
         mean: (0.4619535207748413, 0.44102171063423157, 0.4043944478034973)
         std: (0.4985503852367401, 0.4965093731880188, 0.4907744526863098)
         min_scale: 0.5
-        max_scale: 1.0
-      val:
-        name: "blip2_image_val"
-        image_size: 224
-        mean: (0.4582795202732086, 0.4375796616077423, 0.40068480372428894)
-        std: (0.4982563555240631, 0.4960884153842926, 0.4900372326374054)
-        min_scale: 0.5
-        max_scale: 1.0
+        max_scale: 1.0      
     text_processor:
       train:
         name: "blip_caption"
@@ -48,7 +41,7 @@ datasets:
 
 run:
   agent: image_text_finetune
-  max_epoch: 10
+  max_epoch: 5
   num_workers: 1
   accumulated_gradients: 1
   patience: 10
@@ -68,7 +61,7 @@ run:
   amp: True
   resume_ckpt_path: null
   evaluate: False
-  train_splits: ["train"]
+  train_splits: [ "train" ]
 
   device: "cuda"
 

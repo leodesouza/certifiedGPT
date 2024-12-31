@@ -85,7 +85,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         try:
 
             if (
-                not self.config.run.evaluate_only
+                not self.config.run.evaluate
                 and self.config.run.resume_ckpt_path is not None
             ):
                 self.logger.info(
@@ -96,7 +96,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             self.logger.info("Creating the dataloaders")
             self._dataloaders = self.create_dataloaders()
 
-            if not self._dataloaders.get("train") and not self.config.run.evaluate_only:
+            if not self._dataloaders.get("train") and not self.config.run.evaluate:
                 raise ValueError("Training dataloader is empty")
 
             if not self._dataloaders.get("val"):
@@ -111,34 +111,35 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             for epoch in range(self.start_epoch, self.max_epoch):
 
                 # training step
-                if not self.config.run.evaluate_only:
+                if not self.config.run.evaluate:
                     self.logger.info(f"Training epoch: {epoch}")
                     train_loss = self.train(epoch)
                     train_losses.append(train_loss)                   
-                
-                # evaluation step
-                self.logger.info(f"Evaluation epoch: {epoch}")
-                val_loss = self.eval(epoch)
-                val_losses.append(val_loss)
+                else:                                                    
+                    # evaluation step
+                    self.logger.info(f"Evaluation epoch: {epoch}")
+                    val_loss = self.eval(epoch)
+                    val_losses.append(val_loss)
 
-                
-                self.logger.info(f"Train loss: {train_loss}. Eval loss: {val_loss}")                    
-                
-                if val_loss < best_val_loss:                        
-                    best_val_loss = val_loss                    
-                    wait = 0
-                    self.save_checkpoint(self.model, self.optimizer, 
-                                         epoch, val_loss)
-                else:
-                    wait += 1
-                
-                if wait >= patience:
-                    self.logger.info(f"Early Stopping at epoch: {epoch}")
-                    break
+                    
+                    self.logger.info(f"Train loss: {train_loss}. Eval loss: {val_loss}")                    
+                    
+                    if val_loss < best_val_loss:                        
+                        best_val_loss = val_loss                    
+                        wait = 0
+                        self.save_checkpoint(self.model, self.optimizer, 
+                                            epoch, val_loss)
+                    else:
+                        wait += 1
+                    
+                    if wait >= patience:
+                        self.logger.info(f"Early Stopping at epoch: {epoch}")
+                        break
                 
                 losses = {"Train loss": train_losses, "Val loss": val_losses}
                 plot_losses(losses)
-
+            
+            
             elapsed_time = time.time() - start_time
             minutes = int(elapsed_time // 60)
             seconds = int(elapsed_time % 60)

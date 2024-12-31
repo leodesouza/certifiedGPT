@@ -10,6 +10,7 @@ from configs.all_config_paths import get_database_config_path
 from datasets.builders.base_dataset_builder import BaseDatasetBuilder
 from datasets.datasets.vqav2_dataset import VQAv2Dataset
 from datasets.datasets.cc_sbu_align_dataset import CCSbuDataset
+from pathlib import Path
 
 
 @registry.register_builder("vqav2")
@@ -31,9 +32,7 @@ class CCSbuBuilder(BaseDatasetBuilder):
     def build(self):
 
         self.build_processors()
-
-        build_info = self.config.build_info
-        questions_info = build_info.questions
+        build_info = self.config.build_info        
         annotations_info = build_info.annotations
 
         images_info = build_info.images
@@ -41,40 +40,28 @@ class CCSbuBuilder(BaseDatasetBuilder):
         self.logger.info("Building the dataset based in build options")
         self.logger.info(f"Build path: {self.default_config_path()}")
 
-        for dataset_info in annotations_info.keys():
-            if dataset_info not in ["train", "val", "test"]:
-                continue
-            self.logger.info(f"Building dataset: {dataset_info}")
+        vis_processor = self.vis_processor["train"]
+        text_processor = self.text_processor["train"]
 
-            is_train = True if dataset_info in ["train", "val", "test"] else False
+        
+        annotation_paths = annotations_info.get('train').path
+        vis_paths = Path(images_info.get('train').path[0])
 
-            vis_processor = (
-                self.vis_processor["train"]
-                if is_train
-                else self.vis_processor["eval"]
-            )
-
-            text_processor = (
-                self.text_processor["train"]
-                if is_train
-                else self.text_processor["eval"]
-            )
-
-            questions_path = questions_info.get(dataset_info).path
-            annotation_paths = annotations_info.get(dataset_info).path
-            vis_paths = Path(images_info.get(dataset_info).path[0])
-
-            dataset_cls = self.train_datasets_cls if is_train else self.eval_datasets_cls
-            datasets[dataset_info] = dataset_cls(
-                vis_processor=vis_processor,
-                text_processor=text_processor,
-                questions_paths=questions_path,
-                annotation_paths=annotation_paths,
-                vis_paths=vis_paths,
-                split=dataset_info
-            )
+        dataset_cls = self.train_datasets_cls
+        datasets['train'] = dataset_cls(
+            vis_processor=vis_processor,
+            text_processor=text_processor,
+            questions_paths=None,
+            annotation_paths=annotation_paths,
+            vis_paths=vis_paths,
+            split='train'
+        )
+                
         return datasets
     
+    def build_processors(self):
+       self.build_train_processors()
+       
     def build_train_processors(self):
         self.logger.info("Building val processors")
         train_config = registry.get_configuration_class("configuration")
@@ -91,20 +78,6 @@ class CCSbuBuilder(BaseDatasetBuilder):
         self.logger.info("Building textual processor")
         self.text_processor["train"] = text_processor_class.from_config(text_train_config)        
 
-    def build_val_processors(self):
-        self.logger.info("Building val processors")
-        val_config = registry.get_configuration_class("configuration")
-
-        vis_val_config = val_config.datasets.cc_sbu.vis_processor.val
-        text_val_config = val_config.datasets.cc_sbu.text_processor.val
-
-        vis_processor_class = registry.get_processor_class(vis_val_config.name)
-        self.logger.info("Building visual processor")
-        self.vis_processor["val"] = vis_processor_class.from_config(vis_val_config)
-
-        text_processor_class = registry.get_processor_class(text_val_config.name)
-
-        self.logger.info("Building textual processor")
-        self.text_processor["val"] = text_processor_class.from_config(text_val_config)    
+    
 
 

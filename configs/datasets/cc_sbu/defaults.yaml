@@ -1,0 +1,12 @@
+datasets:
+  cc_sbu:
+    data_type: images # [images|videos|features]
+    build_info:      
+      annotations:
+        train:
+          path:
+               - ${env:DATA_DIR}\\cc_sbu_align\\filter_cap.json        
+      images:
+        train:
+          path:
+               - ${env:DATA_DIR}\\images        

@@ -24,7 +24,7 @@ import agents
 from common.config import Config
 from common.registry import registry
 
-# to register builsers
+# to register builders
 from datasets.builders import *
 
 # to register processors
