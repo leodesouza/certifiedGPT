@@ -5,8 +5,8 @@ datasets:
       annotations:
         train:
           path:
-               - ${env:DATA_DIR}\\cc_sbu_align\\filter_cap.json        
+               - ${env:DATA_DIR}\\filter_cap.json
       images:
         train:
           path:
-               - ${env:DATA_DIR}\\images        
+               - ${env:DATA_DIR}\\image

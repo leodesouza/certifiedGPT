@@ -99,8 +99,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             if not self._dataloaders.get("train") and not self.config.run.evaluate:
                 raise ValueError("Training dataloader is empty")
 
-            if not self._dataloaders.get("val"):
-                raise ValueError("Validation dataloader is empty")
+            # if not self._dataloaders.get("val"):
+            #     raise ValueError("Validation dataloader is empty")
 
             self.logger.info("Start running the training loop")
             self.logger.info(
@@ -122,7 +122,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     val_losses.append(val_loss)
 
                     
-                    self.logger.info(f"Train loss: {train_loss}. Eval loss: {val_loss}")                    
+                    # self.logger.info(f"Train loss: {train_loss}. Eval loss: {val_loss}")
                     
                     if val_loss < best_val_loss:                        
                         best_val_loss = val_loss                    
@@ -136,8 +136,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                         self.logger.info(f"Early Stopping at epoch: {epoch}")
                         break
                 
-                losses = {"Train loss": train_losses, "Val loss": val_losses}
-                plot_losses(losses)
+                # losses = {"Train loss": train_losses, "Val loss": val_losses}
+                # plot_losses(losses)
             
             
             elapsed_time = time.time() - start_time

@@ -44,14 +44,13 @@ class CCSbuBuilder(BaseDatasetBuilder):
         text_processor = self.text_processor["train"]
 
         
-        annotation_paths = annotations_info.get('train').path
+        annotation_paths = Path(annotations_info.get('train').path[0])
         vis_paths = Path(images_info.get('train').path[0])
 
         dataset_cls = self.train_datasets_cls
         datasets['train'] = dataset_cls(
             vis_processor=vis_processor,
             text_processor=text_processor,
-            questions_paths=None,
             annotation_paths=annotation_paths,
             vis_paths=vis_paths,
             split='train'
