@@ -203,6 +203,7 @@ class BaseModel(nn.Module):
         else:
             for name, param in llama_model.named_parameters():
                 param.requires_grad = False
+            self.logger.info('freeze LLAMA')
         self.logger.info('Loading LLAMA Done')
         return llama_model, llama_tokenizer
 

@@ -219,6 +219,8 @@ class BaseModel(nn.Module):
             else:
                 for name, param in llama_model.named_parameters():
                     param.requires_grad = False
+                logging.info('freeze LLM Done')
+
             logging.info('Loading LLM Done')
             return llama_model, llama_tokenizer
         except Exception as e:
