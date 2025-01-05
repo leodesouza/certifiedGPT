@@ -1,4 +1,4 @@
-name: certifiedgpt
+name: certifiedgpt-tpu
 channels:
   - defaults
   - https://repo.anaconda.com/pkgs/main
