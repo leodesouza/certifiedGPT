@@ -2,6 +2,8 @@ import logging
 import random
 
 import torch
+import torch_xla
+import torch_xla.core.xla_model as xm
 from torch.cuda.amp import autocast as autocast
 import torch.nn as nn
 
@@ -35,8 +37,14 @@ class MiniGPTBase(BaseModel):
             lora_target_modules=["q_proj", "v_proj"],
             lora_alpha=16,
             lora_dropout=0.05,
+            use_tpu=True
     ):
         super().__init__()
+
+        if use_tpu:            
+            self.device = xm.xla_device()
+        else:
+            self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         self.llama_model, self.llama_tokenizer = self.init_llm(
             llama_model_path=llama_model,
