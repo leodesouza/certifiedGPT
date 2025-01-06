@@ -4,7 +4,7 @@ model:
   end_sym: "###"
   prompt_path: "prompts/alignment.txt"
   prompt_template: '###Human: {} ###Assistant: '
-  ckpt: 'E:\pesquisa_ia\projetos\checkpoints\minigpt-4\prerained_minigpt4_7b.pth'
+  ckpt: '/home/leonardosouza/storage/checkpoints/minigpt-4/prerained_minigpt4_7b.pth'
 
   drop_path_rate: 0
   use_grad_checkpoint: false
