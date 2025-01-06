@@ -11,6 +11,7 @@ import contextlib
 from omegaconf import OmegaConf
 import numpy as np
 import torch
+import torch_xla
 import torch.nn as nn
 from transformers import LlamaTokenizer
 from peft import (
@@ -129,14 +130,16 @@ class BaseModel(nn.Module):
             return tot
 
     def maybe_autocast(self, dtype=torch.float16):
-        # if on cpu, don't use autocast
-        # if on gpu, use autocast with dtype if provided, otherwise use torch.float16
-        enable_autocast = self.device != torch.device("cpu")
-
-        if enable_autocast:
-            return torch.amp.autocast('cuda',dtype=dtype)
-        else:
+        # Check if device is CPU, GPU (CUDA), or TPU (XLA)
+        device_type = self.device.type
+        
+        if device_type == "cpu":
             return contextlib.nullcontext()
+        elif device_type == "xla":
+            # TPUs prefer bfloat16 over float16
+            return torch.amp.autocast(device_type="xla", dtype=torch.bfloat16)
+        else:  # cuda or mps
+            return torch.amp.autocast(device_type=device_type, dtype=dtype)
 
     @classmethod
     def init_vision_encoder(

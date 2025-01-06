@@ -2,7 +2,8 @@ import logging
 import random
 
 import torch
-from torch.cuda.amp import autocast as autocast
+import torch_xla
+from torch_xla.amp import autocast as autocast
 import torch.nn as nn
 
 from common.registry import registry
