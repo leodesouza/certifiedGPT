@@ -7,7 +7,10 @@
 import os 
 import time
 import torch
+import torch_xla.core.xla_model as xm
+import torch_xla.distributed.parallel_loader as pl
 from torch.utils.data import DataLoader, DistributedSampler
+import torch_xla.amp as xla_amp
 
 from agents.base import BaseAgent
 from common.registry import registry
@@ -51,16 +54,16 @@ def apply_to_sample(f, sample):
     return _apply(sample)
 
 
-def move_to_cuda(sample):
-    def _move_to_cuda(tensor):
-        return tensor.cuda()
+def move_to_xla(sample):
+    def _move_to_xla(tensor):
+        return tensor.to(xm.xla_device())
 
-    return apply_to_sample(_move_to_cuda, sample)
+    return apply_to_sample(_move_to_xla, sample)
 
 
-def prepare_sample(samples, cuda_enabled=True):
-    if cuda_enabled:
-        samples = move_to_cuda(samples)
+def prepare_sample(samples, xla_enabled=True):
+    if xla_enabled:
+        samples = move_to_xla(samples)
     return samples
 
 
@@ -99,15 +102,14 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             if not self._dataloaders.get("train") and not self.config.run.evaluate:
                 raise ValueError("Training dataloader is empty")
 
-            # if not self._dataloaders.get("val"):
-            #     raise ValueError("Validation dataloader is empty")
+            
 
             self.logger.info("Start running the training loop")
             self.logger.info(
                 f"Start epoch: {self.start_epoch}. Max epoch: {self.max_epoch}"
             )
 
-            self._scaler = torch.amp.GradScaler()
+            self._scaler = xla_amp.GradScaler()
             for epoch in range(self.start_epoch, self.max_epoch):
 
                 # training step
@@ -152,6 +154,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
     def train(self, epoch):
 
         train_loader = self._dataloaders["train"]
+        train_loader = pl.ParallelLoader(train_loader, [self.device])
 
         if len(train_loader) == 0:
             return float("inf")
@@ -164,23 +167,27 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         for batch_sample in tqdm(train_loader, desc=f"Training epoch {epoch}"):
             
             batch_sample = prepare_sample(
-                batch_sample, cuda_enabled=torch.cuda.is_available()
+                batch_sample
             )
 
             self.lr_scheduler.step(cur_epoch=epoch, cur_step=curr_step)
 
-            with torch.amp.autocast("cuda", enabled=self.config.run.amp):
+            with xla_amp.autocast(enabled=self.config.run.amp): 
                 outputs = self.model(batch_sample)
                 loss = outputs["loss"]
+                
 
-            if not torch.isnan(loss).any():                
+            if not torch.isnan(loss).any():                                
+
                 if self.config.run.amp:
                     self._scaler.scale(loss).backward()
-                    self._scaler.unscale_(self.optimizer)
                 else:
-                    loss.backward()
+                    loss.backward() 
+                
+                if self.config.run.amp:                                                  
+                    self._scaler.unscale_(self.optimizer)
 
-                # prevent exploding gradients
+                # clip grad to avoid exploding gradients
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
 
                 if (curr_step + 1) % accumulated_gradients == 0:
@@ -190,19 +197,25 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     else:
                         self.optimizer.step()
 
+                    xm.mark_step()
                     self.optimizer.zero_grad()
 
                 curr_step += 1
                 running_loss += loss.item()
             else:
                 self.logger.info("NaN detected")
-                        
+
+        
+        running_loss = xm.mesh_reduce("running_loss", running_loss, lambda x: sum(x))    
+            
         return running_loss / len(train_loader)
 
     @torch.no_grad()
     def eval(self, epoch):
         running_eval_loss = 0
+
         val_loader = self._dataloaders["val"]
+        val_loader = pl.ParallelLoader(val_loader, [self.device])
 
         if len(val_loader) == 0:
             return float("inf")
@@ -212,12 +225,12 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         for batch_sample in tqdm(val_loader, desc=f"Evaluating epoch {epoch}"):
 
             batch_sample = prepare_sample(
-                batch_sample, cuda_enabled=torch.cuda.is_available()
+                batch_sample
             )
             
-            with torch.amp.autocast("cuda", enabled=self.config.run.amp):
-                outputs = self.model(batch_sample)               
-                loss = outputs["loss"]
+            
+            outputs = self.model(batch_sample)               
+            loss = outputs["loss"]
 
             if not torch.isnan(loss).any():                
                 running_eval_loss += loss.item()
@@ -238,12 +251,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         :return:
         """
         # raise NotImplementedError
-
-    @property
-    def device(self):
-        if self._device is None:
-            self._device = torch.device(self.config.run.device)
-        return self._device
+    
 
     @classmethod
     def setup_agent(cls, **kwargs):
@@ -267,6 +275,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         dataloaders = dict()
 
         for dataset_name in dataset_names:
+
             dataset = datasets[dataset_name]
 
             for split in dataset.values():
@@ -282,13 +291,23 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
                 collate_fn = getattr(split, "collater", None)
 
+
+                sampler = DistributedSampler(
+                    split,
+                    num_replicas=xm.xla_device_count(),
+                    rank=xm.get_ordinal(),
+                    shuffle=True if is_train else False
+                ) if self.config.run.distributed else None
+
                 loader = DataLoader(
                     split,
                     batch_size=self.config.datasets[dataset_name].batch_size,
                     num_workers=self.config.run.num_workers,
                     pin_memory=True,
                     shuffle=True if is_train else False,
+                    sampler=sampler,
                     collate_fn=collate_fn,
+                    drop_last=True
                 )
                 dataloaders[split.split_name] = loader
 
@@ -329,7 +348,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         path = self.config.run.output_dir
         file_and_path = os.path.join(path, file_name)
-        torch.save(checkpoint, file_and_path)
+        xm.save(checkpoint, file_and_path)
         self.logger.info(f"Checkpoint saved at path: {file_and_path}")
     
         

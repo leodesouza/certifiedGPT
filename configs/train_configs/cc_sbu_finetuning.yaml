@@ -63,7 +63,7 @@ run:
   evaluate: False
   train_splits: ["train"]
 
-  device: "cuda"
+  device: "tpu"
 
 #  world_size: 1
 #  dist_url: "env://"
