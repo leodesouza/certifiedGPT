@@ -7,7 +7,7 @@
 
 import logging
 import torch
-
+import torch_xla.core.xla_model as xm
 import common
 from common.registry import registry
 
@@ -81,7 +81,10 @@ class BaseAgent:
     @property
     def device(self):
         if self._device is None:
-            self._device = torch.device(self.config.run.device)
+            if self.config.run.device == "tpu":
+                self._device = xm.xla_device()
+            else:
+                self._device = torch.device(self.config.run.device)
         return self._device
 
     @property

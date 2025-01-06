@@ -8,16 +8,11 @@ import logging
 import argparse
 
 import os
-os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
-os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:1024"
-
-
 import random
 import sys
 
 import numpy as np
 import torch
-import torch.backends.cudnn as cudnn
 from omegaconf import OmegaConf
 
 import agents
@@ -69,10 +64,7 @@ def setup_seeds(config):
     seed = config.run.seed
     random.seed(seed)
     np.random.seed(seed)
-    torch.manual_seed(seed)
-
-    cudnn.benchmark = False
-    cudnn.deterministic = True
+    torch.manual_seed(seed)    
 
 
 def register_variables():
