@@ -188,12 +188,11 @@ class BaseModel(nn.Module):
             llama_tokenizer = LlamaTokenizer.from_pretrained(llama_model_path, use_fast=False)
             llama_tokenizer.pad_token = "$$"
 
-            device = torch.device(f'xla:{low_res_device}' if torch_xla.is_available() 
-                                else f'cuda:{low_res_device}' if torch.cuda.is_available() 
-                                else 'cpu')
-            
-            is_tpu = device.type == 'xla'
-            
+            is_tpu = 'xla' in str(type(torch_xla._XLAC._xla_get_default_device()))
+            # device = torch.device(f'xla:{low_res_device}' if is_tpu 
+            #                     else f'cuda:{low_res_device}' if torch.cuda.is_available() 
+            #                     else 'cpu')
+
             if low_resource:
                 if is_tpu:
                     logging.info("Loading with low resource on TPU. dtype=bfloat16")
