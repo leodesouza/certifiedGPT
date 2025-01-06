@@ -178,7 +178,8 @@ class BaseModel(nn.Module):
                 llama_model_path,
                 torch_dtype=torch.float16,
                 load_in_8bit=True,
-                device_map={'': low_res_device}
+                device_map={'': low_res_device},
+                use_bitsandbytes=False
             )
         else:
             llama_model = LlamaForCausalLM.from_pretrained(
