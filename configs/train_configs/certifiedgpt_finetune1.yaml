@@ -64,7 +64,7 @@ run:
   beta2: 0.999
 
   seed: 42
-  output_dir: 'e:\pesquisa_ia\projetos\checkpoints\certifiedgpt'
+  output_dir: '~/storage/checkpoints/certifiedgpt/'
   amp: True
   resume_ckpt_path: null
   evaluate: False
