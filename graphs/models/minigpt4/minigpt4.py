@@ -3,7 +3,8 @@ import os
 import random
 
 import torch
-from torch.cuda.amp import autocast as autocast
+import torch_xla.core.xla_model as xm
+from torch_xla.amp import autocast as autocast
 import torch.nn as nn
 
 import common.registry
