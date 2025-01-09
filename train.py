@@ -34,7 +34,7 @@ from graphs.models.minigpt4.common.optims import *
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Training")
-    parser.add_argument("--config-path", required=True, help="path to configuration file.")
+    parser.add_argument("--config-path", required=True, help="path to configuration file.")    
     args = parser.parse_args()
 
     return args
