@@ -101,7 +101,6 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
             if not self._dataloaders.get("train") and not self.config.run.evaluate:
                 raise ValueError("Training dataloader is empty")
-
             
 
             self.logger.info("Start running the training loop")
@@ -110,6 +109,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             )
 
             self._scaler = xla_amp.GradScaler()
+            
             for epoch in range(self.start_epoch, self.max_epoch):
 
                 # training step
@@ -122,9 +122,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     self.logger.info(f"Evaluation epoch: {epoch}")
                     val_loss = self.eval(epoch)
                     val_losses.append(val_loss)
-
-                    
-                    # self.logger.info(f"Train loss: {train_loss}. Eval loss: {val_loss}")
+                                        
                     
                     if val_loss < best_val_loss:                        
                         best_val_loss = val_loss                    
@@ -151,6 +149,16 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         except Exception as e:
             self.logger.error(f"Error on runing the agent. Details: {e}")
 
+    def add_noise(self, image_inputs, noise_level):
+
+        if noise_level < 0:
+            raise ValueError("Noise level must be greater than 0")
+        
+
+        noised_image_inputs = image_inputs + torch.rand_like(image_inputs) * noise_level
+        
+        return noised_image_inputs
+    
     def train(self, epoch):
 
         train_loader = self._dataloaders["train"]
@@ -163,12 +171,19 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         running_loss = 0.0
         curr_step = 0
         accumulated_gradients = self.config.run.accumulated_gradients or 1
+        noise_level = self.config.run.noise_level
         
         for batch_sample in tqdm(train_loader, desc=f"Training epoch {epoch}"):
             
             batch_sample = prepare_sample(
                 batch_sample
             )
+
+            if noise_level > 0:
+                image_inputs = batch_sample["image"]
+                noised_image_inputs = self.add_noise(image_inputs, noise_level)
+                batch_sample["image"] = noised_image_inputs
+            
 
             self.lr_scheduler.step(cur_epoch=epoch, cur_step=curr_step)
 
