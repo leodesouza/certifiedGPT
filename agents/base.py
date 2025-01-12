@@ -89,7 +89,11 @@ class BaseAgent:
 
     @property
     def model(self):
+        if self._model is None:
+            raise ValueError("Model has not been initialized. Call build_model() first.")
+        
         if self._model.device != self._device:
+            self.logger.info(f"Moving model to device: {self._device}") 
             self._model = self._model.to(self.device)
         return self._model
 
