@@ -6,6 +6,7 @@
 #    
 import logging
 import argparse
+import wandb
 
 import os
 import random
@@ -13,6 +14,7 @@ import sys
 
 import numpy as np
 import torch
+import torch_xla.distributed.xla_multiprocessing as xmp
 from omegaconf import OmegaConf
 
 import agents
@@ -35,6 +37,9 @@ from graphs.models.minigpt4.common.optims import *
 def parse_args():
     parser = argparse.ArgumentParser(description="Training")
     parser.add_argument("--config-path", required=True, help="path to configuration file.")    
+    parser.add_argument("--noise_level", required=True, help="noise level to apply on images.")    
+    parser.add_argument("--num_procs", required=True, help="num of tpu cores.")    
+    
     args = parser.parse_args()
 
     return args
@@ -74,18 +79,20 @@ def register_variables():
     registry.register("SPLIT_NAMES", ["train", "val", "test"])
 
 
+def train(config):
+    agent = agents.setup_agent(config)
+    agent.run()
+    agent.finalize()
+
 def main():
 
     setup_logger()
     args = parse_args()
     config = Config(args)
-    setup_seeds(config)
-
-    register_variables()
-
-    agent = agents.setup_agent(config)
-    agent.run()
-    agent.finalize()
+    setup_seeds(config)    
+    register_variables()    
+    
+    xmp.spawn(train, args=(args, config,), nprocs=int(args.num_procs), start_method='spawn' )
 
 
 if __name__ == "__main__":

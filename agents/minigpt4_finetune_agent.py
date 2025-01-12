@@ -17,24 +17,24 @@ from common.registry import registry
 from graphs.losses.cross_entropy_loss import CrossEntropyLoss
 from tqdm import tqdm
 import matplotlib.pyplot as plt
-
+import wandb
 
 torch.autograd.set_detect_anomaly(False)
 
 
-def plot_losses(losses):
-    fig = plt.figure(figsize=(13, 5))
-    ax = fig.gca()
+# def plot_losses(losses):
+#     fig = plt.figure(figsize=(13, 5))
+#     ax = fig.gca()
 
-    for loss_name, loss_values in losses.items():
-        ax.plot(loss_values, label=loss_name)
+#     for loss_name, loss_values in losses.items():
+#         ax.plot(loss_values, label=loss_name)
 
-    ax.legend(fontsize=16)
-    ax.set_xlabel("Iteration", fontsize=16)
-    ax.set_ylabel("Loss", fontsize=16)
-    ax.set_title("Loss vs iterations", fontsize=16)
-    plt.savefig("vqa_plot_training.png")
-    plt.close()
+#     ax.legend(fontsize=16)
+#     ax.set_xlabel("Iteration", fontsize=16)
+#     ax.set_ylabel("Loss", fontsize=16)
+#     ax.set_title("Loss vs iterations", fontsize=16)
+#     plt.savefig("vqa_plot_training.png")
+#     plt.close()
 
 
 def apply_to_sample(f, sample):
@@ -67,6 +67,17 @@ def prepare_sample(samples, xla_enabled=True):
     return samples
 
 
+
+def setup_wandb(self, model):
+    if self.config.run.wandb:
+        wandb.login(key="d1b66dc342a50d8604e1f216a1cdbf329d08d8a8")
+        wandb.init(
+            mode="offline",    
+            project="certifiedgpt",         
+            name=self.config.model.arch)
+        
+        wandb.watch(model)  
+
 @registry.register_agent("image_text_finetune")
 class MiniGPT4FineTuneAgent(BaseAgent):
     def __init__(self):
@@ -74,13 +85,17 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self.start_epoch = 0
         self.max_epoch = self.config.run.max_epoch
         self._model = self.build_model()
+        self._setup_wandb(self._model)
         self._start_epoch = 0
         self._scaler = None
+        self.training_history = {
+            "epoch": [],
+            "train_loss": [],
+            "val_loss": []            
+        }
 
     def run(self):
-        start_time = time.time()
-        train_losses = []
-        val_losses = []    
+        start_time = time.time()        
         best_val_loss = float('inf')
         patience = self.config.run.patience or 3
         wait = 0
@@ -113,31 +128,42 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             for epoch in range(self.start_epoch, self.max_epoch):
 
                 # training step
-                if not self.config.run.evaluate:
-                    self.logger.info(f"Training epoch: {epoch}")
-                    train_loss = self.train(epoch)
-                    train_losses.append(train_loss)                   
-                else:                                                    
+                # if not self.config.run.evaluate:
+                self.logger.info(f"Training epoch: {epoch}")
+                train_loss = self.train(epoch)
+                train_losses += train_loss
+
+                # else:                                                    
                     # evaluation step
-                    self.logger.info(f"Evaluation epoch: {epoch}")
-                    val_loss = self.eval(epoch)
-                    val_losses.append(val_loss)
-                                        
-                    
-                    if val_loss < best_val_loss:                        
-                        best_val_loss = val_loss                    
-                        wait = 0
-                        self.save_checkpoint(self.model, self.optimizer, 
-                                            epoch, val_loss)
-                    else:
-                        wait += 1
-                    
-                    if wait >= patience:
-                        self.logger.info(f"Early Stopping at epoch: {epoch}")
-                        break
+                self.logger.info(f"Evaluation epoch: {epoch}")
+                val_loss = self.eval(epoch)
+                val_losses += val_loss
+                                                    
+                if val_loss < best_val_loss:                        
+                    best_val_loss = val_loss                    
+                    wait = 0
+                    self.save_checkpoint(self.model, self.optimizer, 
+                                        epoch, val_loss)
+                else:
+                    wait += 1
                 
-                # losses = {"Train loss": train_losses, "Val loss": val_losses}
-                # plot_losses(losses)
+                if wait >= patience:
+                    self.logger.info(f"Early Stopping at epoch: {epoch}")
+                    break
+
+                self.training_history["epoch"].append(epoch)
+                self.training_history["train_loss"].append(train_loss)
+                self.training_history["val_loss"].append(val_loss)                
+                
+                
+            if self.config.run.wandb:
+                for i in range(len(self.training_history["epoch"])):                        
+                    wandb.log({
+                        "epoch": self.training_history["epoch"][i],
+                        "train_loss": self.training_history["train_loss"][i],
+                        "val_loss": self.training_history["val_loss"][i]                        
+                        })                    
+                wandb.finish()
             
             
             elapsed_time = time.time() - start_time
@@ -191,6 +217,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 outputs = self.model(batch_sample)
                 loss = outputs["loss"]
                 
+                
 
             if not torch.isnan(loss).any():                                
 
@@ -213,7 +240,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                         self.optimizer.step()
 
                     xm.mark_step()
-                    self.optimizer.zero_grad()
+                    self.optimizer.zero_grad()                    
 
                 curr_step += 1
                 running_loss += loss.item()
@@ -358,7 +385,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             'epoch': epoch,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
-            'loss': loss
+            'loss': loss,
+            'noise_level': self.config.run.noise_level  
         }
 
         path = self.config.run.output_dir
