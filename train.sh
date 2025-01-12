@@ -7,7 +7,7 @@ BATCH_SIZE=6
 CHECKPOINT_NAME="checkpoint_finetune_vqav2_0.25.pth"
 
 # Execute the Python training script
-python3 -m torch_xla.distributed.xla_spawn --num_devices=${NUM_TPU_CORES} train.py \
+python3 -m torch_xla.distributed.launch --num_cores=${NUM_TPU_CORES} train.py \
     --num_procs=${NUM_TPU_CORES} \
     --config-path="" \
     --noise_level=${NOISE_LEVEL} \
