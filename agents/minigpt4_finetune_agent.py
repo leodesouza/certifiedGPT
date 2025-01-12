@@ -361,7 +361,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
     
     def save_checkpoint(self, model, optimizer, epoch, loss, is_best=False):
         
-        file_name = f'checkpoint_certifiedpt.pth'
+        file_name = self.config.run.checkpoint_name
         checkpoint = {
             'epoch': epoch,
             'model_state_dict': model.state_dict(),
