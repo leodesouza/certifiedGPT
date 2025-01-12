@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 NUM_TPU_CORES=8
 NOISE_LEVEL=0.25
 MAX_EPOCHS=1
@@ -14,5 +13,5 @@ python3 -m torch_xla.distributed.xla_spawn --num_devices=${NUM_TPU_CORES} train.
     --noise_level=${NOISE_LEVEL} \
     --max_epochs=${MAX_EPOCHS} \
     --batch_size=${BATCH_SIZE} \    
-    --checkpoint_name=${CHECKPOINT_NAME}  
+    --checkpoint_name=${CHECKPOINT_NAME}     
     
