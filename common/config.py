@@ -14,9 +14,25 @@ class Config:
         self.config = {}
         self.args = args
         # Register the config and configuration for setup
-        registry.register("configuration", self)
+        registry.register("configuration", self)        
         self.config = OmegaConf.load(self.args.config_path)
+        self.config.noise_level = self.args.noise_level
 
+        if hasattr(self.args, 'max_epochs') and self.args.max_epochs > 0:
+            self.config.run.max_epochs = self.args.max_epochs
+
+        if hasattr(self.args, 'batch_size') and self.args.batch_size > 0:
+            self.config.config.datasets.vqav2.batch_size = self.args.batch_size
+        
+        if hasattr(self.args, 'checkpoint_name') and self.args.checkpoint_name != "":
+            self.config.run.checkpoint_name = self.args.checkpoint_name
+        
+        if hasattr(self.args, 'num_procs') and self.args.num_procs > 0:
+            self.config.run.num_procs = self.args.num_procs
+        
+        if hasattr(self.args, 'noise_level') and self.args.noise_level > 0:
+            self.config.config.datasets.vqav2.noise_level = self.args.noise_level                                                
+        
     @property
     def datasets(self):
         return self.config.datasets

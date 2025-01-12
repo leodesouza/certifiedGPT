@@ -1,13 +1,5 @@
-# SPDX-License-Identifier: BSD-3-Clause
-#
-# Portions of this file are derived from the "MiniGPT-4" project.
-# See LICENSE.md for the full license text or visit the repo at:
-# https://github.com/Vision-CAIR/MiniGPT-4
-#    
 import logging
 import argparse
-import wandb
-
 import os
 import random
 import sys
@@ -17,6 +9,8 @@ import torch
 import torch_xla.distributed.xla_multiprocessing as xmp
 from omegaconf import OmegaConf
 
+
+# local imports 
 import agents
 from common.config import Config
 from common.registry import registry
@@ -83,17 +77,15 @@ def train(config):
     agent = agents.setup_agent(config)
     agent.run()
     agent.finalize()
-
-def main():
-
+            
+if __name__ == "__main__":
     setup_logger()
     args = parse_args()
     config = Config(args)
     setup_seeds(config)    
     register_variables()    
-    
-    xmp.spawn(train, args=(args, config,), nprocs=int(args.num_procs), start_method='spawn' )
 
-
-if __name__ == "__main__":
-    main()
+    xmp.spawn(train, 
+              args=(args, config,), 
+              nprocs=int(args.num_procs), 
+              start_method='spawn' )
