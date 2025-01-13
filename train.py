@@ -96,7 +96,12 @@ if __name__ == "__main__":
     setup_seeds(config)    
     register_variables()    
 
-    xmp.spawn(train, 
-              args=(args, config,), 
-              nprocs=int(args.num_procs), 
-              start_method='spawn' )
+    agent = agents.setup_agent(config)
+    agent.run()
+    agent.finalize()
+
+
+    # xmp.spawn(train, 
+    #           args=(args, config,), 
+    #           nprocs=int(args.num_procs), 
+    #           start_method='spawn' )
