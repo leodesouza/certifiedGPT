@@ -147,13 +147,10 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         return noised_image_inputs
     
     def train(self, epoch):
-
-        self.logger.info("entering train") 
+        
         train_loader = self._dataloaders["train"]
         parallel_loader = pl.ParallelLoader(train_loader, [self.device])
-        train_loader = parallel_loader.per_device_loader(self.device)
-
-        self.logger.info("len(train_loader)") 
+        train_loader = parallel_loader.per_device_loader(self.device)        
 
         if len(train_loader) == 0:
             return float("inf")
@@ -163,11 +160,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         curr_step = 0
         accumulated_gradients = self.config.run.accumulated_gradients or 1
         noise_level = self.config.run.noise_level
-        
-        self.logger.info("prepare_sample") 
+                
         for batch_sample in tqdm(train_loader, desc=f"Training epoch {epoch}"):
-            
-            self.logger.info("prepare_sample")   
+                        
             batch_sample = prepare_sample(
                 batch_sample
             )
@@ -177,11 +172,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 noised_image_inputs = self.add_noise(image_inputs, noise_level)
                 batch_sample["image"] = noised_image_inputs
             
-
-            self.logger.info("learning rate scheduler")   
+            
             self.lr_scheduler.step(cur_epoch=epoch, cur_step=curr_step)
-
-            self.logger.info("autocast")   
+            
             with xla_amp.autocast(enabled=self.config.run.amp, device=self.device): 
                 outputs = self.model(batch_sample)
                 loss = outputs["loss"]
@@ -218,13 +211,15 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                                 
         avg_loss = xm.mesh_reduce("running_loss", running_loss, lambda x: sum(x) / len(x)) / len(train_loader)    
 
-         
+        tpu_cores = xm.xrt_world_size()
         if self.config.run.wandb:
             wandb.log({
                 "epoch": epoch,
                 "loss": avg_loss,
-                "learning_rate": self.lr_scheduler.get_last_lr()
+                "learning_rate": self.lr_scheduler.get_last_lr(),
+                "tpu_cores": tpu_cores
             })
+            wandb.watch(self.model)
         self._tpu_metrics.log_tpu_metrics(curr_step)
         #wandb.finish()
             
