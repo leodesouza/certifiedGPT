@@ -148,9 +148,12 @@ class MiniGPT4FineTuneAgent(BaseAgent):
     
     def train(self, epoch):
 
+        self.logger.info("entering train") 
         train_loader = self._dataloaders["train"]
         parallel_loader = pl.ParallelLoader(train_loader, [self.device])
         train_loader = parallel_loader.per_device_loader(self.device)
+
+        self.logger.info("len(train_loader)") 
 
         if len(train_loader) == 0:
             return float("inf")
@@ -161,9 +164,10 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         accumulated_gradients = self.config.run.accumulated_gradients or 1
         noise_level = self.config.run.noise_level
         
-        
+        self.logger.info("prepare_sample") 
         for batch_sample in tqdm(train_loader, desc=f"Training epoch {epoch}"):
             
+            self.logger.info("prepare_sample")   
             batch_sample = prepare_sample(
                 batch_sample
             )
@@ -174,8 +178,10 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 batch_sample["image"] = noised_image_inputs
             
 
+            self.logger.info("learning rate scheduler")   
             self.lr_scheduler.step(cur_epoch=epoch, cur_step=curr_step)
 
+            self.logger.info("autocast")   
             with xla_amp.autocast(enabled=self.config.run.amp): 
                 outputs = self.model(batch_sample)
                 loss = outputs["loss"]
