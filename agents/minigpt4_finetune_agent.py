@@ -186,9 +186,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 outputs = self.model(batch_sample)
                 loss = outputs["loss"]
                 
-                
+            self.logger.info(f"loss: {loss}")          
             if not torch.isnan(loss).any():                                
-
+                self.logger.info("backward")
                 if self.config.run.amp:
                     self._scaler.scale(loss).backward()
                 else:
