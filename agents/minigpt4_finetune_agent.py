@@ -182,7 +182,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             self.lr_scheduler.step(cur_epoch=epoch, cur_step=curr_step)
 
             self.logger.info("autocast")   
-            with xla_amp.autocast(enabled=self.config.run.amp): 
+            with xla_amp.autocast(enabled=self.config.run.amp, device=self.device): 
                 outputs = self.model(batch_sample)
                 loss = outputs["loss"]
                 
