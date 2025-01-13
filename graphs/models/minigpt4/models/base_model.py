@@ -195,9 +195,7 @@ class BaseModel(nn.Module):
                     logging.info("Loading with low resource on TPU. dtype=bfloat16")
                     llama_model = LlamaForCausalLM.from_pretrained(
                         llama_model_path,
-                        torch_dtype=torch.bfloat16,
-                        device_map={'': low_res_device},
-                        weights_only=True                        
+                        torch_dtype=torch.bfloat16                        
                     )
                 else:
                     logging.info("Loading with low resource. dtype=16 and 8bit")
