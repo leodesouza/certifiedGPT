@@ -21,7 +21,7 @@ class Config:
             self.config.run.max_epochs = int(self.args.max_epochs)  
 
         if hasattr(self.args, 'batch_size') and int(self.args.batch_size)> 0:
-            self.config.config.datasets.vqav2.batch_size = int(self.args.batch_size)    
+            self.config.datasets.vqav2.batch_size = int(self.args.batch_size)    
         
         if hasattr(self.args, 'checkpoint_name') and self.args.checkpoint_name != "":
             self.config.run.checkpoint_name = self.args.checkpoint_name
