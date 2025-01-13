@@ -33,6 +33,10 @@ def parse_args():
     parser.add_argument("--config-path", required=True, help="path to configuration file.")    
     parser.add_argument("--noise_level", required=True, help="noise level to apply on images.")    
     parser.add_argument("--num_procs", required=True, help="num of tpu cores.")    
+    parser.add_argument("--max_epochs", required=True, help="max epochs to train.")    
+    parser.add_argument("--batch_size", required=True, help="batch size.")    
+    parser.add_argument("--checkpoint_name", required=True, help="checkpoint name.")    
+    
     
     args = parser.parse_args()
 
