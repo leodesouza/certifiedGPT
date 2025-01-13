@@ -159,7 +159,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         running_loss = 0.0
         curr_step = 0
         accumulated_gradients = self.config.run.accumulated_gradients or 1
-        noise_level = self.config.noise_level
+        noise_level = self.config.run.noise_level
         
         
         for batch_sample in tqdm(train_loader, desc=f"Training epoch {epoch}"):

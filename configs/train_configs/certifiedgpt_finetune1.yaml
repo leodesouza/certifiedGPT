@@ -19,12 +19,11 @@ model:
   llama_model: ${env:VICUNA_DIR}
   blip_flant5_pth: ${env:BLIP_FLANT5_PTH}
   eva_vit_g_pth: ${env:EVA_VIT_G_PTH}
-  
-      
+
+
 datasets:
   vqav2:
-    batch_size: 64
-    noise_level: 0.25    
+    batch_size: 64    
     vis_processor:
       train:
         name: "blip2_image_train"
@@ -52,6 +51,7 @@ run:
   num_workers: 1
   accumulated_gradients: 1
   patience: 10
+  noise_level: 0.25
       
   lr_sched: "linear_warmup_cosine_lr"
   init_lr: 5e-3 # 1e-2   # init_lr peak learning rate after warmup phase
