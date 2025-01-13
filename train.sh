@@ -3,7 +3,7 @@
 NUM_TPU_CORES=8
 NOISE_LEVEL=0.25
 MAX_EPOCHS=1
-BATCH_SIZE=64
+BATCH_SIZE=6
 CHECKPOINT_NAME="checkpoint_finetune_vqav2_0.25.pth"
 CONFIG_PATH='/home/leonardosouza/certifiedGPT/configs/train_configs/certifiedgpt_finetune1.yaml'
 
