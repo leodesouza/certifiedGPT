@@ -54,16 +54,6 @@ def prepare_sample(samples, xla_enabled=True):
 
 
 
-def setup_wandb(self, model):
-    if self.config.run.wandb:
-        wandb.login(key=self.config.run.wandb_api_key)
-        wandb.init(
-            # mode="offline",    
-            project="certifiedgpt",         
-            name=self.config.model.arch)
-        
-        wandb.watch(model)  
-
 @registry.register_agent("image_text_finetune")
 class MiniGPT4FineTuneAgent(BaseAgent):
     def __init__(self):
@@ -374,5 +364,15 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         file_and_path = os.path.join(path, file_name)
         xm.save(checkpoint, file_and_path)
         self.logger.info(f"Checkpoint saved at path: {file_and_path}")
+
+    def _setup_wandb(self, model):
+        if self.config.run.wandb:
+            wandb.login(key=self.config.run.wandb_api_key)
+            wandb.init(
+                # mode="offline",    
+                project="certifiedgpt",         
+                name=self.config.model.arch)
+            
+            wandb.watch(model)  
     
         
