@@ -149,7 +149,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
     def train(self, epoch):
 
         train_loader = self._dataloaders["train"]
-        train_loader = pl.ParallelLoader(train_loader, [self.device])
+        parallel_loader = pl.ParallelLoader(train_loader, [self.device])
+        train_loader = parallel_loader.per_device_loader(self.device)
 
         if len(train_loader) == 0:
             return float("inf")
