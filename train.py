@@ -72,31 +72,31 @@ def register_variables():
     registry.register("MAX_INT", sys.maxsize)
     registry.register("SPLIT_NAMES", ["train", "val", "test"])
 
-def main():
+# def main():
+#     setup_logger()
+#     args = parse_args()
+#     config = Config(args)
+#     setup_seeds(config)    
+#     register_variables()    
+
+#     agent = agents.setup_agent(config)
+#     agent.run()
+#     agent.finalize()
+
+def train(config):
+    agent = agents.setup_agent(config)
+    agent.run()
+    agent.finalize()
+            
+if __name__ == "__main__":
+    
     setup_logger()
     args = parse_args()
     config = Config(args)
     setup_seeds(config)    
     register_variables()    
 
-    agent = agents.setup_agent(config)
-    agent.run()
-    agent.finalize()
-
-# def train(config):
-#     agent = agents.setup_agent(config)
-#     agent.run()
-#     agent.finalize()
-            
-if __name__ == "__main__":
-    main()
-    # setup_logger()
-    # args = parse_args()
-    # config = Config(args)
-    # setup_seeds(config)    
-    # register_variables()    
-
-    # xmp.spawn(train, 
-    #           args=(args, config,), 
-    #           nprocs=int(args.num_procs), 
-    #           start_method='spawn' )
+    xmp.spawn(train, 
+              args=(args, config,), 
+              nprocs=int(args.num_procs), 
+              start_method='spawn' )
