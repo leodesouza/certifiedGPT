@@ -306,7 +306,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
                 sampler = DistributedSampler(
                     split,
-                    num_replicas=xm.xla_device_count(),
+                    num_replicas=xm.xrt_world_size(),
                     rank=xm.get_ordinal(),
                     shuffle=True if is_train else False
                 ) if self.config.run.distributed else None
