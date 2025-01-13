@@ -30,7 +30,7 @@ class Config:
             self.config.run.num_procs = int(self.args.num_procs)
         
         if hasattr(self.args, 'noise_level') and float(self.args.noise_level) > 0:
-            self.config.config.datasets.vqav2.noise_level = float(self.args.noise_level)                                                
+            self.config.datasets.vqav2.noise_level = float(self.args.noise_level)                                                
         
     @property
     def datasets(self):

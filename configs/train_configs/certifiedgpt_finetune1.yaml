@@ -20,9 +20,7 @@ model:
   blip_flant5_pth: ${env:BLIP_FLANT5_PTH}
   eva_vit_g_pth: ${env:EVA_VIT_G_PTH}
   
-  
-  
-
+      
 datasets:
   vqav2:
     batch_size: 64
