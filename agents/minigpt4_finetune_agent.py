@@ -219,7 +219,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 "learning_rate": self.lr_scheduler.get_last_lr(),
                 "tpu_cores": tpu_cores
             })
-            wandb.watch(self.model)
+            
         self._tpu_metrics.log_tpu_metrics(curr_step)
         #wandb.finish()
             
