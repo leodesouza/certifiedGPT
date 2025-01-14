@@ -173,15 +173,18 @@ class BaseModel(nn.Module):
         llama_tokenizer = LlamaTokenizer.from_pretrained(llama_model_path, use_fast=False)
         llama_tokenizer.pad_token = "$$"
 
-        is_tpu = torch.device(low_res_device).type == 'xla'
+        # Properly detect TPU
+        is_tpu = torch.device("xla") if "xla" in str(torch.device(type='xla')) else False
 
         if low_resource:
             if is_tpu:
+                import torch_xla.core.xla_model as xm
+                device = xm.xla_device()
                 self.logger.info("Loading with low resource on TPU. dtype=bfloat16")
                 llama_model = LlamaForCausalLM.from_pretrained(
                     llama_model_path,
-                    torch_dtype=torch.bfloat16,
-                    device_map={'': low_res_device}
+                    torch_dtype=torch.bfloat16,                    
+                    device_map={'': device},
                 )
             else:
                 self.logger.info("Loading with low resource. dtype=16 and 8bit")

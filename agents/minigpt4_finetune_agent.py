@@ -197,8 +197,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     if self.config.run.amp:
                         self._scaler.step(self.optimizer)
                         self._scaler.update()
-                    else:
-                        self.optimizer.step()
+                    else:                        
+                        xm.optimizer_step(self.optimizer)
 
                     xm.mark_step()
                     self.optimizer.zero_grad()                    
