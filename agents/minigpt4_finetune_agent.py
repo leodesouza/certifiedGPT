@@ -7,9 +7,12 @@
 import os 
 import time
 import torch
+import torch.distributed as dist
 import torch_xla as xla
+import torch_xla.distributed.xla_backend
 import torch_xla.core.xla_model as xm
 import torch_xla.distributed.parallel_loader as pl
+
 from torch.utils.data import DataLoader, DistributedSampler
 import torch_xla.amp as xla_amp
 
@@ -21,6 +24,10 @@ from tqdm import tqdm
 import wandb
 
 torch.autograd.set_detect_anomaly(False)
+
+# rank and world size are inferred from XLA Device
+# source: https://github.com/pytorch/xla/
+dist.init_process_group(backend='xla', init_method='xla://')
 
 
 def apply_to_sample(f, sample):
@@ -163,50 +170,50 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         curr_step = 0
                 
         for batch_sample in tqdm(train_loader, desc=f"Training epoch {epoch}"):
-                        
-            batch_sample = prepare_sample(
-                batch_sample
-            )
+            with xla.step():                        
+                batch_sample = prepare_sample(
+                    batch_sample
+                )
 
-            if noise_level > 0:
-                image_inputs = batch_sample["image"]
-                noised_image_inputs = self.add_noise(image_inputs, noise_level)
-                batch_sample["image"] = noised_image_inputs
-            
-            
-            self.lr_scheduler.step(cur_epoch=epoch, cur_step=curr_step)
-            
-            with xla_amp.autocast(enabled=self.config.run.amp, device=self.device): 
-                outputs = self.model(batch_sample)
-                loss = outputs["loss"]
-                            
-            if not torch.isnan(loss).any():                                                
-                if self.config.run.amp:
-                    self._scaler.scale(loss).backward()
-                else:
-                    loss.backward() 
+                if noise_level > 0:
+                    image_inputs = batch_sample["image"]
+                    noised_image_inputs = self.add_noise(image_inputs, noise_level)
+                    batch_sample["image"] = noised_image_inputs
                 
-                if self.config.run.amp:                                                  
-                    self._scaler.unscale_(self.optimizer)
-
-                # clip grad to avoid exploding gradients
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
-
-                if (curr_step + 1) % accumulated_gradients == 0:
+                
+                self.lr_scheduler.step(cur_epoch=epoch, cur_step=curr_step)
+                
+                with xla_amp.autocast(enabled=self.config.run.amp, device=self.device): 
+                    outputs = self.model(batch_sample)
+                    loss = outputs["loss"]
+                                
+                if not torch.isnan(loss).any():                                                
                     if self.config.run.amp:
-                        self._scaler.step(self.optimizer)
-                        self._scaler.update()
-                    else:                        
-                        xm.optimizer_step(self.optimizer)
+                        self._scaler.scale(loss).backward()
+                    else:
+                        loss.backward() 
+                    
+                    if self.config.run.amp:                                                  
+                        self._scaler.unscale_(self.optimizer)
 
-                    xm.mark_step()
-                    self.optimizer.zero_grad() 
+                    # clip grad to avoid exploding gradients
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
 
-                curr_step += 1                                     
-                running_loss += loss.item()
-                                               
-            else:
-                self.logger.info("NaN detected")
+                    if (curr_step + 1) % accumulated_gradients == 0:
+                        if self.config.run.amp:
+                            self._scaler.step(self.optimizer)
+                            self._scaler.update()
+                        else:                        
+                            xm.optimizer_step(self.optimizer)
+
+                        xm.mark_step()
+                        self.optimizer.zero_grad() 
+
+                    curr_step += 1                                     
+                    running_loss += loss.item()
+                                                
+                else:
+                    self.logger.info("NaN detected")
                                 
         avg_loss = xm.mesh_reduce("running_loss", running_loss, lambda x: sum(x) / len(x)) / len(train_loader)    
 
