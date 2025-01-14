@@ -24,10 +24,7 @@ class Config:
             self.config.datasets.vqav2.batch_size = int(self.args.batch_size)    
         
         if hasattr(self.args, 'checkpoint_name') and self.args.checkpoint_name != "":
-            self.config.run.checkpoint_name = self.args.checkpoint_name
-        
-        if hasattr(self.args, 'num_procs') and int(self.args.num_procs) > 0:
-            self.config.run.num_procs = int(self.args.num_procs)
+            self.config.run.checkpoint_name = self.args.checkpoint_name                
         
         if hasattr(self.args, 'noise_level') and float(self.args.noise_level) > 0:
             self.config.run.noise_level = float(self.args.noise_level)                                                

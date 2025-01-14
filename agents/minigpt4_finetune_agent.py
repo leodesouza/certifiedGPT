@@ -65,7 +65,7 @@ def prepare_sample(samples, xla_enabled=True):
 class MiniGPT4FineTuneAgent(BaseAgent):
     def __init__(self):
         super().__init__()
-        self.start_epoch = 0
+        self.start_epoch = 1
         self.max_epoch = self.config.run.max_epoch
         self._model = self.build_model()
         self._setup_wandb(self._model)
@@ -365,6 +365,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
     def save_checkpoint(self, model, optimizer, epoch, loss):
         if xm.is_master_ordinal():
             file_name = self.config.run.checkpoint_name
+            file_name = f"{file_name}_{epoch}_{self.config.run.noise_level}.pth"  
             checkpoint = {
                 'epoch': epoch,
                 'model_state_dict': model.state_dict(),
