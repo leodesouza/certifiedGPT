@@ -3,7 +3,7 @@ import wandb
 
 class TPUMetrics:
     def log_tpu_metrics(self, step):
-        metrics_report = metrics.report_metrics()
+        metrics_report = metrics.metrics_report
         
         utilization = self.parse_tpu_metrics(metrics_report)
 
