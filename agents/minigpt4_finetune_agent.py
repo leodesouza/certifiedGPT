@@ -211,8 +211,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     wandb.log(
                         {
                             "batch_loss": batch_loss,
-                            "batch": step + epoch * len(train_loader),                            
-                            "learning_rate": self.lr_scheduler.get_last_lr()
+                            "batch": step + epoch * len(train_loader),                                                        
                         })
                     self._tpu_metrics.log_tpu_metrics(step)
                 
@@ -226,7 +225,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             wandb.log({
                 "epoch": epoch,
                 "loss": avg_loss,
-                "learning_rate": self.lr_scheduler.get_last_lr(),        
+                "learning_rate": self.lr_scheduler.get_last_lr()[0],        
             })
             
         
