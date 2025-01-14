@@ -16,16 +16,16 @@ from common.config import Config
 from common.registry import registry
 
 # to register builders
-from datasets.builders import *
+#from datasets.builders import *
 
 # to register processors
-from processors import blip_processors
+#from processors import blip_processors
 
 # register models
-from graphs.models import *
+#from graphs.models import *
 
 # register optimizer and learning rate scheduler
-from graphs.models.minigpt4.common.optims import *
+#from graphs.models.minigpt4.common.optims import *
 
 
 def parse_args():
@@ -89,7 +89,7 @@ def main(index):
             
 if __name__ == "__main__":
         
-    #xmp.spawn(main, args=(), nprocs=8, start_method='spawn')
-    xmp.spawn(main, args=())
+    xmp.spawn(main, args=(), nprocs=8, start_method='spawn')
+    #xmp.spawn(main, args=())
 
     #xmp.launch(main, args=())   
