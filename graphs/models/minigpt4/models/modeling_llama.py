@@ -110,13 +110,13 @@ class LlamaForCausalLM(LlamaForCausalLMOrig):
             # Enable model parallelism
             shift_labels = shift_labels.to(shift_logits.device)
 
-            shift_logits = shift_logits - shift_logits.max(dim=-1, keepdim=True)[0]
-            shift_logits = torch.clamp(shift_logits, min=-100, max=100)
+            # shift_logits = shift_logits - shift_logits.max(dim=-1, keepdim=True)[0]
+            # shift_logits = torch.clamp(shift_logits, min=-100, max=100)
 
             loss = loss_fct(shift_logits, shift_labels)
 
-            if torch.isnan(loss).any():
-                print('LlamaForCausalLM --> NaN detected in loss')
+            # if torch.isnan(loss).any():
+            #     print('LlamaForCausalLM --> NaN detected in loss')
                 # loss = torch.tensor(0.0).to(shift_logits.device)
 
             if reduction == "none":
