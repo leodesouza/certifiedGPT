@@ -80,6 +80,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
     def run(self):
         start_time = time.time()        
         best_val_loss = float('inf')
+        best_train_loss = float('inf')  
+        
         patience = self.config.run.patience or 3
         wait = 0
         
@@ -114,8 +116,11 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 # training step
                 if not self.config.run.evaluate:
                     self.logger.info(f"Training epoch: {epoch}")
-                    self.train(epoch)                    
+                    train_loss = self.train(epoch)                    
 
+                    if train_loss < best_train_loss:
+                        best_train_loss = train_loss
+                        self.save_checkpoint(self.model, self.optimizer, epoch, best_train_loss)                     
                 else:                                                    
                     # evaluation step
                     self.logger.info(f"Evaluation epoch: {epoch}")
@@ -219,6 +224,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
 
         if self.config.run.wandb and xm.is_master_ordinal():
+            
             wandb.log({
                 "epoch": epoch,
                 "loss": avg_loss                
@@ -356,21 +362,27 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         model = model_type.from_config(self.config.model)
         return model
     
-    def save_checkpoint(self, model, optimizer, epoch, loss, is_best=False):
-        
-        file_name = self.config.run.checkpoint_name
-        checkpoint = {
-            'epoch': epoch,
-            'model_state_dict': model.state_dict(),
-            'optimizer_state_dict': optimizer.state_dict(),
-            'loss': loss,
-            'noise_level': self.config.run.noise_level  
-        }
+    def save_checkpoint(self, model, optimizer, epoch, loss):
+        if xm.is_master_ordinal():
+            file_name = self.config.run.checkpoint_name
+            checkpoint = {
+                'epoch': epoch,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'loss': loss,
+                'noise_level': self.config.run.noise_level,                
+            }
 
-        path = self.config.run.output_dir
-        file_and_path = os.path.join(path, file_name)
-        xm.save(checkpoint, file_and_path)
-        self.logger.info(f"Checkpoint saved at path: {file_and_path}")
+            path = self.config.run.output_dir
+
+            file_and_path = os.path.join(path, file_name)
+            os.makedirs(path, exist_ok=True)    
+
+            torch.save(checkpoint, file_and_path)
+            self.logger.info(f"Checkpoint saved at path: {file_and_path}")
+
+        #synchronize all the processes
+        xm.rendezvous("checkpoint_saved")
 
     def _setup_wandb(self, model):
         if self.config.run.wandb:
