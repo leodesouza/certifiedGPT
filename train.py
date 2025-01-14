@@ -6,6 +6,7 @@ import sys
 
 import numpy as np
 import torch
+import torch_xla as xla
 import torch_xla.distributed.xla_multiprocessing as xmp
 from omegaconf import OmegaConf
 
@@ -76,24 +77,7 @@ def register_variables():
     registry.register("MAX_INT", sys.maxsize)
     registry.register("SPLIT_NAMES", ["train", "val", "test"])
 
-# def main():
-#     setup_logger()
-#     args = parse_args()
-#     config = Config(args)
-#     setup_seeds(config)    
-#     register_variables()    
-
-#     agent = agents.setup_agent(config)
-#     agent.run()
-#     agent.finalize()
-
-def train(config):
-    agent = agents.setup_agent(config)
-    agent.run()
-    agent.finalize()
-            
-if __name__ == "__main__":
-    
+def main():
     setup_logger()
     args = parse_args()
     config = Config(args)
@@ -102,10 +86,13 @@ if __name__ == "__main__":
 
     agent = agents.setup_agent(config)
     agent.run()
-    agent.finalize()
-
-
+    
+            
+if __name__ == "__main__":
+        
     # xmp.spawn(train, 
     #           args=(args, config,), 
     #           nprocs=int(args.num_procs), 
     #           start_method='spawn' )
+
+    xla.launch(main, args=())   

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 NUM_TPU_CORES=8
-NOISE_LEVEL=0
+NOISE_LEVEL=0.25
 MAX_EPOCHS=1
 BATCH_SIZE=12
 CHECKPOINT_NAME="checkpoint_cc_sbu_align.pth"
