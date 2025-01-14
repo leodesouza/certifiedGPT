@@ -5,27 +5,27 @@ import random
 import sys
 
 import numpy as np
-#import torch
+import torch
 import torch_xla.distributed.xla_multiprocessing as xmp
 from omegaconf import OmegaConf
 
 
 # local imports 
-# import agents
+
 from common.config import Config
 from common.registry import registry
 
 # to register builders
-#from datasets.builders import *
+from datasets.builders import *
 
 # to register processors
-#from processors import blip_processors
+from processors import blip_processors
 
 # register models
-#from graphs.models import *
+from graphs.models import *
 
 # register optimizer and learning rate scheduler
-#from graphs.models.minigpt4.common.optims import *
+from graphs.models.minigpt4.common.optims import *
 
 
 def parse_args():
@@ -67,7 +67,7 @@ def setup_seeds(config):
     seed = config.run.seed
     random.seed(seed)
     np.random.seed(seed)
-    #torch.manual_seed(seed)    
+    torch.manual_seed(seed)    
 
 
 def register_variables():
@@ -77,19 +77,21 @@ def register_variables():
     registry.register("SPLIT_NAMES", ["train", "val", "test"])
 
 def main(index):
+    
+    import agents
+    
     setup_logger()
     args = parse_args()
     config = Config(args)
     setup_seeds(config)    
     register_variables()    
 
-    #agent = agents.setup_agent(config)
-    #agent.run()
+    agent = agents.setup_agent(config)
+    agent.run()
     
             
 if __name__ == "__main__":
-        
-    xmp.spawn(main, args=())
-    #xmp.spawn(main, args=())
-
-    #xmp.launch(main, args=())   
+    
+    import torch_xla as xla 
+    
+    xla.launch(main, args=())   
