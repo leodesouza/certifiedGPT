@@ -363,7 +363,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         return model
     
     def save_checkpoint(self, model, optimizer, epoch, loss):
+        self.logger.info(f"Saving checkpoint for epoch {epoch} with noise level {self.config.run.noise_level}")    
         if xm.is_master_ordinal():
+            self.logger.info("save in the main process")    
             file_name = self.config.run.checkpoint_name
             file_name = f"{file_name}_{epoch}_{self.config.run.noise_level}.pth"  
             checkpoint = {
