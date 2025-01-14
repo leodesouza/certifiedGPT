@@ -191,7 +191,8 @@ class MiniGPT4(MiniGPTBase):
         ckpt_path = cfg.get("ckpt", "")  # load weights of MiniGPT-4
         if ckpt_path:
             print("Load MiniGPT-4 Checkpoint: {}".format(ckpt_path))
-            ckpt = torch.load(ckpt_path, map_location="cpu")
+            import torch_xla.core.xla_model as xm
+            ckpt = torch.load(ckpt_path, map_location=xm.xla_device(), weights_only=True)
             msg = model.load_state_dict(ckpt['model'], strict=False)
 
         return model
