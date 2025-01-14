@@ -379,6 +379,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             path = self.config.run.output_dir
 
             file_and_path = os.path.join(path, file_name)
+            self.logger.info(f"Saving Checkpoint in the path: {file_and_path}")   
             os.makedirs(path, exist_ok=True)    
 
             torch.save(checkpoint, file_and_path)
