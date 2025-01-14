@@ -446,8 +446,8 @@ def create_eva_vit_g(img_size=224, drop_path_rate=0.4, use_checkpoint=False, pre
     logging.info(f"Reading eva_vit_g path from configuration path: {local_path}")
 
     logging.info(f"Load vit g weights..")
-    import torch_xla.core.xla_model as xm
-    state_dict = torch.load(local_path, map_location=xm.xla_device(), weights_only=True)
+    
+    state_dict = torch.load(local_path, map_location="cpu", weights_only=True)
 
     interpolate_pos_embed(model, state_dict)
 

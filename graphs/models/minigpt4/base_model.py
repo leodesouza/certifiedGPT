@@ -42,16 +42,15 @@ class BaseModel(nn.Module):
 
         This should expect no mismatch in the model keys and the checkpoint keys.
         """
-
-        import torch_xla.core.xla_model as xm
+        
         if is_url(url_or_filename):
             cached_file = download_cached_file(
                 url_or_filename, check_hash=False, progress=True
             )
             
-            checkpoint = torch.load(cached_file, map_location=xm.xla_device(), weights_only=True)
+            checkpoint = torch.load(cached_file, map_location="cpu", weights_only=True)
         elif os.path.isfile(url_or_filename):
-            checkpoint = torch.load(url_or_filename, map_location=xm.xla_device(), weights_only=True)
+            checkpoint = torch.load(url_or_filename, map_location="cpu", weights_only=True)
         else:
             raise RuntimeError("checkpoint url or path is invalid")
 
@@ -225,14 +224,14 @@ class BaseModel(nn.Module):
         return llama_model, llama_tokenizer
 
     def load_from_pretrained(self, url_or_filename):
-        import torch_xla.core.xla_model as xm
+        
         if is_url(url_or_filename):
             cached_file = download_cached_file(
                 url_or_filename, check_hash=False, progress=True
             )
-            checkpoint = torch.load(cached_file, map_location=xm.xla_device(), weights_only=True)
+            checkpoint = torch.load(cached_file, map_location="cpu", weights_only=True)
         elif os.path.isfile(url_or_filename):
-            checkpoint = torch.load(url_or_filename, map_location=xm.xla_device(), weights_only=True)
+            checkpoint = torch.load(url_or_filename, map_location="cpu", weights_only=True)
         else:
             raise RuntimeError("checkpoint url or path is invalid")
 
