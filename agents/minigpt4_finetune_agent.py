@@ -160,8 +160,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         
         accumulated_gradients = self.config.run.accumulated_gradients or 1
         noise_level = self.config.run.noise_level
+        curr_step = 0
                 
-        for step, batch_sample in enumerate(tqdm(train_loader, desc=f"Training epoch {epoch}")):
+        for batch_sample in tqdm(train_loader, desc=f"Training epoch {epoch}"):
                         
             batch_sample = prepare_sample(
                 batch_sample
@@ -173,7 +174,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 batch_sample["image"] = noised_image_inputs
             
             
-            self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)
+            self.lr_scheduler.step(cur_epoch=epoch, cur_step=curr_step)
             
             with xla_amp.autocast(enabled=self.config.run.amp, device=self.device): 
                 outputs = self.model(batch_sample)
@@ -191,7 +192,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 # clip grad to avoid exploding gradients
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
 
-                if (step + 1) % accumulated_gradients == 0:
+                if (curr_step + 1) % accumulated_gradients == 0:
                     if self.config.run.amp:
                         self._scaler.step(self.optimizer)
                         self._scaler.update()
@@ -200,21 +201,10 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
                     xm.mark_step()
                     self.optimizer.zero_grad() 
-                                                       
-                running_loss += loss.item()
-                
-                #aggregate loss from all TPU cores
-                batch_loss = xm.mesh_reduce("batch_loss", loss.item(), lambda x: sum(x) / len(x))
 
-                #check if the current process is the master process to avoid duplicate logs
-                if self.config.run.wandb and xm.is_master_ordinal():
-                    wandb.log(
-                        {
-                            "batch_loss": batch_loss,
-                            "batch": step + epoch * len(train_loader),                                                        
-                        })
-                    self._tpu_metrics.log_tpu_metrics(step)
-                
+                curr_step += 1                                     
+                running_loss += loss.item()
+                                               
             else:
                 self.logger.info("NaN detected")
                                 
@@ -224,11 +214,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         if self.config.run.wandb and xm.is_master_ordinal():
             wandb.log({
                 "epoch": epoch,
-                "loss": avg_loss,
-                "learning_rate": self.lr_scheduler.get_last_lr()[0],        
+                "loss": avg_loss                
             })
-            
-        
+                
         #wandb.finish()
             
         return avg_loss
