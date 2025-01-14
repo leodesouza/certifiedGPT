@@ -6,7 +6,7 @@ import sys
 
 import numpy as np
 import torch
-import torch_xla as xla
+import torch_xla.core.xla_model as xm
 import torch_xla.distributed.xla_multiprocessing as xmp
 from omegaconf import OmegaConf
 
@@ -90,9 +90,8 @@ def main():
             
 if __name__ == "__main__":
         
-    # xmp.spawn(train, 
-    #           args=(args, config,), 
-    #           nprocs=int(args.num_procs), 
-    #           start_method='spawn' )
+    xmp.spawn(main, 
+              args=(), 
+              nprocs=4)
 
-    xla.launch(main, args=())   
+    #xmp.launch(main, args=())   
