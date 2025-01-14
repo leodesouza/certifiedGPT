@@ -1,11 +1,13 @@
 #!/bin/bash
 
 NUM_TPU_CORES=8
-NOISE_LEVEL=0.25
+NOISE_LEVEL=0
 MAX_EPOCHS=1
-BATCH_SIZE=6
-CHECKPOINT_NAME="checkpoint_finetune_vqav2_0.25.pth"
-CONFIG_PATH='/home/leonardosouza/certifiedGPT/configs/train_configs/certifiedgpt_finetune1.yaml'
+BATCH_SIZE=12
+CHECKPOINT_NAME="checkpoint_cc_sbu_align.pth"
+# CONFIG_PATH='/home/leonardosouza/certifiedGPT/configs/train_configs/certifiedgpt_finetune1.yaml'
+CONFIG_PATH='/home/leonardosouza/certifiedGPT/configs/train_configs/cc_sbu_finetuning.yaml'
+
 
 
 # Execute the Python training script

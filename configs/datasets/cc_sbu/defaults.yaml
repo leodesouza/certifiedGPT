@@ -5,8 +5,8 @@ datasets:
       annotations:
         train:
           path:
-               - ${env:DATA_DIR}\\filter_cap.json
+               - ${env:DATA_DIR}/filter_cap.json
       images:
         train:
           path:
-               - ${env:DATA_DIR}\\image
+               - ${env:DATA_DIR}/image
