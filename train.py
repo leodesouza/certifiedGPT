@@ -11,7 +11,7 @@ from omegaconf import OmegaConf
 
 
 # local imports 
-import agents
+# import agents
 from common.config import Config
 from common.registry import registry
 
@@ -83,8 +83,8 @@ def main(index):
     setup_seeds(config)    
     register_variables()    
 
-    agent = agents.setup_agent(config)
-    agent.run()
+    #agent = agents.setup_agent(config)
+    #agent.run()
     
             
 if __name__ == "__main__":
