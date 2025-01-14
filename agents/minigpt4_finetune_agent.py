@@ -230,7 +230,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 "loss": avg_loss                
             })
 
-            self._tpu_metrics.log_tpu_metrics(epoch)
+            # self._tpu_metrics.log_tpu_metrics(epoch)
 
         #wandb.finish()
             
