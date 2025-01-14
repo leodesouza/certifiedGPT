@@ -90,6 +90,6 @@ def main(index):
 if __name__ == "__main__":
         
     #xmp.spawn(main, args=(), nprocs=8, start_method='spawn')
-    xmp.spawn(main, args=(), nprocs=8)
+    xmp.spawn(main, args=())
 
     #xmp.launch(main, args=())   
