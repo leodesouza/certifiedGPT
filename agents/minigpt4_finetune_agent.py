@@ -373,7 +373,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             wandb.init(
                 # mode="offline",    
                 project="certifiedgpt",         
-                name=self.config.model.arch)
+                name=self.config.run.wandb_name)
             
             wandb.watch(model)  
     
