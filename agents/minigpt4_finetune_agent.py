@@ -65,7 +65,7 @@ def prepare_sample(samples, xla_enabled=True):
 class MiniGPT4FineTuneAgent(BaseAgent):
     def __init__(self):
         super().__init__()
-        self.start_epoch = 1
+        self.start_epoch = 0
         self.max_epoch = self.config.run.max_epoch
         self._model = self.build_model()
         self._setup_wandb(self._model)

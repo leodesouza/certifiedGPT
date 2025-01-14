@@ -93,7 +93,7 @@ class BaseAgent:
             raise ValueError("Model has not been initialized. Call build_model() first.")
         
         if self._model.device != self._device:
-            self.logger.info(f"Moving model to device: {self._device}") 
+            # self.logger.info(f"Moving model to device: {self._device}") 
             self._model = self._model.to(self.device)
         return self._model
 
@@ -130,7 +130,7 @@ class BaseAgent:
                 else:
                     p_wd.append(p)
                 num_parameters += p.data.nelement()
-            self.logger.info("number of trainable parameters: %d" % num_parameters)
+            #self.logger.info("number of trainable parameters: %d" % num_parameters)
             optim_params = [
                 {
                     "params": p_wd,
