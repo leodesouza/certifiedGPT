@@ -157,11 +157,11 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         self.model.train()
         running_loss = 0.0
-        curr_step = 0
+        
         accumulated_gradients = self.config.run.accumulated_gradients or 1
         noise_level = self.config.run.noise_level
                 
-        for batch_sample in tqdm(train_loader, desc=f"Training epoch {epoch}"):
+        for step, batch_sample in enumerate(tqdm(train_loader, desc=f"Training epoch {epoch}")):
                         
             batch_sample = prepare_sample(
                 batch_sample
@@ -173,15 +173,13 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 batch_sample["image"] = noised_image_inputs
             
             
-            self.lr_scheduler.step(cur_epoch=epoch, cur_step=curr_step)
+            self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)
             
             with xla_amp.autocast(enabled=self.config.run.amp, device=self.device): 
                 outputs = self.model(batch_sample)
                 loss = outputs["loss"]
-                
-            self.logger.info(f"loss: {loss}")          
-            if not torch.isnan(loss).any():                                
-                self.logger.info("backward")
+                            
+            if not torch.isnan(loss).any():                                                
                 if self.config.run.amp:
                     self._scaler.scale(loss).backward()
                 else:
@@ -193,7 +191,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 # clip grad to avoid exploding gradients
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
 
-                if (curr_step + 1) % accumulated_gradients == 0:
+                if (step + 1) % accumulated_gradients == 0:
                     if self.config.run.amp:
                         self._scaler.step(self.optimizer)
                         self._scaler.update()
@@ -201,26 +199,37 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                         xm.optimizer_step(self.optimizer)
 
                     xm.mark_step()
-                    self.optimizer.zero_grad()                    
-
-                curr_step += 1
+                    self.optimizer.zero_grad() 
+                                                       
                 running_loss += loss.item()
+                
+                #aggregate loss from all TPU cores
+                batch_loss = xm.mesh_reduce("batch_loss", loss.item(), lambda x: sum(x) / len(x))
+                
+                #check if the current process is the master process to avoid duplicate logs
+                if self.config.run.wandb and xm.is_master_process():
+                    wandb.log(
+                        {
+                            "batch_loss": batch_loss,
+                            "batch": step + epoch * len(train_loader),                            
+                            "learning_rate": self.lr_scheduler.get_last_lr()
+                        })
+                    self._tpu_metrics.log_tpu_metrics(step)
                 
             else:
                 self.logger.info("NaN detected")
                                 
         avg_loss = xm.mesh_reduce("running_loss", running_loss, lambda x: sum(x) / len(x)) / len(train_loader)    
 
-        tpu_cores = xm.xrt_world_size()
-        if self.config.run.wandb:
+
+        if self.config.run.wandb and xm.is_master_process():
             wandb.log({
                 "epoch": epoch,
                 "loss": avg_loss,
-                "learning_rate": self.lr_scheduler.get_last_lr(),
-                "tpu_cores": tpu_cores
+                "learning_rate": self.lr_scheduler.get_last_lr(),        
             })
             
-        self._tpu_metrics.log_tpu_metrics(curr_step)
+        
         #wandb.finish()
             
         return avg_loss
