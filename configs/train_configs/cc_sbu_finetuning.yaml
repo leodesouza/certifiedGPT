@@ -70,4 +70,4 @@ run:
 
 #  world_size: 1
 #  dist_url: "env://"
-#  distributed: False
+  distributed: True

@@ -117,16 +117,10 @@ class BaseAgent:
 
     @property
     def optimizer(self):
-        if self._optimizer is None:
+        if self._optimizer is None:            
             num_parameters = 0
             p_wd, p_non_wd = [], []
-            for n, p in self.model.named_parameters():
-                
-                # if p.dtype in [torch.float32, torch.float64]: 
-                #     if "weight" in n:
-                #         torch.nn.init.xavier_uniform_(p) 
-                #     elif "bias" in n:
-                #         torch.nn.init.zeros_(p)
+            for n, p in self.model.named_parameters():                                
 
                 if not p.requires_grad:
                     continue  # frozen weights
@@ -150,6 +144,7 @@ class BaseAgent:
                 lr=float(self.config.run.init_lr),
                 weight_decay=float(self.config.run.weight_decay),
                 betas=(0.9, beta2),
+                foreach=False
             )
 
         return self._optimizer
