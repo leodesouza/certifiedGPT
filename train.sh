@@ -15,5 +15,13 @@ nohup python3 train.py \
         --noise_level=${NOISE_LEVEL} \
         --max_epochs=${MAX_EPOCHS} \
         --batch_size=${BATCH_SIZE} \
-        --checkpoint_name=${CHECKPOINT_NAME} > training_${CHECKPOINT_NAME}.out 2>&1 &
+        --checkpoint_name=${CHECKPOINT_NAME} > training.log 2>&1 &
+
+
+
+
+#tail -f training.log    #check the progress    
+
+# ps aux | grep train.py    # to find the process
+# kill -9 PROCESS_ID        # to kill it if needed
     
