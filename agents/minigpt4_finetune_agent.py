@@ -223,8 +223,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         avg_loss = xm.mesh_reduce("running_loss", running_loss, lambda x: sum(x) / len(x)) / len(train_loader)    
 
 
-        if self.config.run.wandb and xm.is_master_ordinal():
-            
+        if self.config.run.wandb and xm.is_master_ordinal():            
             wandb.log({
                 "epoch": epoch,
                 "loss": avg_loss                
@@ -397,5 +396,17 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 name=self.config.run.wandb_name)
             
             wandb.watch(model)  
+
+            if(not self.config.run.evaluate):
+                # Define metrics once during initialization    
+                wandb.define_metric("train_loss", step_metric="epoch")
+                wandb.define_metric("learning_rate", step_metric="epoch")
+
+            # validation metric
+            if(self.config.run.evaluate):
+                wandb.define_metric("accuracy", step_metric="epoch")
+                # wandb.define_metric("perplexity", step_metric="epoch")
+
+             
     
         
