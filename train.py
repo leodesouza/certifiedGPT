@@ -76,7 +76,7 @@ def register_variables():
     registry.register("MAX_INT", sys.maxsize)
     registry.register("SPLIT_NAMES", ["train", "val", "test"])
 
-def main():
+def main(index):
     setup_logger()
     args = parse_args()
     config = Config(args)
@@ -89,6 +89,7 @@ def main():
             
 if __name__ == "__main__":
         
-    xmp.spawn(main, args=())
+    #xmp.spawn(main, args=(), nprocs=8, start_method='spawn')
+    xmp.spawn(main, args=(), nprocs=8)
 
     #xmp.launch(main, args=())   
