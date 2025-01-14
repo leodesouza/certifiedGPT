@@ -5,7 +5,7 @@ import random
 import sys
 
 import numpy as np
-import torch
+#import torch
 import torch_xla.distributed.xla_multiprocessing as xmp
 from omegaconf import OmegaConf
 
@@ -67,7 +67,7 @@ def setup_seeds(config):
     seed = config.run.seed
     random.seed(seed)
     np.random.seed(seed)
-    torch.manual_seed(seed)    
+    #torch.manual_seed(seed)    
 
 
 def register_variables():
