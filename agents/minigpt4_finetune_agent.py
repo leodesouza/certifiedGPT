@@ -205,9 +205,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 
                 #aggregate loss from all TPU cores
                 batch_loss = xm.mesh_reduce("batch_loss", loss.item(), lambda x: sum(x) / len(x))
-                
+
                 #check if the current process is the master process to avoid duplicate logs
-                if self.config.run.wandb and xm.is_master_process():
+                if self.config.run.wandb and xm.is_master_ordinal():
                     wandb.log(
                         {
                             "batch_loss": batch_loss,
@@ -222,7 +222,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         avg_loss = xm.mesh_reduce("running_loss", running_loss, lambda x: sum(x) / len(x)) / len(train_loader)    
 
 
-        if self.config.run.wandb and xm.is_master_process():
+        if self.config.run.wandb and xm.is_master_ordinal():
             wandb.log({
                 "epoch": epoch,
                 "loss": avg_loss,
