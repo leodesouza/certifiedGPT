@@ -79,11 +79,12 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
     def run(self):
         start_time = time.time()        
-        best_val_loss = float('inf')
-        best_train_loss = float('inf')  
-        
+        best_val_loss = float('inf')        
         patience = self.config.run.patience or 3
         wait = 0
+        step = 1
+        epoch_train_loss = 0
+        epoch_val_loss = 0 
         
         try:
 
@@ -112,44 +113,59 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             
             for epoch in range(self.start_epoch, self.max_epoch):
                 
+                
                 self.training_history["epoch"].append(epoch)
                 # training step
-                if not self.config.run.evaluate:
+                if not self.config.evaluate_only:
                     self.logger.info(f"Training epoch: {epoch}")
-                    train_loss = self.train(epoch)                    
+                    epoch_train_loss = self.train(epoch)                                    
 
-                    if train_loss < best_train_loss:
-                        best_train_loss = train_loss
-                        self.save_checkpoint(self.model, self.optimizer, epoch, best_train_loss)                     
-                else:                                                    
-                    # evaluation step
-                    self.logger.info(f"Evaluation epoch: {epoch}")
-                    val_loss = self.eval(epoch)                    
-                                                        
-                    if val_loss < best_val_loss:                        
-                        best_val_loss = val_loss                    
-                        wait = 0
-                        self.save_checkpoint(self.model, self.optimizer, 
-                                            epoch, val_loss)
-                    else:
-                        wait += 1
-                    
-                    if wait >= patience:
-                        self.logger.info(f"Early Stopping at epoch: {epoch}")
-                        break                                    
+                self.logger.info(f"Evaluation epoch: {epoch}")
+                epoch_val_loss = self.eval(epoch)                    
+                                                    
+                if epoch_val_loss < best_val_loss:                        
+                    best_val_loss = epoch_val_loss                    
+                    wait = 0
+                    self.save_checkpoint(self.model, self.optimizer, epoch, best_val_loss)
+                else:
+                    wait += 1
+                
+                if wait >= patience:
+                    self.logger.info(f"Early Stopping at epoch: {epoch}")
+                    break                                    
                                                                                                                 
             
+                if xm.is_master_ordinal():            
+                    self.logger.info(f"epoch: {epoch}   
+                                     train_loss: {epoch_train_loss}   
+                                     val_loss: {epoch_val_loss}")
+                    
+                    if self.config.run.wandb:
+                    
+                        self.logger.info(f"Logging the metrics to wandb")
+                        wandb.log({
+                            "epoch": epoch,
+                            "train_loss": epoch_train_loss,
+                            "val_loss": epoch_val_loss
+                        })
+
+                        self._tpu_metrics.log_tpu_metrics(step)
+                        step += 1                       
             
             elapsed_time = time.time() - start_time
             minutes = int(elapsed_time // 60)
             seconds = int(elapsed_time % 60)
 
             self.logger.info(f"Finished the training loop in {minutes}:{seconds}")
+            
 
         except Exception as e:
             self.logger.error(f"Error on runing the agent. Details: {e}")
 
     def add_noise(self, image_inputs, noise_level):
+
+        if xm.is_master_ordinal():            
+            self.logger.info(f"Adding noise to the image inputs with level: {noise_level}")
 
         if noise_level < 0:
             raise ValueError("Noise level must be greater than 0")        
@@ -220,18 +236,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 else:
                     self.logger.info("NaN detected")
                                 
-        avg_loss = xm.mesh_reduce("running_loss", running_loss, lambda x: sum(x) / len(x)) / len(train_loader)    
-
-
-        if self.config.run.wandb and xm.is_master_ordinal():            
-            wandb.log({
-                "epoch": epoch,
-                "loss": avg_loss                
-            })
-
-            # self._tpu_metrics.log_tpu_metrics(epoch)
-
-        #wandb.finish()
+        avg_loss = xm.mesh_reduce("running_loss", running_loss, lambda x: sum(x) / len(x)) / len(train_loader)            
             
         return avg_loss
 
@@ -240,7 +245,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         running_eval_loss = 0
 
         val_loader = self._dataloaders["val"]
-        val_loader = pl.ParallelLoader(val_loader, [self.device])
+        parallel_loader = pl.ParallelLoader(val_loader, [self.device])
+        val_loader = parallel_loader.per_device_loader(self.device)
+        noise_level = self.config.run.noise_level
 
         if len(val_loader) == 0:
             return float("inf")
@@ -248,20 +255,26 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self.model.eval()
 
         for batch_sample in tqdm(val_loader, desc=f"Evaluating epoch {epoch}"):
+            with xla.step():
 
-            batch_sample = prepare_sample(
-                batch_sample
-            )            
-            
-            outputs = self.model(batch_sample)               
-            loss = outputs["loss"]
+                batch_sample = prepare_sample(
+                    batch_sample
+                )            
 
-            if not torch.isnan(loss).any():                
+                if noise_level > 0:
+                    image_inputs = batch_sample["image"]
+                    noised_image_inputs = self.add_noise(image_inputs, noise_level)
+                    batch_sample["image"] = noised_image_inputs
+                
+                outputs = self.model(batch_sample)               
+                loss = outputs["loss"]                
                 running_eval_loss += loss.item()
-            else:
-                self.logger.info("NaN detected")
+                xm.mark_step()
 
-        return running_eval_loss / len(val_loader)
+        eval_avg_loss = xm.mesh_reduce("running_eval_loss", running_eval_loss, lambda x: sum(x) / len(x)) / len(val_loader)            
+                                
+        return eval_avg_loss
+    
 
     def validate(self):
         """
@@ -431,19 +444,24 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         raise NotImplementedError()
 
     def _setup_wandb(self, model):
-        if self.config.run.wandb:
+        if self.config.run.wandb and xm.is_master_ordinal():
+            self.logger.info("Start wandb")
             wandb.login(key=self.config.run.wandb_api_key)
-            wandb.init(
-                # mode="offline",    
-                project="certifiedgpt",         
-                name=self.config.run.wandb_name)
+            wandb.init(                
+                project="certifiedgpt",                
+                name=self.config.run.wandb_name,
+                job_type="train" if self.config.run.evaluate else "eval",
+                config=self.config
+            )
+            
             
             wandb.watch(model)  
 
             if(not self.config.run.evaluate):
                 # Define metrics once during initialization    
                 wandb.define_metric("train_loss", step_metric="epoch")
-                wandb.define_metric("learning_rate", step_metric="epoch")
+                wandb.define_metric("val_loss", step_metric="epoch")
+                # wandb.define_metric("learning_rate", step_metric="epoch")
 
             # validation metric
             if(self.config.run.evaluate):
