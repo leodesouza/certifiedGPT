@@ -362,20 +362,18 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         return model
     
     def save_checkpoint(self, model, optimizer, epoch, loss):        
+
         if xm.is_master_ordinal():
+
             self.logger.info("save in the main process")    
 
-            model_state_dict = {k: v.half() for k, v in model.state_dict().items()}
-
+            model_state_dict = self.return_state_dict_without_grad(model)
+                        
             file_name = self.config.run.checkpoint_name
             file_name = f"{file_name}_{epoch}_{self.config.run.noise_level}.pth"  
             checkpoint = {
                 'epoch': epoch,
-                'model_state_dict': model_state_dict,
-                # 'optimizer_state_dict': optimizer.state_dict(),
-                'loss': loss,
-                'noise_level': self.config.run.noise_level,                
-                'is_hal_precision': True
+                'model_state_dict': model_state_dict,                                                                                
             }
 
             path = self.config.run.output_dir
@@ -390,35 +388,47 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         #synchronize all the processes
         xm.rendezvous("checkpoint_saved")
 
+    def return_state_dict_without_grad(self, model):
+        """
+        Return the state_dict without the parameters that do not require gradients
+        """
+        param_grads = {
+                k: v.requires_grad for (k, v) in model.named_parameters()
+            }
+
+        state_dict = self.model.state_dict()
+        for k in list(state_dict.keys()):
+            if k in param_grads.keys() and not param_grads[k]:
+                del state_dict[k] 
+
+        return state_dict
+
     def load_checkpoint(self, file_name):
-        try:
-            # Load checkpoint with map_location to handle device placement
-            checkpoint = torch.load(file_name, map_location='cpu')
-            
-            # Handle half precision if used during saving
-            is_half_precision = checkpoint.get('is_half_precision', False)
-            model_state_dict = checkpoint['model_state_dict']
-            
-            if is_half_precision:
-                model_state_dict = {
-                    k: v.to(self.model.state_dict()[k].dtype) 
-                    for k, v in model_state_dict.items()
-                }
-            
-            # Load state dict and handle potential missing keys
-            missing_keys, unexpected_keys = self.model.load_state_dict(model_state_dict, strict=False)
-            
-            if missing_keys:
-                self.logger.warning(f"Missing keys in checkpoint: {missing_keys}")
-            if unexpected_keys:
-                self.logger.warning(f"Unexpected keys in checkpoint: {unexpected_keys}")
-            
-            self.logger.info(f"Successfully loaded checkpoint from {file_name}")
-            return checkpoint
-            
-        except Exception as e:
-            self.logger.error(f"Error loading the checkpoint: {e}")
-            raise
+        #  """
+        # Resume from a checkpoint.
+        # """
+        # if is_url(url_or_filename):
+        #     cached_file = download_cached_file(
+        #         url_or_filename, check_hash=False, progress=True
+        #     )
+        #     checkpoint = torch.load(cached_file, map_location=self.device)
+        # elif os.path.isfile(url_or_filename):
+        #     checkpoint = torch.load(url_or_filename, map_location=self.device)
+        # else:
+        #     raise RuntimeError("checkpoint url or path is invalid")
+
+        # state_dict = checkpoint["model"]
+        # message = self.unwrap_dist_model(self.model).load_state_dict(state_dict, strict=False)
+
+        # self.optimizer.load_state_dict(checkpoint["optimizer"])
+        # if self.scaler and "scaler" in checkpoint:
+        #     self.scaler.load_state_dict(checkpoint["scaler"])
+
+        # self.start_epoch = checkpoint["epoch"] + 1
+        # print("resume the checkpoint")
+        # logging.info("Resume checkpoint from {}".format(url_or_filename))
+
+        raise NotImplementedError()
 
     def _setup_wandb(self, model):
         if self.config.run.wandb:
