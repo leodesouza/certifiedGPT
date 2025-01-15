@@ -11,12 +11,12 @@ CONFIG_PATH='/home/leonardosouza/certifiedGPT/configs/train_configs/cc_sbu_finet
 
 # Execute the Python training script
 
-python3 train.py \
+nohup python3 train.py \
         --config-path=${CONFIG_PATH} \
         --noise_level=${NOISE_LEVEL} \
         --max_epochs=${MAX_EPOCHS} \
         --batch_size=${BATCH_SIZE} \
-        --checkpoint_name=${CHECKPOINT_NAME}
+        --checkpoint_name=${CHECKPOINT_NAME} > training.log 2>&1 & 
     
 # nohup python3 train.py \
 #         --config-path=${CONFIG_PATH} \
