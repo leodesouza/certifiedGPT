@@ -80,6 +80,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
     def run(self):
         start_time = time.time()        
         best_val_loss = float('inf')        
+        best_train_loss = float('inf')   
         patience = self.config.run.patience or 3
         wait = 0
         step = 1
@@ -118,21 +119,24 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 # training step
                 if not self.config.evaluate_only:
                     self.logger.info(f"Training epoch: {epoch}")
-                    epoch_train_loss = self.train(epoch)                                    
+                    epoch_train_loss = self.train(epoch)
 
-                self.logger.info(f"Evaluation epoch: {epoch}")
-                epoch_val_loss = self.eval(epoch)                    
+                    if epoch_train_loss < best_train_loss:                                                
+                        self.save_checkpoint(self.model, epoch)                                    
+
+                # self.logger.info(f"Evaluation epoch: {epoch}")
+                # epoch_val_loss = self.eval(epoch)                    
                                                     
-                if epoch_val_loss < best_val_loss:                        
-                    best_val_loss = epoch_val_loss                    
-                    wait = 0
-                    self.save_checkpoint(self.model, self.optimizer, epoch, best_val_loss)
-                else:
-                    wait += 1
+                # if epoch_val_loss < best_val_loss:                        
+                #     best_val_loss = epoch_val_loss                    
+                #     wait = 0
+                #     self.save_checkpoint(self.model, self.optimizer, epoch, best_val_loss)
+                # else:
+                #     wait += 1
                 
-                if wait >= patience:
-                    self.logger.info(f"Early Stopping at epoch: {epoch}")
-                    break                                    
+                # if wait >= patience:
+                #     self.logger.info(f"Early Stopping at epoch: {epoch}")
+                #     break                                    
                                                                                                                 
             
                 if xm.is_master_ordinal():            
@@ -374,7 +378,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         model = model_type.from_config(self.config.model)
         return model
     
-    def save_checkpoint(self, model, optimizer, epoch, loss):        
+    def save_checkpoint(self, model, epoch):        
 
         if xm.is_master_ordinal():
 
