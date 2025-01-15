@@ -361,18 +361,21 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         model = model_type.from_config(self.config.model)
         return model
     
-    def save_checkpoint(self, model, optimizer, epoch, loss):
-        self.logger.info(f"Saving checkpoint for epoch {epoch} with noise level {self.config.run.noise_level}")    
+    def save_checkpoint(self, model, optimizer, epoch, loss):        
         if xm.is_master_ordinal():
             self.logger.info("save in the main process")    
+
+            model_state_dict = {k: v.half() for k, v in model.state_dict().items()}
+
             file_name = self.config.run.checkpoint_name
             file_name = f"{file_name}_{epoch}_{self.config.run.noise_level}.pth"  
             checkpoint = {
                 'epoch': epoch,
-                'model_state_dict': model.state_dict(),
-                'optimizer_state_dict': optimizer.state_dict(),
+                'model_state_dict': model_state_dict,
+                # 'optimizer_state_dict': optimizer.state_dict(),
                 'loss': loss,
                 'noise_level': self.config.run.noise_level,                
+                'is_hal_precision': True
             }
 
             path = self.config.run.output_dir
@@ -386,6 +389,25 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         #synchronize all the processes
         xm.rendezvous("checkpoint_saved")
+
+    def load_checkpoint(self, file_name):
+        
+        checkpoint = torch.load(file_name, map_location='cpu')
+        is_half_precision = checkpoint.get('is_half_precision', False)
+        if is_half_precision:
+            model_state_dict = {
+                k: v.to(self.model.state_dict()[k].dtype) 
+                for k, v in checkpoint['model_state_dict'].items()
+            }
+        else:
+            model_state_dict = checkpoint['model_state_dict']
+        
+        try:
+            self.model.load_state_dict(model_state_dict)
+        except Exception as e:
+            self.logger.error(f"Error loading the checkpoint: {e}")
+
+        return checkpoint
 
     def _setup_wandb(self, model):
         if self.config.run.wandb:

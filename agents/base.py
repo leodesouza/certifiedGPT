@@ -27,7 +27,7 @@ class BaseAgent:
         Latest/saved checkpoint
         :param file_name:
         :return:
-        """
+        """        
         raise NotImplementedError
 
     def save_checkpoint(self, model, optimizer, epoch, loss, file_name="checkpoint.pth.bar", is_best=False):
