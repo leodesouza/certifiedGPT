@@ -384,30 +384,41 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             self.logger.info(f"Saving Checkpoint in the path: {file_and_path}")   
             os.makedirs(path, exist_ok=True)    
 
-            torch.save(checkpoint, file_and_path)
+            torch.save(checkpoint, file_and_path, _use_new_zipfile_serialization=True)
             self.logger.info(f"Checkpoint saved at path: {file_and_path}")
 
         #synchronize all the processes
         xm.rendezvous("checkpoint_saved")
 
     def load_checkpoint(self, file_name):
-        
-        checkpoint = torch.load(file_name, map_location='cpu')
-        is_half_precision = checkpoint.get('is_half_precision', False)
-        if is_half_precision:
-            model_state_dict = {
-                k: v.to(self.model.state_dict()[k].dtype) 
-                for k, v in checkpoint['model_state_dict'].items()
-            }
-        else:
-            model_state_dict = checkpoint['model_state_dict']
-        
         try:
-            self.model.load_state_dict(model_state_dict)
+            # Load checkpoint with map_location to handle device placement
+            checkpoint = torch.load(file_name, map_location='cpu')
+            
+            # Handle half precision if used during saving
+            is_half_precision = checkpoint.get('is_half_precision', False)
+            model_state_dict = checkpoint['model_state_dict']
+            
+            if is_half_precision:
+                model_state_dict = {
+                    k: v.to(self.model.state_dict()[k].dtype) 
+                    for k, v in model_state_dict.items()
+                }
+            
+            # Load state dict and handle potential missing keys
+            missing_keys, unexpected_keys = self.model.load_state_dict(model_state_dict, strict=False)
+            
+            if missing_keys:
+                self.logger.warning(f"Missing keys in checkpoint: {missing_keys}")
+            if unexpected_keys:
+                self.logger.warning(f"Unexpected keys in checkpoint: {unexpected_keys}")
+            
+            self.logger.info(f"Successfully loaded checkpoint from {file_name}")
+            return checkpoint
+            
         except Exception as e:
             self.logger.error(f"Error loading the checkpoint: {e}")
-
-        return checkpoint
+            raise
 
     def _setup_wandb(self, model):
         if self.config.run.wandb:
