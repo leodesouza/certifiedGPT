@@ -136,9 +136,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                                                                                                                 
             
                 if xm.is_master_ordinal():            
-                    self.logger.info(f"epoch: {epoch}   
+                    self.logger.info(f"""epoch: {epoch}   
                                      train_loss: {epoch_train_loss}   
-                                     val_loss: {epoch_val_loss}")
+                                     val_loss: {epoch_val_loss}""")
                     
                     if self.config.run.wandb:
                     
