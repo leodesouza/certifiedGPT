@@ -121,22 +121,20 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     self.logger.info(f"Training epoch: {epoch}")
                     epoch_train_loss = self.train(epoch)
 
-                    if epoch_train_loss < best_train_loss:                                                
-                        self.save_checkpoint(self.model, epoch)                                    
-
-                # self.logger.info(f"Evaluation epoch: {epoch}")
-                # epoch_val_loss = self.eval(epoch)                    
+                    
+                self.logger.info(f"Evaluation epoch: {epoch}")
+                epoch_val_loss = self.eval(epoch)                    
                                                     
-                # if epoch_val_loss < best_val_loss:                        
-                #     best_val_loss = epoch_val_loss                    
-                #     wait = 0
-                #     self.save_checkpoint(self.model, self.optimizer, epoch, best_val_loss)
-                # else:
-                #     wait += 1
+                if epoch_val_loss < best_val_loss:                        
+                    best_val_loss = epoch_val_loss                    
+                    wait = 0
+                    self.save_checkpoint(self.model, self.optimizer, epoch, best_val_loss)
+                else:
+                    wait += 1
                 
-                # if wait >= patience:
-                #     self.logger.info(f"Early Stopping at epoch: {epoch}")
-                #     break                                    
+                if wait >= patience:
+                    self.logger.info(f"Early Stopping at epoch: {epoch}")
+                    break                                    
                                                                                                                 
             
                 if xm.is_master_ordinal():            

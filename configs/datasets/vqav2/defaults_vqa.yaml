@@ -21,9 +21,9 @@ datasets:
       images:
         train:
           path:
-               - ${env:DATA_DIR}/images/sample/train
-               # - ${env:DATA_DIR}/images/train2014/all
+               # - ${env:DATA_DIR}/images/sample/train
+               - /home/leonardosouza/image/images/sample/train
         val:
           path:
-               - ${env:DATA_DIR}/images/sample/val
-               # - ${env:DATA_DIR}/images/val2014
+               # - ${env:DATA_DIR}/images/sample/val
+               - /home/leonardosouza/image/images/sample/val
