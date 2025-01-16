@@ -47,6 +47,7 @@ class Config:
     
     @property
     def evaluate_only(self):
-        return self.config.run.evaluate
+        return self.config.run.evaluate        
+    
     
     

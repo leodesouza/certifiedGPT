@@ -120,21 +120,23 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 if not self.config.evaluate_only:
                     self.logger.info(f"Training epoch: {epoch}")
                     epoch_train_loss = self.train(epoch)
-
-                    
-                self.logger.info(f"Evaluation epoch: {epoch}")
-                epoch_val_loss = self.eval(epoch)                    
-                                                    
-                if epoch_val_loss < best_val_loss:                        
-                    best_val_loss = epoch_val_loss                    
-                    wait = 0
                     self.save_checkpoint(self.model, epoch)
-                else:
-                    wait += 1
-                
-                if wait >= patience:
-                    self.logger.info(f"Early Stopping at epoch: {epoch}")
-                    break                                    
+
+                if self.config.has_val_split:
+                        
+                    self.logger.info(f"Evaluation epoch: {epoch}")
+                    epoch_val_loss = self.eval(epoch)                    
+                                                        
+                    if epoch_val_loss < best_val_loss:                        
+                        best_val_loss = epoch_val_loss                    
+                        wait = 0
+                        self.save_checkpoint(self.model, epoch)
+                    else:
+                        wait += 1
+                    
+                    if wait >= patience:
+                        self.logger.info(f"Early Stopping at epoch: {epoch}")
+                        break                                    
                                                                                                                 
             
                 if xm.is_master_ordinal():            
@@ -386,6 +388,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                         
             file_name = self.config.run.checkpoint_name
             file_name = f"{file_name}_{epoch}_{self.config.run.noise_level}.pth"  
+
+            self.logger.info(f"checkpoint name: {file_name}")    
             checkpoint = {
                 'epoch': epoch,
                 'model_state_dict': model_state_dict,                                                                                
@@ -397,7 +401,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             self.logger.info(f"Saving Checkpoint in the path: {file_and_path}")   
             os.makedirs(path, exist_ok=True)    
 
-            torch.save(checkpoint, file_and_path, _use_new_zipfile_serialization=True)
+            # torch.save(checkpoint, file_and_path, _use_new_zipfile_serialization=True)
+            torch.save(checkpoint, file_and_path)
             self.logger.info(f"Checkpoint saved at path: {file_and_path}")
 
         #synchronize all the processes
