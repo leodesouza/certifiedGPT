@@ -199,7 +199,7 @@ class MiniGPT4(MiniGPTBase):
 
         if ckpt_path:            
             cls.logger.info("Loading weights of MiniGPT-4")
-            ckpt = torch.load(ckpt_path, map_location="cpu")
+            ckpt = torch.load(ckpt_path, map_location="cpu", weights_only=False)
             msg = model.load_state_dict(ckpt['model'], strict=False)
             cls.logger.info("Loading weights of MiniGPT-4 Done")
 
