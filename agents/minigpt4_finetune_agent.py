@@ -111,6 +111,12 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             )
 
             self._scaler = xla_amp.GradScaler()
+
+            if xm.is_master_ordinal():     
+                if self.config.run.noise_level > 0:       
+                    self.logger.info(f"Noise level: {self.config.run.noise_level} will be applied to the image inputs")
+                else:
+                    self.logger.info(f"No noise will be applied to the image inputs")
             
             for epoch in range(self.start_epoch, self.max_epoch):
                 
@@ -122,7 +128,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     epoch_train_loss = self.train(epoch)
                     self.save_checkpoint(self.model, epoch)
 
-                if self.config.has_val_split:
+                if self.config.run.has_val_split:
                         
                     self.logger.info(f"Evaluation epoch: {epoch}")
                     epoch_val_loss = self.eval(epoch)                    
@@ -167,10 +173,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             self.logger.error(f"Error on runing the agent. Details: {e}")
 
     def add_noise(self, image_inputs, noise_level):
-
-        if xm.is_master_ordinal():            
-            self.logger.info(f"Adding noise to the image inputs with level: {noise_level}")
-
+        
         if noise_level < 0:
             raise ValueError("Noise level must be greater than 0")        
 
