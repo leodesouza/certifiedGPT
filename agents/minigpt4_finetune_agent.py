@@ -83,7 +83,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         best_train_loss = float('inf')   
         patience = self.config.run.patience or 3
         wait = 0
-        step = 1
+        #step = 1
         epoch_train_loss = 0
         epoch_val_loss = 0 
         
@@ -159,8 +159,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                             "val_loss": epoch_val_loss
                         })
 
-                        self._tpu_metrics.log_tpu_metrics(step)
-                        step += 1                       
+                        #self._tpu_metrics.log_tpu_metrics(step)
+                        #step += 1                       
             
             elapsed_time = time.time() - start_time
             minutes = int(elapsed_time // 60)
