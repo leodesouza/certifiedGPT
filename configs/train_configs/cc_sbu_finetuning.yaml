@@ -69,7 +69,7 @@ run:
   device: "tpu"
   wandb: True
   wandb_api_key: ${env:WANDB_API_KEY}
-  wandb_name: "minigpt4_stage2"  
+  wandb_name: "finetuned_minigpt4_7b_stage2"  
 
 #  world_size: 1
 #  dist_url: "env://"
