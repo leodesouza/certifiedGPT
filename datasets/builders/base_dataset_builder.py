@@ -31,7 +31,7 @@ class BaseDatasetBuilder:
 
     def __init__(self):
         self.config = load_dataset_config(self.default_config_path())        
-        self.vis_processor = {"train": BaseProcessor(image_size=self.config.get("image_size", 224)), "eval": BaseProcessor(image_size=self.config.get("image_size", 224))}
+        self.vis_processor = {"train": BaseProcessor(), "eval": BaseProcessor()}
         self.text_processor = {"train": BaseProcessor(), "eval": BaseProcessor()}
 
     def build_datasets(self):
