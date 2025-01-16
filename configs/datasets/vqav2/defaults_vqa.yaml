@@ -25,5 +25,5 @@ datasets:
                - /home/leonardosouza/dataset/images/sample/train
         val:
           path:
-               # - ${env:DATA_DIR}/images/sample/val
+               # - ${env:DATA_DIR}/images/sample/va
                - /home/leonardosouza/dataset/images/sample/val
