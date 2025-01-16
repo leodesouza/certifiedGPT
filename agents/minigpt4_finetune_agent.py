@@ -128,7 +128,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 if epoch_val_loss < best_val_loss:                        
                     best_val_loss = epoch_val_loss                    
                     wait = 0
-                    self.save_checkpoint(self.model, self.optimizer, epoch, best_val_loss)
+                    self.save_checkpoint(self.model, epoch)
                 else:
                     wait += 1
                 
