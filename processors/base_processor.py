@@ -14,7 +14,7 @@ def min_max_scaling(x):
     return (x - x.min()) / (x.max() - x.min() + 1e-7)
 
 class BaseProcessor:
-    def __init__(self, image_size=224, mean=None, std=None):
+    def __init__(self, image_size=448, mean=None, std=None):
         self.transform = lambda x: x
 
         normalize = transforms.Normalize(mean, std)
