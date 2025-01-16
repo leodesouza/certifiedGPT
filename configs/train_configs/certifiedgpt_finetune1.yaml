@@ -76,6 +76,7 @@ run:
   resume_ckpt_path: null
   evaluate: False
   train_splits: ["train"]
+  has_val_split: true
   device: "tpu"
   wandb: True
   wandb_api_key: ${env:WANDB_API_KEY}
