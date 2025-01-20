@@ -51,6 +51,8 @@ def open_json_file(path):
 
 
 def sample(build_info, split, new_file_name):
+    
+    
     exist_annotation = []
     annotation_path = build_info.annotations[split].path[0]
     file_path = Path(annotation_path)
@@ -59,7 +61,7 @@ def sample(build_info, split, new_file_name):
 
     images_path = build_info.images[split].path[0]
     data_dir = os.environ["DATA_DIR"]
-    new_images_path = os.path.join(data_dir, "images/sample", split)
+    new_images_path = os.path.join(data_dir, "images/sample_10k", split)
 
     for annotation in json_file['annotations']:
         image_id = annotation["image_id"]
@@ -69,10 +71,12 @@ def sample(build_info, split, new_file_name):
             exist_annotation.append(annotation)
 
     annotations = exist_annotation
+    
+    # test_size=0.977 for training split
     questions_type = [ann['question_type'] for ann in annotations]
     train_or_val_split, _ = train_test_split(
         annotations,
-        test_size=0.993,
+        test_size=0.977,
         random_state=42,
         shuffle=True,
         stratify=questions_type)
@@ -97,8 +101,8 @@ def generate_random_samples():
     config = load_dataset_config(config_file_path)
     build_info = config.build_info
 
-    logging.info('generate training sample')
-    sample(build_info, 'train', "sample_v2_mscoco_train2014_annotations.json")
+    #logging.info('generate training sample')
+    #sample(build_info, 'train', "sample_v2_mscoco_train2014_annotations.json")
 
     logging.info('generate validation sample')
     sample(build_info, 'val', "sample_v2_mscoco_val2014_annotations.json")

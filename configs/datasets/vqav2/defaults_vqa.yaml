@@ -13,17 +13,17 @@ datasets:
         train:
           path:
                - ${env:DATA_DIR}/annotations/train/sample_v2_mscoco_train2014_annotations.json
-               # - ${env:DATA_DIR}/annotations/train/v2_mscoco_train2014_annotations.json
+               #- ${env:DATA_DIR}/annotations/train/v2_mscoco_train2014_annotations.json
         val:
           path:
                - ${env:DATA_DIR}/annotations/val/sample_v2_mscoco_val2014_annotations.json
-               # - ${env:DATA_DIR}/annotations/val/v2_mscoco_val2014_annotations.json
+               #- ${env:DATA_DIR}/annotations/val/v2_mscoco_val2014_annotations.json
       images:
         train:
           path:
-               # - ${env:DATA_DIR}/images/sample/train
-               - /home/leonardosouza/dataset/images/sample/train
+               - ${env:DATA_DIR}/images/sample_10k/train
+               #- /home/leonardosouza/projects/datasets/vqav2/images/train2014/all
         val:
           path:
-               # - ${env:DATA_DIR}/images/sample/va
-               - /home/leonardosouza/dataset/images/sample/val
+               - ${env:DATA_DIR}/images/sample_10k/val
+               #- /home/leonardosouza/projects/datasets/vqav2/images/val2014
