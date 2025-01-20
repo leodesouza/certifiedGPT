@@ -3,5 +3,5 @@
   <component name="Black">
     <option name="sdkName" value="certifiedGPT" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="certifiedgpt" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="certifiedgpt-tpu" project-jdk-type="Python SDK" />
 </project>

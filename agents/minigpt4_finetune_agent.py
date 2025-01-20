@@ -126,7 +126,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 if not self.config.evaluate_only:
                     self.logger.info(f"Training epoch: {epoch}")
                     epoch_train_loss = self.train(epoch)
-                    self.save_checkpoint(self.model, epoch)
+                    # self.save_checkpoint(self.model, epoch)
 
                 if self.config.run.has_val_split:
                         

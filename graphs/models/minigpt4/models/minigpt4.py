@@ -29,7 +29,7 @@ class MiniGPT4(MiniGPTBase):
             self,
             vit_model="eva_clip_g",
             q_former_model="https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP2/blip2_pretrained_flant5xxl.pth",
-            img_size=224,
+            img_size=448,
             drop_path_rate=0,
             use_grad_checkpoint=False,
             vit_precision="fp16",
@@ -152,7 +152,7 @@ class MiniGPT4(MiniGPTBase):
     def from_config(cls, cfg):
         vit_model = cfg.get("vit_model", "eva_clip_g")
         q_former_model = cfg.get("q_former_model", "https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP2/blip2_pretrained_flant5xxl.pth")
-        img_size = cfg.get("image_size", 224)
+        img_size = cfg.get("image_size", 448)
         num_query_token = cfg.get("num_query_token")
         llama_model = cfg.get("llama_model")
 
