@@ -29,7 +29,7 @@ class MiniGPT4(MiniGPTBase):
             self,
             vit_model="eva_clip_g",
             q_former_model="",
-            img_size=224,
+            img_size=448,
             drop_path_rate=0,
             use_grad_checkpoint=False,
             vit_precision="fp16",

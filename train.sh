@@ -2,7 +2,7 @@
 
 export PJRT_DEVICE=TPU
 
-NOISE_LEVEL=0.25
+NOISE_LEVEL=0
 MAX_EPOCHS=1
 BATCH_SIZE=6
 CHECKPOINT_NAME="finetuned_certifiedgpt_vqa"
