@@ -6,11 +6,10 @@ from tqdm import tqdm
 
 
 def compute():
-    # root_dir = "E:/pesquisa_ia/projetos/datasets/vqav2/images/sample/val"
-    root_dir = "E:/pesquisa_ia/projetos/datasets/cc_sbu_align/image"
-    
+    root_dir = "/home/leonardosouza/projects/datasets/vqav2/images/sample_10k/train"
+    # root_dir = "E:/pesquisa_ia/projetos/datasets/cc_sbu_align/image"
 
-    transform = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
+    transform = transforms.Compose([transforms.Resize((448, 448)), transforms.ToTensor()])
 
     num_pixels = 0
     pixel_sum = torch.zeros(3)  # 3 channels (RGB)
