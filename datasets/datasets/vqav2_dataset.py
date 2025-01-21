@@ -149,6 +149,7 @@ class VQAv2Dataset(BaseDataset):
 
             answer = random.choices(answers, weights=normalized_weights, k=1)
             answer = answer[0]
+            self.logger.info(f'answer - text_processor : {answer}')
             answer = self.text_processor(answer)
 
             return {
