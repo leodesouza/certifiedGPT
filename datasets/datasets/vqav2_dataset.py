@@ -129,7 +129,7 @@ class VQAv2Dataset(BaseDataset):
                 elif  answer_confidence == 'maybe':
                     confidence = 1                
 
-                weight = weight * confidence
+                # weight = weight * confidence
 
                 if answer in answer_weights:
                     answer_weights[answer] += weight
@@ -142,14 +142,11 @@ class VQAv2Dataset(BaseDataset):
                     f"No valid answers processed for question_id {question_id}"
                 )
 
-            answers = list(answer_weights.keys())            
-            
-            total_weights = sum(answer_weights.values())
-            normalized_weights = [w / total_weights for w in answer_weights.values()]
-
-            answer = random.choices(answers, weights=normalized_weights, k=1)
+                        
+            answers = list(answer_weights.keys())
+            weights = list(answer_weights.values())
+            answer = random.choices(answers, weights=weights, k=1)
             answer = answer[0]
-            self.logger.info(f'answer - text_processor : {answer}')
             answer = self.text_processor(answer)
 
             return {
