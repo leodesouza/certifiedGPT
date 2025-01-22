@@ -10,8 +10,6 @@ from torchvision import transforms
 from torchvision.transforms.functional import InterpolationMode
 
 
-def min_max_scaling(x):
-    return (x - x.min()) / (x.max() - x.min() + 1e-7)
 
 class BaseProcessor:
     def __init__(self, image_size=448, mean=None, std=None):
@@ -25,8 +23,7 @@ class BaseProcessor:
                     (image_size, image_size), interpolation=InterpolationMode.BICUBIC
                 ),               
                 transforms.ToTensor(),
-                normalize,
-                transforms.Lambda(min_max_scaling)  # Min-max scaling, prevents division by zero
+                normalize                
             ]
         )
         return
