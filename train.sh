@@ -12,9 +12,9 @@ export MINIGPT_4=/home/leonardosouza/storage/checkpoints/minigpt4_stage2/finetun
 
 export PJRT_DEVICE=TPU
 
-NOISE_LEVEL=0
-MAX_EPOCHS=1
-BATCH_SIZE=6
+NOISE_LEVEL=0.25
+MAX_EPOCHS=5
+BATCH_SIZE=32
 CHECKPOINT_NAME="finetuned_certifiedgpt_vqa"
 CONFIG_PATH='/home/leonardosouza/certifiedGPT/configs/train_configs/certifiedgpt_finetune1.yaml'
 # CONFIG_PATH='/home/leonardosouza/certifiedGPT/configs/train_configs/cc_sbu_finetuning.yaml'

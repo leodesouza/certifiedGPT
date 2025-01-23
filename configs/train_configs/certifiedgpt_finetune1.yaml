@@ -24,7 +24,7 @@ model:
 
 datasets:
   vqav2:
-    batch_size: 6    
+    batch_size: 32    
     vis_processor:
       train:
         name: "blip2_image_train"
@@ -49,10 +49,10 @@ datasets:
 run:
   agent: image_text_finetune
   max_epoch: 5
-  num_workers: 0
+  num_workers: 8
   accumulated_gradients: 1
   patience: 2
-  noise_level: 0
+  noise_level: 0.25
       
   #Consider using other learning rate schedulers for small datasets
   # - Exponential Decay
