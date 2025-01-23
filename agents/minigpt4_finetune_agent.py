@@ -154,8 +154,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                             "val_loss": epoch_val_loss                            
                         })
 
-                        #self._tpu_metrics.log_tpu_metrics(step)
-                        #step += 1                       
+                        self._tpu_metrics.log_tpu_metrics(step)
+                        step += 1                       
             
             elapsed_time = time.time() - start_time
             minutes = int(elapsed_time // 60)
