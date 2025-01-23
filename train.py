@@ -91,8 +91,6 @@ def main(index):
             
 if __name__ == "__main__":
     
-    import torch_xla as xla 
-
-    os.environ["XRT_TPU_CONFIG"] = "tpu_worker;0:0"
+    import torch_xla as xla     
     
     xla.launch(main, args=())   
