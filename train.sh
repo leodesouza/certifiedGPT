@@ -1,15 +1,5 @@
 #!/bin/bash
 
-export DATA_DIR=/home/leonardosouza/storage/datasets/vqav2
-
-export VICUNA_DIR=/home/leonardosouza/storage/checkpoints/vicuna-7b/
-
-export BLIP_FLANT5_PTH=/home/leonardosouza/storage/checkpoints/blip_flant5/blip2_pretrained_flant5xxl.pth
-
-export EVA_VIT_G_PTH=/home/leonardosouza/storage/checkpoints/eva_vit_g/eva_vit_g.pth
-
-export MINIGPT_4=/home/leonardosouza/storage/checkpoints/minigpt4_stage2/finetuned_minigpt4_7b_stage2_0.pth
-
 export PJRT_DEVICE=TPU
 
 NOISE_LEVEL=0.25
