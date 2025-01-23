@@ -3,8 +3,7 @@ model:
   max_txt_len: 160
   end_sym: "###"
   prompt_path: "prompts/alignment.txt"
-  prompt_template: '###Human: {} ###Assistant: '
-  # ckpt: '/home/leonardosouza/storage/checkpoints/minigpt-4/prerained_minigpt4_7b.pth'
+  prompt_template: '###Human: {} ###Assistant: '  
   ckpt: ${env:MINIGPT_4}
     
 

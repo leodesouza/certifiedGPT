@@ -22,8 +22,8 @@ datasets:
         train:
           path:
                # - ${env:DATA_DIR}/images/sample_10k/train
-               - /home/leonardosouza/sample_10k/sample_10k/train               
+               - /home/leonardosouza/sample_10k/train               
         val:
           path:
                # - ${env:DATA_DIR}/images/sample_10k/val
-               - /home/leonardosouza/sample_10k/sample_10k/val               
+               - /home/leonardosouza/sample_10k/val               
