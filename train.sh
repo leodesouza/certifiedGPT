@@ -1,14 +1,14 @@
 #!/bin/bash
 
-export DATA_DIR=/home/swf_developer/storage/datasets/vqav2
+export DATA_DIR=/home/leonardosouza/storage/datasets/vqav2
 
-export VICUNA_DIR=/home/swf_developer/storage/checkpoints/vicuna-7b/
+export VICUNA_DIR=/home/leonardosouza/storage/checkpoints/vicuna-7b/
 
-export BLIP_FLANT5_PTH=/home/swf_developer/storage/checkpoints/blip_flant5/blip2_pretrained_flant5xxl.pth
+export BLIP_FLANT5_PTH=/home/leonardosouza/storage/checkpoints/blip_flant5/blip2_pretrained_flant5xxl.pth
 
-export EVA_VIT_G_PTH=/home/swf_developer/storage/checkpoints/eva_vit_g/eva_vit_g.pth
+export EVA_VIT_G_PTH=/home/leonardosouza/storage/checkpoints/eva_vit_g/eva_vit_g.pth
 
-export MINIGPT_4=/home/swf_developer/storage/checkpoints/minigpt4_stage2/finetuned_minigpt4_7b_stage2_0.pth
+export MINIGPT_4=/home/leonardosouza/storage/checkpoints/minigpt4_stage2/finetuned_minigpt4_7b_stage2_0.pth
 
 export PJRT_DEVICE=TPU
 
@@ -16,7 +16,7 @@ NOISE_LEVEL=0
 MAX_EPOCHS=5
 BATCH_SIZE=6
 CHECKPOINT_NAME="finetuned_certifiedgpt_vqa"
-CONFIG_PATH='/home/swf_developer/certifiedGPT/configs/train_configs/certifiedgpt_finetune1.yaml'
+CONFIG_PATH='/home/leonardosouza/certifiedGPT/configs/train_configs/certifiedgpt_finetune1.yaml'
 # CONFIG_PATH='/home/leonardosouza/certifiedGPT/configs/train_configs/cc_sbu_finetuning.yaml'
 
 # Execute the Python training script

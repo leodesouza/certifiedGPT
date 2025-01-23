@@ -72,7 +72,7 @@ run:
   seed: 42
   #output_dir: '/home/leonardosouza/storage/checkpoints/certifiedgpt/'
   #output_dir: '/home/leonardosouza/checkpoint/certifiedgpt/'
-  output_dir: '/home/swf_developer/checkpoint/certifiedgpt/'
+  output_dir: '/home/leonardosouza/checkpoint/certifiedgpt/'
   
   
   amp: True
