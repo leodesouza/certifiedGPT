@@ -3,7 +3,7 @@
 export PJRT_DEVICE=TPU
 
 NOISE_LEVEL=0
-MAX_EPOCHS=1
+MAX_EPOCHS=6
 BATCH_SIZE=6
 CHECKPOINT_NAME="finetuned_certifiedgpt_vqa"
 CONFIG_PATH='/home/leonardosouza/certifiedGPT/configs/train_configs/certifiedgpt_finetune1.yaml'
