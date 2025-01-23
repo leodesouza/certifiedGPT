@@ -71,11 +71,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self._setup_wandb(self._model)
         self._start_epoch = 0
         self._scaler = None
-        self._tpu_metrics = TPUMetrics()    
-        self.training_history = {
-            "epoch": [],
-            "loss": []            
-        }
+        self._tpu_metrics = TPUMetrics()            
 
     def run(self):
         start_time = time.time()        
@@ -120,8 +116,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             
             for epoch in range(self.start_epoch, self.max_epoch):
                 
-                
-                self.training_history["epoch"].append(epoch)
+                                
                 # training step
                 if not self.config.evaluate_only:
                     self.logger.info(f"Training epoch: {epoch}")
@@ -156,7 +151,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                         wandb.log({
                             "epoch": epoch,
                             "train_loss": epoch_train_loss,
-                            "val_loss": epoch_val_loss
+                            "val_loss": epoch_val_loss                            
                         })
 
                         #self._tpu_metrics.log_tpu_metrics(step)
@@ -403,8 +398,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             file_and_path = os.path.join(path, file_name)
             self.logger.info(f"Saving Checkpoint in the path: {file_and_path}")   
             os.makedirs(path, exist_ok=True)    
-
-            # torch.save(checkpoint, file_and_path, _use_new_zipfile_serialization=True)
+            
             torch.save(checkpoint, file_and_path)
             self.logger.info(f"Checkpoint saved at path: {file_and_path}")
 
@@ -471,7 +465,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 # Define metrics once during initialization    
                 wandb.define_metric("train_loss", step_metric="epoch")
                 wandb.define_metric("val_loss", step_metric="epoch")
-                # wandb.define_metric("learning_rate", step_metric="epoch")
+                wandb.define_metric("learning_rate", step_metric="epoch")
 
             # validation metric
             if(self.config.run.evaluate):
