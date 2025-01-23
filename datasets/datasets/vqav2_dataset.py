@@ -131,7 +131,7 @@ class VQAv2Dataset(BaseDataset):
 
                 
                 if answer in answer_weights:
-                    answer_weights[answer] += weight
+                    answer_weights[answer] += weight * confidence
                 else:
                     answer_weights[answer] = weight * confidence
 
