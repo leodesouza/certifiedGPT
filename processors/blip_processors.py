@@ -32,10 +32,10 @@ class Blip2ImageTrainProcessor(BaseProcessor):
         image_size = config.get("image_size", 448)
 
         mean = config.get("mean", None)
-        mean = ast.literal_eval(mean)
+        # mean = ast.literal_eval(mean)
 
         std = config.get("std", None)
-        std = ast.literal_eval(std)
+        # std = ast.literal_eval(std)
         min_scale = config.get("min_scale", None)
         max_scale = config.get("max_scale", None)
 
