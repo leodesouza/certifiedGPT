@@ -187,8 +187,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         
         accumulated_gradients = self.config.run.accumulated_gradients or 1
         noise_level = self.config.run.noise_level
+        step = 0
                         
-        for batch_idx, batch_sample in tqdm(train_loader, desc=f"Training epoch {epoch}"):
+        for batch_sample in tqdm(train_loader, desc=f"Training epoch {epoch}"):
 
             if noise_level > 0:
                 image_inputs = batch_sample["image"]
@@ -199,7 +200,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 batch_sample
             )
                                     
-            self.lr_scheduler.step(cur_epoch=epoch, cur_step=batch_idx)
+            self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)
             
             with xla_amp.autocast(enabled=self.config.run.amp, device=self.device): 
                 outputs = self.model(batch_sample)
@@ -211,7 +212,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             else:
                 loss.backward() 
                         
-            if (batch_idx + 1) % accumulated_gradients == 0:
+            if (step + 1) % accumulated_gradients == 0:
                 if self.config.run.amp:
                     self._scaler.step(self.optimizer)
                     self._scaler.update()
@@ -220,14 +221,15 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
                 xm.mark_step()
                 self.optimizer.zero_grad() 
-                                             
+
+            step += 1                               
             running_loss += loss.item()                                                        
                                 
         avg_loss = xm.mesh_reduce("running_loss", running_loss, lambda x: sum(x) / len(x)) / len(train_loader)            
 
         if xm.is_master_ordinal():   
                 current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")         
-                self.logger.info(f"current_time: {current_time}. Batch: {batch_idx} executed.")   
+                self.logger.info(f"current_time: {current_time}. Step: {step} executed.")   
                                      
             
         return avg_loss
