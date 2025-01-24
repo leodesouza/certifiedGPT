@@ -52,7 +52,7 @@ run:
   num_workers: 8
   accumulated_gradients: 1
   patience: 2
-  noise_level: 0.25
+  noise_level: 0
       
   #Consider using other learning rate schedulers for small datasets
   # - Exponential Decay
