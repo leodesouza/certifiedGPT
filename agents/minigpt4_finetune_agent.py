@@ -22,6 +22,7 @@ from common.registry import registry
 from graphs.losses.cross_entropy_loss import CrossEntropyLoss
 from tqdm import tqdm
 import wandb
+import datetime
 
 torch.autograd.set_detect_anomaly(False)
 
@@ -84,16 +85,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         epoch_val_loss = 0 
         
         try:
-
-            if (
-                not self.config.run.evaluate
-                and self.config.run.resume_ckpt_path is not None
-            ):
-                self.logger.info(
-                    f"Loading the checkpoint from path: {self.config.run.resume_ckpt_path}"
-                )
-                self.load_checkpoint(self.config.run.resume_ckpt_path)
-
+            
             self.logger.info("Creating the dataloaders")
             self._dataloaders = self.create_dataloaders()
 
@@ -140,7 +132,11 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                         break                                    
                                                                                                                 
             
-                if xm.is_master_ordinal():            
+                if xm.is_master_ordinal():                        
+                    
+                    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")         
+                    self.logger.info(f"current_time: {current_time}. epoch: {epoch} executed.")   
+                
                     self.logger.info(f"""epoch: {epoch}   
                                      train_loss: {epoch_train_loss}   
                                      val_loss: {epoch_val_loss}""")
@@ -190,55 +186,48 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         
         accumulated_gradients = self.config.run.accumulated_gradients or 1
         noise_level = self.config.run.noise_level
-        curr_step = 0
-                
-        for batch_sample in tqdm(train_loader, desc=f"Training epoch {epoch}"):
-            with xla.step():                        
-                batch_sample = prepare_sample(
-                    batch_sample
-                )
+                        
+        for batch_idx, batch_sample in tqdm(train_loader, desc=f"Training epoch {epoch}"):
 
-                if noise_level > 0:
-                    image_inputs = batch_sample["image"]
-                    noised_image_inputs = self.add_noise(image_inputs, noise_level)
-                    batch_sample["image"] = noised_image_inputs
-                
-                
-                self.lr_scheduler.step(cur_epoch=epoch, cur_step=curr_step)
-                
-                with xla_amp.autocast(enabled=self.config.run.amp, device=self.device): 
-                    outputs = self.model(batch_sample)
-                    loss = outputs["loss"]
-                                
-                if not torch.isnan(loss).any():                                                
-                    if self.config.run.amp:
-                        self._scaler.scale(loss).backward()
-                    else:
-                        loss.backward() 
-                    
-                    if self.config.run.amp:                                                  
-                        self._scaler.unscale_(self.optimizer)
+            if noise_level > 0:
+                image_inputs = batch_sample["image"]
+                noised_image_inputs = self.add_noise(image_inputs, noise_level)
+                batch_sample["image"] = noised_image_inputs
+            
+            batch_sample = prepare_sample(
+                batch_sample
+            )
+                                    
+            self.lr_scheduler.step(cur_epoch=epoch, cur_step=batch_idx)
+            
+            with xla_amp.autocast(enabled=self.config.run.amp, device=self.device): 
+                outputs = self.model(batch_sample)
+                loss = outputs["loss"]
+                            
+            
+            if self.config.run.amp:
+                self._scaler.scale(loss).backward()
+            else:
+                loss.backward() 
+                        
+            if (batch_idx + 1) % accumulated_gradients == 0:
+                if self.config.run.amp:
+                    self._scaler.step(self.optimizer)
+                    self._scaler.update()
+                else:                        
+                    xm.optimizer_step(self.optimizer)
 
-                    # clip grad to avoid exploding gradients
-                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
-
-                    if (curr_step + 1) % accumulated_gradients == 0:
-                        if self.config.run.amp:
-                            self._scaler.step(self.optimizer)
-                            self._scaler.update()
-                        else:                        
-                            xm.optimizer_step(self.optimizer)
-
-                        xm.mark_step()
-                        self.optimizer.zero_grad() 
-
-                    curr_step += 1                                     
-                    running_loss += loss.item()
-                                                
-                else:
-                    self.logger.info("NaN detected")
+                xm.mark_step()
+                self.optimizer.zero_grad() 
+                                             
+            running_loss += loss.item()                                                        
                                 
         avg_loss = xm.mesh_reduce("running_loss", running_loss, lambda x: sum(x) / len(x)) / len(train_loader)            
+
+        if xm.is_master_ordinal():   
+                current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")         
+                self.logger.info(f"current_time: {current_time}. Batch: {batch_idx} executed.")   
+                                     
             
         return avg_loss
 
@@ -257,21 +246,22 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self.model.eval()
 
         for batch_sample in tqdm(val_loader, desc=f"Evaluating epoch {epoch}"):
-            with xla.step():
+            
+            if noise_level > 0:
+                image_inputs = batch_sample["image"]
+                noised_image_inputs = self.add_noise(image_inputs, noise_level)
+                batch_sample["image"] = noised_image_inputs
+            
+            batch_sample = prepare_sample(
+                batch_sample
+            )            
 
-                batch_sample = prepare_sample(
-                    batch_sample
-                )            
-
-                if noise_level > 0:
-                    image_inputs = batch_sample["image"]
-                    noised_image_inputs = self.add_noise(image_inputs, noise_level)
-                    batch_sample["image"] = noised_image_inputs
-                
-                outputs = self.model(batch_sample)               
-                loss = outputs["loss"]                
-                running_eval_loss += loss.item()
-                xm.mark_step()
+            
+            outputs = self.model(batch_sample)               
+            loss = outputs["loss"]                
+            running_eval_loss += loss.item()
+            
+            xm.mark_step()
 
         eval_avg_loss = xm.mesh_reduce("running_eval_loss", running_eval_loss, lambda x: sum(x) / len(x)) / len(val_loader)            
                                 
@@ -420,33 +410,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         return state_dict
 
-    def load_checkpoint(self, file_name):
-        #  """
-        # Resume from a checkpoint.
-        # """
-        # if is_url(url_or_filename):
-        #     cached_file = download_cached_file(
-        #         url_or_filename, check_hash=False, progress=True
-        #     )
-        #     checkpoint = torch.load(cached_file, map_location=self.device)
-        # elif os.path.isfile(url_or_filename):
-        #     checkpoint = torch.load(url_or_filename, map_location=self.device)
-        # else:
-        #     raise RuntimeError("checkpoint url or path is invalid")
-
-        # state_dict = checkpoint["model"]
-        # message = self.unwrap_dist_model(self.model).load_state_dict(state_dict, strict=False)
-
-        # self.optimizer.load_state_dict(checkpoint["optimizer"])
-        # if self.scaler and "scaler" in checkpoint:
-        #     self.scaler.load_state_dict(checkpoint["scaler"])
-
-        # self.start_epoch = checkpoint["epoch"] + 1
-        # print("resume the checkpoint")
-        # logging.info("Resume checkpoint from {}".format(url_or_filename))
-
-        raise NotImplementedError()
-
+  
     def _setup_wandb(self, model):
         if self.config.run.wandb and xm.is_master_ordinal():
             self.logger.info("Start wandb")
