@@ -79,7 +79,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         best_train_loss = float('inf')   
         patience = self.config.run.patience or 3
         wait = 0
-        #step = 1
+        step = 1
         epoch_train_loss = 0
         epoch_val_loss = 0 
         
