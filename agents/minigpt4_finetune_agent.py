@@ -133,7 +133,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                                                                                                                 
             
                 if xm.is_master_ordinal():                        
-                    
+
                     current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")         
                     self.logger.info(f"current_time: {current_time}. epoch: {epoch} executed.")   
                 
@@ -147,7 +147,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                         wandb.log({
                             "epoch": epoch,
                             "train_loss": epoch_train_loss,
-                            "val_loss": epoch_val_loss                            
+                            "val_loss": epoch_val_loss,
+                            "learning_rate":self.optimizer.param_groups[0]["lr"]
                         })
 
                         self._tpu_metrics.log_tpu_metrics(step)
