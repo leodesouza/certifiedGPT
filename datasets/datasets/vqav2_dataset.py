@@ -10,6 +10,7 @@ from pathlib import Path
 from datasets.datasets.base_dataset import BaseDataset
 from PIL import Image
 from common.registry import registry
+import pickle
 
 
 class VQAv2Dataset(BaseDataset):
@@ -21,6 +22,7 @@ class VQAv2Dataset(BaseDataset):
         vis_paths,
         annotation_paths,
         split="train",
+        cache_dir="/var/cache/certifiedgpt/images"
     ):
         super().__init__(
             vis_processor=vis_processor,
@@ -42,14 +44,24 @@ class VQAv2Dataset(BaseDataset):
             f"Filter annotations that contains images int the path: {vis_paths}"
         )
         exist_annotation = []
+
+        self.cache_dir = Path(cache_dir)
+        self.cache_file = self.cache_dir / f"{split}_images.pkl"
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
+
+        self._images =[]
         self.images =[]
 
+        if self.cache_file.exists():
+            self.logger.info("load images from cache")
+            with open(self.cache_file,"rb") as f:
+                self.images = pickle.load(f)
+        
         try:
 
             self.questions = []
 
             self.logger.info("Loading annotations...")
-
 
             for annotation in self.annotations:
                 question_id = annotation.get("question_id")
@@ -66,27 +78,31 @@ class VQAv2Dataset(BaseDataset):
                     )
                     continue
 
+                self.questions.append(question)
+
                 image_id = annotation.get("image_id")
                 if image_id is None:
                     print(f"Warning: Missing 'image_id' in annotation: {annotation}")
                     continue
-
+                
                 file_name = f"COCO_{split}2014_{image_id:012d}.jpg"
                 image_path = os.path.join(self.vis_paths, file_name)
-                if os.path.exists(image_path):
-                    exist_annotation.append(annotation)
-                    self.questions.append(question)
-                                        
+                
+                if not self.images:                    
                     image = Image.open(image_path).convert("RGB")
                     image = self.vis_processor(image)
-                    self.images.append(
+                    self._images.append(
                         {
                             "question_id": question_id,
                             "image": image
                         }
-                    )
+                    )            
 
-            self.annotations = exist_annotation            
+            if self._images:
+                self.images = self._images
+                with open(self.cache_file, "wb") as f:
+                    pickle.dump(self.images, f)
+                self.logger(f"cached images to {self.cache_dir}")
 
             self.logger.info("Loading annotations. Done!")
 
