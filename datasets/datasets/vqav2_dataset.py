@@ -22,7 +22,7 @@ class VQAv2Dataset(BaseDataset):
         vis_paths,
         annotation_paths,
         split="train",
-        cache_dir="/var/cache/certifiedgpt/images"
+        cache_dir="/cache/certifiedgpt/images"
     ):
         super().__init__(
             vis_processor=vis_processor,
