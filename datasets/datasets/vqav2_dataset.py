@@ -42,10 +42,15 @@ class VQAv2Dataset(BaseDataset):
             f"Filter annotations that contains images int the path: {vis_paths}"
         )
         exist_annotation = []
+        self.images =[]
 
         try:
 
             self.questions = []
+
+            self.logger.info("Loading annotations...")
+
+
             for annotation in self.annotations:
                 question_id = annotation.get("question_id")
                 if question_id is None:
@@ -71,8 +76,19 @@ class VQAv2Dataset(BaseDataset):
                 if os.path.exists(image_path):
                     exist_annotation.append(annotation)
                     self.questions.append(question)
+                                        
+                    image = Image.open(image_path).convert("RGB")
+                    image = self.vis_processor(image)
+                    self.images.append(
+                        {
+                            "question_id": question_id,
+                            "image": image
+                        }
+                    )
 
             self.annotations = exist_annotation            
+
+            self.logger.info("Loading annotations. Done!")
 
         except Exception as e:
             self.logger.error(f"error on loading the dataset. Details: {e}")
@@ -88,13 +104,7 @@ class VQAv2Dataset(BaseDataset):
                 or "answers" not in annotation
             ):
                 raise ValueError(f" Invalid annotation at index {index}: {annotation}")
-
-            image_id = annotation["image_id"]
-            file_name = f"COCO_{self.split}2014_{image_id:012d}.jpg"
-            image_file_path = os.path.join(self.vis_paths, file_name)
-            image = Image.open(image_file_path).convert("RGB")
-            image = self.vis_processor(image)
-
+            
             question_id = annotation["question_id"]
             question = next(
                 filter(lambda q: q["question_id"] == question_id, self.questions), None
@@ -105,7 +115,15 @@ class VQAv2Dataset(BaseDataset):
                 raise ValueError(
                     f"Invalid or missing question for question_id {question_id}"
                 )
+                        
+            image = next(
+                filter(lambda q: q["question_id"] == question_id, self.images), 
+                None
+            )
 
+            if image is None:
+                raise ValueError(f"Image was not found for question_id: {question_id}")
+            
             all_answers = annotation["answers"]
             num_answer = len(all_answers)
 
