@@ -53,7 +53,7 @@ class VQAv2Dataset(BaseDataset):
         self.images =[]
 
         if self.cache_file.exists():
-            self.logger.info("load images from cache")
+            self.logger.info("loading images from cache")
             with open(self.cache_file,"rb") as f:
                 self.images = pickle.load(f)
         
@@ -102,7 +102,7 @@ class VQAv2Dataset(BaseDataset):
                 self.images = self._images
                 with open(self.cache_file, "wb") as f:
                     pickle.dump(self.images, f)
-                self.logger(f"cached images to {self.cache_dir}")
+                self.logger.info(f"cached images to {self.cache_dir}")
 
             self.logger.info("Loading annotations. Done!")
 
@@ -139,6 +139,8 @@ class VQAv2Dataset(BaseDataset):
 
             if image is None:
                 raise ValueError(f"Image was not found for question_id: {question_id}")
+            
+            image = image["image"]
             
             all_answers = annotation["answers"]
             num_answer = len(all_answers)
