@@ -88,7 +88,7 @@ def main(index):
 
     xr.initialize_cache(f'tmp/xla_cache{index}', readonly=False)
     
-    disable_print()
+    # disable_print()
 
     import agents
     
