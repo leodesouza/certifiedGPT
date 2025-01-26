@@ -146,7 +146,7 @@ class VQAv2Dataset(BaseDataset):
             )
 
             if image is None:
-                raise ValueError(f"Image was not found for question_id: {question_id}")
+                raise ValueError(f"Image was not found for image_id: {image_id}: Image Tensors:{self.images}")
             
             image = image["image"]
             
