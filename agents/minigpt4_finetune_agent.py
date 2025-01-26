@@ -87,8 +87,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         xm.broadcast_master_param(self._model) 
 
-        if xm.is_master_ordinal():
-            self.writer = test_utils.get_summary_writer(logdir=self.config.run.output_dir)  
+        # if xm.is_master_ordinal():
+        #     self.writer = test_utils.get_summary_writer(logdir=self.config.run.output_dir)  
 
     def run(self):        
         best_val_loss = float('inf')                
@@ -172,7 +172,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             
             
             xm.master_print(f"Finished the training loop {test_utils.now}")
-            test_utils.close_summary_writer(self.writer)
+            # test_utils.close_summary_writer(self.writer)
             
 
         except Exception as e:
@@ -232,13 +232,13 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 else:                        
                     xm.optimizer_step(self.optimizer)
 
-                tracker.add(self.config.datasets.vqav2.batch_size)
-                xm.add_step_closure(
-                    train_update(
-                        args=(self.device, step, loss, tracker, epoch, self.writer)                        
-                    ),
-                    run_async=True
-                )
+                # tracker.add(self.config.datasets.vqav2.batch_size)
+                # xm.add_step_closure(
+                #     train_update(
+                #         args=(self.device, step, loss, tracker, epoch, self.writer)                        
+                #     ),
+                #     run_async=True
+                # )
                 
                 self.optimizer.zero_grad() 
             
@@ -292,8 +292,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         """
 
     def finalize(self):
-        if self.writer:
-            self.writer.close()
+        pass
+        # if self.writer:
+        #     self.writer.close()
     
 
     @classmethod

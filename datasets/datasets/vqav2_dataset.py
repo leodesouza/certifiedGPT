@@ -48,8 +48,9 @@ class VQAv2Dataset(BaseDataset):
         exist_annotation = []
 
         self.cache_dir = Path(cache_dir)
-        self.cache_file = self.cache_dir / f"{split}_images.pkl"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
+        self.cache_file = self.cache_dir / f"{split}_images.pkl"
+        
 
         self._images =[]
         self.images =[]
@@ -100,11 +101,11 @@ class VQAv2Dataset(BaseDataset):
                         }
                     )            
 
-            if self._images:
+            if not self._images:
                 self.images = self._images
                 # with open(self.cache_file, "wb") as f:
-                #     pickle.dump(self.images, f)
-                # self.logger.info(f"cached images to {self.cache_dir}")
+                #     pickle.dump(self.images, f)                
+                # xm.master_print(f"cache images to {self.cache_dir}")
 
             self.logger.info("Loading annotations. Done!")
             xm.master_print(f"Loading {split} annotations. Done!")
