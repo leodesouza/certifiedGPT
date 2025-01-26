@@ -57,9 +57,8 @@ run:
   beta1: 0.9
   beta2: 0.999
 
-  seed: 42
-  #output_dir: '/home/leonardosouza/storage/checkpoints/minigpt4_stage2'
-  output_dir: '/home/leonardosouza/checkpoint/minigpt4_stage2'
+  seed: 42  
+  output_dir: ''
   amp: True
   resume_ckpt_path: null
   evaluate: False
