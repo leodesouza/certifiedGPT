@@ -135,6 +135,7 @@ class BaseModel(nn.Module):
 
         if enable_autocast:
             return torch.cuda.amp.autocast(dtype=dtype)
+            
         else:
             return contextlib.nullcontext()
 
