@@ -8,6 +8,7 @@ import sys
 import numpy as np
 import torch
 import torch_xla.distributed.xla_multiprocessing as xmp
+import torch_xla.runtime as xr
 from omegaconf import OmegaConf
 
 
@@ -84,6 +85,8 @@ def enable_print():
     sys.stdout = sys.__stdout__
 
 def main(index):
+
+    xr.initialize_cache(f'tmp/xla_cache{index}', readonly=False)
     
     disable_print()
 
