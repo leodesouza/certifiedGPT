@@ -192,7 +192,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
     def train(self, epoch):
         
         train_loader = self._dataloaders["train"]
-        train_loader = pl.MpDeviceLoader(train_loader, [self.device])
+        train_loader = pl.MpDeviceLoader(train_loader, self.device)
         
         if len(train_loader) == 0:
             return float("inf")
@@ -257,7 +257,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         running_eval_loss = 0
 
         val_loader = self._dataloaders["val"]
-        val_loader = pl.MpDeviceLoader(val_loader, [self.device])        
+        val_loader = pl.MpDeviceLoader(val_loader, self.device)        
         noise_level = self.config.run.noise_level
 
         if len(val_loader) == 0:
