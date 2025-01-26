@@ -54,10 +54,10 @@ class VQAv2Dataset(BaseDataset):
         self._images =[]
         self.images =[]
 
-        if self.cache_file.exists():
-            self.logger.info("loading images from cache")
-            with open(self.cache_file,"rb") as f:
-                self.images = pickle.load(f)
+        # if self.cache_file.exists():            
+        #     xm.master_print("loading images from cache")
+        #     with open(self.cache_file,"rb") as f:
+        #         self.images = pickle.load(f)
         
         try:
 
@@ -102,11 +102,12 @@ class VQAv2Dataset(BaseDataset):
 
             if self._images:
                 self.images = self._images
-                with open(self.cache_file, "wb") as f:
-                    pickle.dump(self.images, f)
-                self.logger.info(f"cached images to {self.cache_dir}")
+                # with open(self.cache_file, "wb") as f:
+                #     pickle.dump(self.images, f)
+                # self.logger.info(f"cached images to {self.cache_dir}")
 
             self.logger.info("Loading annotations. Done!")
+            xm.master_print(f"Loading {split} annotations. Done!")
 
         except Exception as e:            
             xm.master_print(f"error on loading the dataset. Details: {e}")
