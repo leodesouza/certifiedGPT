@@ -101,7 +101,8 @@ class VQAv2Dataset(BaseDataset):
                         }
                     )            
 
-            print(f'self images loaded with: {self.images}')  
+            
+            self.logger.info(f'self images loaded with: {self.images}')
             # if not self._images:
             #     self.images = self._images
                 # with open(self.cache_file, "wb") as f:
