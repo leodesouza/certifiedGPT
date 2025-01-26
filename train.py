@@ -1,4 +1,5 @@
 import logging
+logging.disable(logging.CRITICAL)
 import argparse
 import os
 import random
@@ -59,7 +60,7 @@ def setup_logger():
     logger.addHandler(console_handler)
     logger.addHandler(file_handler)
 
-    # registry.register("logger", logger)
+    registry.register("logger", logger)
 
 
 def setup_seeds(config):
