@@ -11,6 +11,7 @@ from datasets.datasets.base_dataset import BaseDataset
 from PIL import Image
 from common.registry import registry
 import pickle
+import torch_xla.core.xla_model as xm
 
 
 class VQAv2Dataset(BaseDataset):
@@ -37,6 +38,7 @@ class VQAv2Dataset(BaseDataset):
             "[vqa] Based on the image, respond to this question with a short answer: {}",
         ]
 
+        xm.master_print(f'Loading {split} split')
         self.split = split
         questions_dict = {q["question_id"]: q for q in self.questions}
 
@@ -61,8 +63,8 @@ class VQAv2Dataset(BaseDataset):
 
             self.questions = []
 
-            self.logger.info("Loading annotations...")
-
+            xm.master_print(f'Loading annotations...')
+            
             for annotation in self.annotations:
                 question_id = annotation.get("question_id")
                 if question_id is None:
