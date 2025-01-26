@@ -79,12 +79,7 @@ class BaseAgent:
         raise NotImplementedError
 
     @property
-    def device(self):
-        if self._device is None:
-            if self.config.run.device == "tpu":
-                self._device = xm.xla_device()
-            else:
-                self._device = torch.device(self.config.run.device)
+    def device(self):                    
         return self._device
 
     @property

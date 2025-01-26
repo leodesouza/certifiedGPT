@@ -79,11 +79,13 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         super().__init__()
         self.start_epoch = 0
         self.max_epoch = self.config.run.max_epoch
+        self._device = xm.xla_device()    
         self._model = self.build_model()
         self._setup_wandb(self._model)
         self._start_epoch = 0
         self._scaler = None
-        self._tpu_metrics = TPUMetrics()     
+        self._tpu_metrics = TPUMetrics() 
+        
 
         xm.broadcast_master_param(self._model) 
 
@@ -378,9 +380,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
     def build_model(self):
         self.logger.info("Start building the model")
         model_type = registry.get_model_class(self.config.arch)
-        model = model_type.from_config(self.config.model)
-        device = xm.xla_device()
-        model.to(device)
+        model = model_type.from_config(self.config.model)        
+        model.to(self.device)
         return model
     
     def save_checkpoint(self, model, epoch):        
