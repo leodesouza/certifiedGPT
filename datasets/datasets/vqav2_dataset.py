@@ -52,7 +52,7 @@ class VQAv2Dataset(BaseDataset):
         self.cache_file = self.cache_dir / f"{split}_images.pkl"
         
 
-        self._images =[]        
+        self._images = []        
 
         # if self.cache_file.exists():            
         #     xm.master_print("loading images from cache")
@@ -89,17 +89,16 @@ class VQAv2Dataset(BaseDataset):
                 
                 file_name = f"COCO_{split}2014_{image_id:012d}.jpg"
                 image_path = os.path.join(self.vis_paths, file_name)
+                                
                 
-                
-                if not self.images:                    
-                    image = Image.open(image_path).convert("RGB")
-                    image = self.vis_processor(image)
-                    self.images.append(
-                        {
-                            "image_id": image_id,
-                            "image": image
-                        }
-                    )            
+                image = Image.open(image_path).convert("RGB")
+                image = self.vis_processor(image)
+                self.images.append(
+                    {
+                        "image_id": image_id,
+                        "image": image
+                    }
+                )            
 
 
             self.logger.info(f'self images loaded with: {self.images}')
