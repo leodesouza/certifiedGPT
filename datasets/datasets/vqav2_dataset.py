@@ -140,7 +140,8 @@ class VQAv2Dataset(BaseDataset):
                     f"Invalid or missing question for question_id {question_id}"
                 )
                         
-            image_id = annotation.get("image_id")                                
+            image_id = annotation.get("image_id")
+            self.logger.info(f'***********get_data********: {self.images}')                                
             image = next(
                 filter(lambda i: i["image_id"] == image_id, self.images), 
                 None
