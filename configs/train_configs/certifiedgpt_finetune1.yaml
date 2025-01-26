@@ -68,12 +68,9 @@ run:
   beta1: 0.9
   beta2: 0.999
 
-  seed: 42
-  #output_dir: '/home/leonardosouza/storage/checkpoints/certifiedgpt/'
-  #output_dir: '/home/leonardosouza/checkpoint/certifiedgpt/'
-  output_dir: '/home/leonardosouza/checkpoint/certifiedgpt/'
-  
-  
+  seed: 42  
+  output_dir: ${env:OUTPUT_DIR}
+    
   amp: True
   resume_ckpt_path: null
   evaluate: False

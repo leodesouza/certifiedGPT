@@ -8,10 +8,10 @@ import os
 import time
 import torch
 import torch.distributed as dist
-import torch_xla as xla
-import torch_xla.distributed.xla_backend
+from torch_xla import runtime as xr
 import torch_xla.core.xla_model as xm
 import torch_xla.distributed.parallel_loader as pl
+import torch_xla.test.test_utils as test_utils
 
 from torch.utils.data import DataLoader, DistributedSampler
 import torch_xla.amp as xla_amp
@@ -30,6 +30,17 @@ torch.autograd.set_detect_anomaly(False)
 # source: https://github.com/pytorch/xla/
 dist.init_process_group(backend='xla', init_method='xla://')
 
+
+def train_update(device, step, loss, tracker, epoch, writer):
+    test_utils.print_training_update(
+        device, 
+        step,
+        loss.item(),
+        tracker.rate(),
+        tracker.global_rate(),
+        epoch,
+        summary_writer=writer()
+    )
 
 def apply_to_sample(f, sample):
     if len(sample) == 0:
@@ -72,12 +83,15 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self._setup_wandb(self._model)
         self._start_epoch = 0
         self._scaler = None
-        self._tpu_metrics = TPUMetrics()            
+        self._tpu_metrics = TPUMetrics()     
 
-    def run(self):
-        start_time = time.time()        
-        best_val_loss = float('inf')        
-        best_train_loss = float('inf')   
+        xm.broadcast_master_param(self._model) 
+
+        if xm.is_master_ordinal():
+            self.writer = test_utils.get_summary_writer(self.config.run.output_dir)  
+
+    def run(self):        
+        best_val_loss = float('inf')                
         patience = self.config.run.patience or 3
         wait = 0
         step = 1
@@ -110,16 +124,17 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 
                                 
                 # training step
-                if not self.config.evaluate_only:
-                    self.logger.info(f"Training epoch: {epoch}")
+                if not self.config.evaluate_only:                    
+                    xm.master_print(f"Training epoch: {epoch} started: {test_utils.now}")
                     epoch_train_loss = self.train(epoch)
-                    # self.save_checkpoint(self.model, epoch)
+                    xm.master_print(f"Training epoch: {epoch} ended: {test_utils.now}")                    
 
                 if self.config.run.has_val_split:
-                        
-                    self.logger.info(f"Evaluation epoch: {epoch}")
+                                            
+                    xm.master_print(f"Evaluation epoch: {epoch} started: {test_utils.now}")
                     epoch_val_loss = self.eval(epoch)                    
-                                                        
+                    xm.master_print(f"Evaluation epoch: {epoch} ended: {test_utils.now}")
+                                                                            
                     if epoch_val_loss < best_val_loss:                        
                         best_val_loss = epoch_val_loss                    
                         wait = 0
@@ -129,8 +144,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     
                     if wait >= patience:
                         self.logger.info(f"Early Stopping at epoch: {epoch}")
-                        break                                    
-                                                                                                                
+                        break
+
             
                 if xm.is_master_ordinal():                        
 
@@ -154,11 +169,10 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                         self._tpu_metrics.log_tpu_metrics(step)
                         step += 1                       
             
-            elapsed_time = time.time() - start_time
-            minutes = int(elapsed_time // 60)
-            seconds = int(elapsed_time % 60)
-
-            self.logger.info(f"Finished the training loop in {minutes}:{seconds}")
+            
+            
+            xm.master_print(f"Finished the training loop {test_utils.now}")
+            test_utils.close_summary_writer(self.writer)
             
 
         except Exception as e:
@@ -176,20 +190,19 @@ class MiniGPT4FineTuneAgent(BaseAgent):
     def train(self, epoch):
         
         train_loader = self._dataloaders["train"]
-        parallel_loader = pl.ParallelLoader(train_loader, [self.device])
-        train_loader = parallel_loader.per_device_loader(self.device)        
-
+        train_loader = pl.MpDeviceLoader(train_loader, [self.device])
+        
         if len(train_loader) == 0:
             return float("inf")
-
+        
+        tracker = xm.RateTracker()
         self.model.train()
         running_loss = 0.0
         
         accumulated_gradients = self.config.run.accumulated_gradients or 1
         noise_level = self.config.run.noise_level
-        step = 0
-                        
-        for batch_sample in tqdm(train_loader, desc=f"Training epoch {epoch}"):
+                                
+        for step, (batch_sample, target) in enumerate(train_loader):
 
             if noise_level > 0:
                 image_inputs = batch_sample["image"]
@@ -219,19 +232,22 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 else:                        
                     xm.optimizer_step(self.optimizer)
 
-                xm.mark_step()
+                tracker.add(self.config.datasets.vqav2.batch_size)
+                xm.add_step_closure(
+                    train_update(
+                        args=(self.device, step, loss, tracker, epoch, self.writer)                        
+                    ),
+                    run_async=True
+                )
+                
                 self.optimizer.zero_grad() 
-
-            step += 1                               
+            
             running_loss += loss.item()                                                        
                                 
         avg_loss = xm.mesh_reduce("running_loss", running_loss, lambda x: sum(x) / len(x)) / len(train_loader)            
-
-        if xm.is_master_ordinal():   
-                current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")         
-                self.logger.info(f"current_time: {current_time}. Step: {step} executed.")   
-                                     
-            
+        
+        xm.master_print(f"current_time: {test_utils.now}. Step: {step} executed.")
+                                                 
         return avg_loss
 
     @torch.no_grad()
@@ -239,8 +255,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         running_eval_loss = 0
 
         val_loader = self._dataloaders["val"]
-        parallel_loader = pl.ParallelLoader(val_loader, [self.device])
-        val_loader = parallel_loader.per_device_loader(self.device)
+        val_loader = pl.MpDeviceLoader(val_loader, [self.device])        
         noise_level = self.config.run.noise_level
 
         if len(val_loader) == 0:
@@ -248,7 +263,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         self.model.eval()
 
-        for batch_sample in tqdm(val_loader, desc=f"Evaluating epoch {epoch}"):
+        for batch_sample in enumerate(val_loader):
             
             if noise_level > 0:
                 image_inputs = batch_sample["image"]
@@ -263,8 +278,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             outputs = self.model(batch_sample)               
             loss = outputs["loss"]                
             running_eval_loss += loss.item()
-            
-            xm.mark_step()
+                        
 
         eval_avg_loss = xm.mesh_reduce("running_eval_loss", running_eval_loss, lambda x: sum(x) / len(x)) / len(val_loader)            
                                 
@@ -326,10 +340,10 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
                 sampler = DistributedSampler(
                     split,
-                    num_replicas=xm.xrt_world_size(),
+                    num_replicas=xr.world_size(),
                     rank=xm.runtime.global_ordinal(),
                     shuffle=True if is_train else False
-                ) if self.config.run.distributed else None
+                ) if self.config.run.distributed and xr.world_size() > 1 else None
 
                 
                 loader = DataLoader(
@@ -367,6 +381,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self.logger.info("Start building the model")
         model_type = registry.get_model_class(self.config.arch)
         model = model_type.from_config(self.config.model)
+        device = xm.xla_device()
+        model.to(device)
         return model
     
     def save_checkpoint(self, model, epoch):        

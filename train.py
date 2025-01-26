@@ -59,7 +59,7 @@ def setup_logger():
     logger.addHandler(console_handler)
     logger.addHandler(file_handler)
 
-    registry.register("logger", logger)
+    # registry.register("logger", logger)
 
 
 def setup_seeds(config):
@@ -75,8 +75,17 @@ def register_variables():
     registry.register("MAX_INT", sys.maxsize)
     registry.register("SPLIT_NAMES", ["train", "val", "test"])
 
+
+def disable_print():
+    sys.stdout = open(os.devnull, 'w')
+
+def enable_print():
+    sys.stdout = sys.__stdout__
+
 def main(index):
     
+    disable_print()
+
     import agents
     
     setup_logger()
