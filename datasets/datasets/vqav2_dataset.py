@@ -158,23 +158,23 @@ class VQAv2Dataset(BaseDataset):
 
             for answer in all_answers:
                 
-                answer_confidence = answer.get("answer_confidence")
+                # answer_confidence = answer.get("answer_confidence")
                 answer = answer.get("answer")
 
                 if not answer:
                     continue
 
-                confidence = 0 
-                if answer_confidence == 'yes':
-                    confidence = 2
-                elif  answer_confidence == 'maybe':
-                    confidence = 1                
+                # confidence = 0 
+                # if answer_confidence == 'yes':
+                #     confidence = 2
+                # elif  answer_confidence == 'maybe':
+                #     confidence = 1                
 
                 
                 if answer in answer_weights:
-                    answer_weights[answer] += weight * confidence
+                    answer_weights[answer] += weight
                 else:
-                    answer_weights[answer] = weight * confidence
+                    answer_weights[answer] = weight
 
 
             if not answer_weights:
