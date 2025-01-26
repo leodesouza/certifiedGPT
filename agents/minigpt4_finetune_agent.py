@@ -88,7 +88,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         xm.broadcast_master_param(self._model) 
 
         if xm.is_master_ordinal():
-            self.writer = test_utils.get_summary_writer(self.config.run.output_dir)  
+            self.writer = test_utils.get_summary_writer(logdir=self.config.run.output_dir)  
 
     def run(self):        
         best_val_loss = float('inf')                
@@ -292,11 +292,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         """
 
     def finalize(self):
-        """
-        Finalize all operations and dataloaders
-        :return:
-        """
-        # raise NotImplementedError
+        if self.writer:
+            self.writer.close()
     
 
     @classmethod
