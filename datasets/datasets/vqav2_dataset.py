@@ -52,8 +52,7 @@ class VQAv2Dataset(BaseDataset):
         self.cache_file = self.cache_dir / f"{split}_images.pkl"
         
 
-        self._images =[]
-        self.images =[]
+        self._images =[]        
 
         # if self.cache_file.exists():            
         #     xm.master_print("loading images from cache")
