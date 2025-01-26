@@ -108,8 +108,9 @@ class VQAv2Dataset(BaseDataset):
 
             self.logger.info("Loading annotations. Done!")
 
-        except Exception as e:
-            self.logger.error(f"error on loading the dataset. Details: {e}")
+        except Exception as e:            
+            xm.master_print(f"error on loading the dataset. Details: {e}")
+
 
     def get_data(self, index):
 
