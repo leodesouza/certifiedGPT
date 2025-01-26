@@ -94,16 +94,16 @@ class VQAv2Dataset(BaseDataset):
                 if not self.images:                    
                     image = Image.open(image_path).convert("RGB")
                     image = self.vis_processor(image)
-                    self._images.append(
+                    self.images.append(
                         {
                             "question_id": question_id,
                             "image": image
                         }
                     )            
 
-            xm.master_print(f'self images loaded with: {self.images}')  
-            if not self._images:
-                self.images = self._images
+            # xm.master_print(f'self images loaded with: {self.images}')  
+            # if not self._images:
+            #     self.images = self._images
                 # with open(self.cache_file, "wb") as f:
                 #     pickle.dump(self.images, f)                
                 # xm.master_print(f"cache images to {self.cache_dir}")
