@@ -91,17 +91,18 @@ class VQAv2Dataset(BaseDataset):
                 file_name = f"COCO_{split}2014_{image_id:012d}.jpg"
                 image_path = os.path.join(self.vis_paths, file_name)
                 
+                
                 if not self.images:                    
                     image = Image.open(image_path).convert("RGB")
                     image = self.vis_processor(image)
                     self.images.append(
                         {
-                            "question_id": question_id,
+                            "image_id": image_id,
                             "image": image
                         }
                     )            
 
-            
+
             self.logger.info(f'self images loaded with: {self.images}')
             # if not self._images:
             #     self.images = self._images
@@ -139,8 +140,9 @@ class VQAv2Dataset(BaseDataset):
                     f"Invalid or missing question for question_id {question_id}"
                 )
                         
+            image_id = annotation.get("image_id")                                
             image = next(
-                filter(lambda q: q["question_id"] == question_id, self.images), 
+                filter(lambda i: i["image_id"] == image_id, self.images), 
                 None
             )
 
