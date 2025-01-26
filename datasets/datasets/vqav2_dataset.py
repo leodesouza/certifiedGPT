@@ -101,7 +101,7 @@ class VQAv2Dataset(BaseDataset):
                         }
                     )            
 
-            # xm.master_print(f'self images loaded with: {self.images}')  
+            print(f'self images loaded with: {self.images}')  
             # if not self._images:
             #     self.images = self._images
                 # with open(self.cache_file, "wb") as f:
