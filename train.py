@@ -100,6 +100,7 @@ def main(index):
 
     agent = agents.setup_agent(config)
     agent.run()
+    agent.finalize()
     
             
 if __name__ == "__main__":

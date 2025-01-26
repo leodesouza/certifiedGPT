@@ -23,11 +23,12 @@ datasets:
           path:
                # - ${env:DATA_DIR}/images/sample_10k/train
                #- /home/leonardosouza/sample_10/train               
-               #- /home/leonardosouza/sample/train               
-               - ${env:DATA_DIR}/images/sample/train
+               - /home/leonardosouza/images/train
+               # - ${env:DATA_DIR}/images/sample/train
         val:
           path:
                # - ${env:DATA_DIR}/images/sample_10k/val
                # - /home/leonardosouza/sample_10/val               
-               #- /home/leonardosouza/sample/val
-               - ${env:DATA_DIR}/images/sample/val
+               - /home/leonardosouza/images/val
+               #- ${env:DATA_DIR}/images/sample/val
+               
