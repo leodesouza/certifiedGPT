@@ -99,9 +99,7 @@ class VQAv2Dataset(BaseDataset):
                         "image": image
                     }
                 )            
-
-
-            self.logger.info(f'self images loaded with: {self.images}')
+            
             # if not self._images:
             #     self.images = self._images
                 # with open(self.cache_file, "wb") as f:
@@ -145,7 +143,7 @@ class VQAv2Dataset(BaseDataset):
             )
 
             if image is None:
-                raise ValueError(f"Image was not found for image_id: {image_id}: Image Tensors:{self.images}")
+                raise ValueError(f"Image was not found for image_id: {image_id}")
             
             image = image["image"]
             
@@ -160,19 +158,19 @@ class VQAv2Dataset(BaseDataset):
 
             for answer in all_answers:
                 
-                # answer_confidence = answer.get("answer_confidence")
+                answer_confidence = answer.get("answer_confidence")
                 answer = answer.get("answer")
 
                 if not answer:
                     continue
 
-                # confidence = 0 
-                # if answer_confidence == 'yes':
-                #     confidence = 2
-                # elif  answer_confidence == 'maybe':
-                #     confidence = 1                
+                confidence = 0 
+                if answer_confidence == 'yes':
+                    confidence = 2
+                elif  answer_confidence == 'maybe':
+                    confidence = 1                
 
-                
+                weight * confidence
                 if answer in answer_weights:
                     answer_weights[answer] += weight
                 else:
