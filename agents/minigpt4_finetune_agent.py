@@ -127,15 +127,15 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                                 
                 # training step
                 if not self.config.evaluate_only:                    
-                    xm.master_print(f"Training epoch: {epoch} started: {test_utils.now}")
+                    xm.master_print(f"Training epoch: {epoch} started: {test_utils.now()}")
                     epoch_train_loss = self.train(epoch)
-                    xm.master_print(f"Training epoch: {epoch} ended: {test_utils.now}")                    
+                    xm.master_print(f"Training epoch: {epoch} ended: {test_utils.now()}")                    
 
                 if self.config.run.has_val_split:
                                             
-                    xm.master_print(f"Evaluation epoch: {epoch} started: {test_utils.now}")
+                    xm.master_print(f"Evaluation epoch: {epoch} started: {test_utils.now()}")
                     epoch_val_loss = self.eval(epoch)                    
-                    xm.master_print(f"Evaluation epoch: {epoch} ended: {test_utils.now}")
+                    xm.master_print(f"Evaluation epoch: {epoch} ended: {test_utils.now()}")
                                                                             
                     if epoch_val_loss < best_val_loss:                        
                         best_val_loss = epoch_val_loss                    
@@ -173,12 +173,12 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             
             
             
-            xm.master_print(f"Finished the training loop {test_utils.now}")
+            xm.master_print(f"Finished the training loop {test_utils.now()}")
             # test_utils.close_summary_writer(self.writer)
             
 
         except Exception as e:
-              xm.master_print(f"Error on agent run: {test_utils.now}. Details: {e}")
+              xm.master_print(f"Error on agent run: {test_utils.now()}. Details: {e}")
 
     def add_noise(self, image_inputs, noise_level):
         
@@ -248,7 +248,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                                 
         avg_loss = xm.mesh_reduce("running_loss", running_loss, lambda x: sum(x) / len(x)) / len(train_loader)            
         
-        xm.master_print(f"current_time: {test_utils.now}. Step: {step} executed.")
+        xm.master_print(f"current_time: {(test_utils.now())}. Step: {step} executed.")
                                                  
         return avg_loss
 
