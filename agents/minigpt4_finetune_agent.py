@@ -197,14 +197,14 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         if len(train_loader) == 0:
             return float("inf")
         
-        tracker = xm.RateTracker()
+        # tracker = xm.RateTracker()
         self.model.train()
         running_loss = 0.0
         
         accumulated_gradients = self.config.run.accumulated_gradients or 1
         noise_level = self.config.run.noise_level
                                 
-        for step, (batch_sample, target) in enumerate(train_loader):
+        for step, batch_sample in enumerate(train_loader):
 
             if noise_level > 0:
                 image_inputs = batch_sample["image"]
@@ -265,7 +265,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         self.model.eval()
 
-        for batch_sample in enumerate(val_loader):
+        for step, batch_sample in enumerate(val_loader):
             
             if noise_level > 0:
                 image_inputs = batch_sample["image"]
