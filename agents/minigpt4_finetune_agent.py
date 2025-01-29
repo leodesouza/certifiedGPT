@@ -205,7 +205,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         noise_level = self.config.run.noise_level
                                 
         for step, batch_sample in enumerate(train_loader):
-
+            self.optimizer.zero_grad() 
             if noise_level > 0:
                 image_inputs = batch_sample["image"]
                 noised_image_inputs = self.add_noise(image_inputs, noise_level)
@@ -232,7 +232,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     self._scaler.step(self.optimizer)
                     self._scaler.update()
                 else:                        
-                    xm.optimizer_step(self.optimizer)
+                    xm.optimizer_step(self.optimizer, barrier=True)
 
                 # tracker.add(self.config.datasets.vqav2.batch_size)
                 # xm.add_step_closure(
@@ -240,9 +240,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 #         args=(self.device, step, loss, tracker, epoch, self.writer)                        
                 #     ),
                 #     run_async=True
-                # )
-                
-                self.optimizer.zero_grad() 
+                # )                                
             
             running_loss += loss.item()                                                        
                                 

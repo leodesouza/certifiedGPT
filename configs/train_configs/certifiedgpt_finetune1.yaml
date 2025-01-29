@@ -71,7 +71,7 @@ run:
   seed: 42  
   output_dir: ${env:OUTPUT_DIR}
     
-  amp: True
+  amp: False
   resume_ckpt_path: null
   evaluate: False
   train_splits: ["train"]
