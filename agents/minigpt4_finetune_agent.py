@@ -232,7 +232,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     self._scaler.step(self.optimizer)
                     self._scaler.update()
                 else:                        
-                    xm.optimizer_step(self.optimizer, barrier=True)
+                    xm.optimizer_step(self.optimizer)
+                
+                xm.mark_step()
 
                 # tracker.add(self.config.datasets.vqav2.batch_size)
                 # xm.add_step_closure(
@@ -242,6 +244,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 #     run_async=True
                 # )                                
             
+            # running_loss += loss.detach()  # Reduce unnecessary computation graph expansion
             running_loss += loss.item()                                                        
                                 
         avg_loss = xm.mesh_reduce("running_loss", running_loss, lambda x: sum(x) / len(x)) / len(train_loader)            
