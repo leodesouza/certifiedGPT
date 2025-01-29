@@ -23,7 +23,7 @@ class VQAv2Dataset(BaseDataset):
         vis_paths,
         annotation_paths,
         split="train",
-        cache_dir="/home/leonardosouza/cache/certifiedgpt/images"
+        #cache_dir="/home/leonardosouza/cache/certifiedgpt/images"
     ):
         super().__init__(
             vis_processor=vis_processor,
@@ -47,9 +47,9 @@ class VQAv2Dataset(BaseDataset):
         )
         exist_annotation = []
 
-        self.cache_dir = Path(cache_dir)
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
-        self.cache_file = self.cache_dir / f"{split}_images.pkl"
+        # self.cache_dir = Path(cache_dir)
+        # self.cache_dir.mkdir(parents=True, exist_ok=True)
+        # self.cache_file = self.cache_dir / f"{split}_images.pkl"
         
 
         self._images = []        
