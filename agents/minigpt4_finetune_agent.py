@@ -211,9 +211,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 noised_image_inputs = self.add_noise(image_inputs, noise_level)
                 batch_sample["image"] = noised_image_inputs
             
-            batch_sample = prepare_sample(
-                batch_sample
-            )
+            # batch_sample = prepare_sample(
+            #     batch_sample
+            # )
                                     
             # self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)
             
