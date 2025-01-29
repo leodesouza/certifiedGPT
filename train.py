@@ -107,4 +107,4 @@ if __name__ == "__main__":
     
     import torch_xla as xla     
     
-    xla.launch(main, args=(), debug_single_process=true)   
+    xla.launch(main, args=(), debug_single_process=True)   
