@@ -22,8 +22,7 @@ class VQAv2Dataset(BaseDataset):
         questions_paths,
         vis_paths,
         annotation_paths,
-        split="train",
-        cache_dir="/home/leonardosouza/cache/certifiedgpt/images"
+        split="train"        
     ):
         super().__init__(
             vis_processor=vis_processor,
@@ -47,17 +46,7 @@ class VQAv2Dataset(BaseDataset):
         )
         exist_annotation = []
 
-        self.cache_dir = Path(cache_dir)
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
-        self.cache_file = self.cache_dir / f"{split}_images.pkl"
-        
-
         self._images = []        
-
-        # if self.cache_file.exists():            
-        #     xm.master_print("loading images from cache")
-        #     with open(self.cache_file,"rb") as f:
-        #         self.images = pickle.load(f)
         
         try:
 
@@ -99,12 +88,6 @@ class VQAv2Dataset(BaseDataset):
                         "image": image
                     }
                 )            
-            
-            # if not self._images:
-            #     self.images = self._images
-                # with open(self.cache_file, "wb") as f:
-                #     pickle.dump(self.images, f)                
-                # xm.master_print(f"cache images to {self.cache_dir}")
 
             self.logger.info("Loading annotations. Done!")
             xm.master_print(f"Loading {split} annotations. Done!")

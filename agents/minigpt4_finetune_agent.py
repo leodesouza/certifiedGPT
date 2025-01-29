@@ -232,7 +232,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     self._scaler.step(self.optimizer)
                     self._scaler.update()
                 else:                        
-                    xm.optimizer_step(self.optimizer, barrier=False)
+                    xm.optimizer_step(self.optimizer)
 
                 # tracker.add(self.config.datasets.vqav2.batch_size)
                 # xm.add_step_closure(
