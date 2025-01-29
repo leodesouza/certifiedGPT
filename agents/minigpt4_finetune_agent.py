@@ -203,11 +203,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         
         accumulated_gradients = self.config.run.accumulated_gradients or 1
         noise_level = self.config.run.noise_level
-
-        if epoch == 0:
-            xm.master_print(f"Updating learning rate on epoch {epoch}:  {(test_utils.now())}")
-            self.lr_scheduler.step(cur_epoch=epoch, cur_step=epoch + 1)     
-
+                                
         for step, batch_sample in enumerate(train_loader):
 
             if noise_level > 0:
@@ -218,7 +214,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             batch_sample = prepare_sample(
                 batch_sample
             )
-                                                                        
+                                    
+            self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)
+            
             with xla_amp.autocast(enabled=self.config.run.amp, device=self.device): 
                 outputs = self.model(batch_sample)
                 loss = outputs["loss"]
@@ -251,12 +249,6 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         avg_loss = xm.mesh_reduce("running_loss", running_loss, lambda x: sum(x) / len(x)) / len(train_loader)            
         
         xm.master_print(f"current_time: {(test_utils.now())}. Step: {step} executed.")
-
-        xm.mark_step()
-        if epoch % 2 == 0:
-            xm.master_print(f"Updating learning rate on epoch {epoch}:  {(test_utils.now())}")
-            self.lr_scheduler.step(cur_epoch=epoch, cur_step=epoch + 1)
-
                                                  
         return avg_loss
 
