@@ -66,14 +66,15 @@ class MiniGPT4(MiniGPTBase):
 
         self.has_qformer = has_qformer
         if self.has_qformer:
-            logging.info('Loading Q-Former')
+            
+            xm.master_print('Loading Q-Former')
             self.Qformer, self.query_tokens = self.init_Qformer(
                 num_query_token, self.visual_encoder.num_features, freeze_qformer
             )
             self.load_from_pretrained(url_or_filename=q_former_model)  # load q-former weights here
 
-            img_f_dim = self.Qformer.config.hidden_size
-            self.logger.info('Loading Q-Former Done')
+            img_f_dim = self.Qformer.config.hidden_size            
+            xm.master_print('Loading Q-Former Done')
         else:
             img_f_dim = self.visual_encoder.num_features * 4
             self.logger.info('Do not use Q-Former here.')
@@ -94,7 +95,8 @@ class MiniGPT4(MiniGPTBase):
 
     @classmethod
     def init_Qformer(cls, num_query_token, vision_width, freeze):
-        logging.info("loading Qformer from pretrained BERT")
+        xm.master_print("loading Qformer from pretrained BERT")
+        
         encoder_config = BertConfig.from_pretrained("bert-base-uncased")
         encoder_config.encoder_width = vision_width
         # insert cross-attention layer every other block
@@ -119,8 +121,9 @@ class MiniGPT4(MiniGPTBase):
                 param.requires_grad = False
             Qformer = Qformer.eval()
             Qformer.train = disabled_train
-            query_tokens.requires_grad = False
-            logging.info("freeze Qformer")
+            query_tokens.requires_grad = False            
+            xm.master_print("freeze Qformer")
+            
 
         return Qformer, query_tokens
 

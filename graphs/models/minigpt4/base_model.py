@@ -12,6 +12,7 @@ from omegaconf import OmegaConf
 import numpy as np
 import torch
 import torch.nn as nn
+import torch_xla.core.xla_model as xm
 from transformers import LlamaTokenizer
 from peft import (
     LoraConfig,
@@ -143,7 +144,7 @@ class BaseModel(nn.Module):
     def init_vision_encoder(
             cls, model_name, img_size, drop_path_rate, use_grad_checkpoint, precision, freeze
     ):
-        self.logger.info('Loading VIT')
+        xm.master_print('Loading VIT')        
 
         assert model_name == "eva_clip_g", "vit model must be eva_clip_g for current version of MiniGPT-4"
         if not freeze:
@@ -165,13 +166,14 @@ class BaseModel(nn.Module):
             ln_vision = ln_vision.eval()
             ln_vision.train = disabled_train
             self.logger.info("freeze vision encoder")
-
-        self.logger.info('Loading VIT Done')
+        
+        xm.master_print('Loading VIT Done')
         return visual_encoder, ln_vision
 
     def init_llm(cls, llama_model_path, low_resource=False, low_res_device=0, lora_r=0,
                  lora_target_modules=["q_proj", "v_proj"], **lora_kargs):
-        self.logger.info('Loading LLAMA')
+        
+        xm.master_print('Loading LLAMA')
         llama_tokenizer = LlamaTokenizer.from_pretrained(llama_model_path, use_fast=False)
         llama_tokenizer.pad_token = "$$"
 
@@ -220,8 +222,8 @@ class BaseModel(nn.Module):
         else:
             for name, param in llama_model.named_parameters():
                 param.requires_grad = False
-            self.logger.info('freeze LLAMA')
-        self.logger.info('Loading LLAMA Done')
+            xm.master_print('freeze LLAMA')
+        xm.master_print('Loading LLAMA Done')
         return llama_model, llama_tokenizer
 
     def load_from_pretrained(self, url_or_filename):
