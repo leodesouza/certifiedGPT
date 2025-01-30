@@ -153,8 +153,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
                     current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")         
                     self.logger.info(f"current_time: {current_time}. epoch: {epoch} executed.")   
-                
-                    self.logger.info(f"""epoch: {epoch}   
+
+                                    
+                    xm.master_print(f"""epoch: {epoch}   
                                      train_loss: {epoch_train_loss}   
                                      val_loss: {epoch_val_loss}""")
                     
