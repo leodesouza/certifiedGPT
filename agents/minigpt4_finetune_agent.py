@@ -266,7 +266,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         self.model.eval()
 
-        for batch_sample in enumerate(val_loader):
+        for _, batch_sample in enumerate(val_loader):
             
             if noise_level > 0:
                 image_inputs = batch_sample["image"]
