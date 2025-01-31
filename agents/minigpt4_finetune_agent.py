@@ -206,25 +206,28 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         noise_level = self.config.run.noise_level
                                 
         for step, batch_sample in enumerate(train_loader):
+            
+            if step % accumulated_gradients == 0:
+                self.optimizer.zero_grad() 
 
-            self.optimizer.zero_grad() 
-
-            if noise_level > 0:
-                image_inputs = batch_sample["image"]
-                noised_image_inputs = self.add_noise(image_inputs, noise_level)
-                batch_sample["image"] = noised_image_inputs
-                                                            
-            # self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)
+            if noise_level > 0:                
+                batch_sample["image"] = self.add_noise(image_inputs, noise_level)
+                                                                                        
             
             with xla_amp.autocast(enabled=self.config.run.amp, device=self.device): 
                 outputs = self.model(batch_sample)
                 loss = outputs["loss"]                                                                
+            
             loss.backward() 
-            xm.optimizer_step(self.optimizer)
+
+            if (step + 1) % accumulated_gradients == 0:
+                xm.optimizer_step(self.optimizer, barrier=False)
+                self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                
+                xm.mark_step()
                                   
-            # running_loss += loss.detach()  # Reduce unnecessary computation graph expansion
-            running_loss += loss.item()                                                        
-                                
+            # loss.detach() to avoid unnecessary computation graph retention                                    
+            running_loss += loss.detach().item()                                                                                          
+                                        
         avg_loss = xm.mesh_reduce("running_loss", running_loss, lambda x: sum(x) / len(x)) / len(train_loader)            
         
         xm.master_print(f"current_time: {(test_utils.now())}. Step: {step} executed.")
@@ -254,6 +257,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             outputs = self.model(batch_sample)               
             loss = outputs["loss"]                
             running_eval_loss += loss.item()                        
+
+            xm.mark_step()
 
         eval_avg_loss = xm.mesh_reduce("running_eval_loss", running_eval_loss, lambda x: sum(x) / len(x)) / len(val_loader)                    
                                 
