@@ -85,7 +85,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self._start_epoch = 0        
         self._tpu_metrics = TPUMetrics() 
         
+        xm.master_print(f"Start broadcasting the model. started: {test_utils.now()}")
         xm.broadcast_master_param(self._model) 
+        xm.master_print(f"Finished broadcasting the model. {test_utils.now()}")
 
         # if xm.is_master_ordinal():
         #     self.writer = test_utils.get_summary_writer(logdir=self.config.run.output_dir)  
@@ -100,8 +102,10 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         
         try:
             
+            xm.master_print(f"Creating the dataloaders: {test_utils.now()}")
             self.logger.info("Creating the dataloaders")
             self._dataloaders = self.create_dataloaders()
+            xm.master_print(f"Fininhed Creating the dataloaders: {test_utils.now()}")
 
             if not self._dataloaders.get("train") and not self.config.run.evaluate:
                 raise ValueError("Training dataloader is empty")
@@ -188,8 +192,12 @@ class MiniGPT4FineTuneAgent(BaseAgent):
     
     def train(self, epoch):
         
+        xm.master_print(f"Getting train from memory : {test_utils.now()}")
         train_loader = self._dataloaders["train"]
+        
+        xm.master_print(f"Wrap data to MpDeviceLoader : {test_utils.now()}")
         train_loader = pl.MpDeviceLoader(train_loader, self.device)
+        xm.master_print(f"Finis.. Wrap data to MpDeviceLoader : {test_utils.now()}")
         
         if len(train_loader) == 0:
             return float("inf")
