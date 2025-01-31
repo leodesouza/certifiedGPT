@@ -41,10 +41,12 @@ class MiniGPTBase(BaseModel):
     ):
         super().__init__()
 
-        if use_tpu:            
-            self.device = xm.xla_device()
-        else:
-            self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        # if use_tpu:            
+        #     self.device = xm.xla_device()
+        # else:
+        #     self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+        self.device = xm.xla_device()
 
         self.llama_model, self.llama_tokenizer = self.init_llm(
             llama_model_path=llama_model,

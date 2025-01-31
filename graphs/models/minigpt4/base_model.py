@@ -132,7 +132,7 @@ class BaseModel(nn.Module):
     def maybe_autocast(self, dtype=torch.float16):
         # if on cpu, don't use autocast
         # if on gpu, use autocast with dtype if provided, otherwise use torch.float16
-        enable_autocast = self.device != torch.device("cpu")
+        enable_autocast = True
 
         if enable_autocast:
             return torch.cuda.amp.autocast(dtype=dtype)
@@ -178,7 +178,7 @@ class BaseModel(nn.Module):
         llama_tokenizer.pad_token = "$$"
 
         # Properly detect TPU
-        is_tpu = torch.device("xla") if "xla" in str(torch.device(type='xla')) else False
+        is_tpu = True # torch.device("xla") if "xla" in str(torch.device(type='xla')) else False
 
         if low_resource:
             if is_tpu:
