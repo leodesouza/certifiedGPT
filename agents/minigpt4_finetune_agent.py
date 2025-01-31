@@ -85,9 +85,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self._start_epoch = 0        
         self._tpu_metrics = TPUMetrics() 
         
-        xm.master_print(f"Start broadcasting the model. started: {test_utils.now()}")
-        xm.broadcast_master_param(self._model) 
-        xm.master_print(f"Finished broadcasting the model. {test_utils.now()}")
+        # xm.master_print(f"Start broadcasting the model. started: {test_utils.now()}")
+        # xm.broadcast_master_param(self._model) 
+        # xm.master_print(f"Finished broadcasting the model. {test_utils.now()}")
 
         # if xm.is_master_ordinal():
         #     self.writer = test_utils.get_summary_writer(logdir=self.config.run.output_dir)  
