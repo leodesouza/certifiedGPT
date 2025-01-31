@@ -6,7 +6,7 @@ NOISE_LEVEL=0
 MAX_EPOCHS=5
 BATCH_SIZE=6
 CHECKPOINT_NAME="finetuned_certifiedgpt_vqa"
-CONFIG_PATH='/home/leonardosouza/certifiedGPT/configs/train_configs/certifiedgpt_finetune1.yaml'
+CONFIG_PATH='/home/leo_desouza/certifiedGPT/configs/train_configs/certifiedgpt_finetune1.yaml'
 # CONFIG_PATH='/home/leonardosouza/certifiedGPT/configs/train_configs/cc_sbu_finetuning.yaml'
 
 # Execute the Python training script
