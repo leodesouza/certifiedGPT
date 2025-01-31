@@ -189,7 +189,7 @@ class BaseModel(nn.Module):
             llama_tokenizer.pad_token = "$$"
 
              # Properly detect TPU
-            is_tpu = torch.device("xla") if "xla" in str(torch.device(type='xla')) else False
+            is_tpu = True # torch.device("xla") if "xla" in str(torch.device(type='xla')) else False
 
             if low_resource:
                 if is_tpu:
