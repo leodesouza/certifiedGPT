@@ -12,6 +12,7 @@ from torch_xla import runtime as xr
 import torch_xla.core.xla_model as xm
 import torch_xla.distributed.parallel_loader as pl
 import torch_xla.test.test_utils as test_utils
+import torch_xla.debug.profiler as xp
 
 from torch.utils.data import DataLoader, DistributedSampler
 import torch_xla.amp as xla_amp
@@ -84,14 +85,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self._setup_wandb(self._model)
         self._start_epoch = 0        
         self._tpu_metrics = TPUMetrics() 
-        
-        # xm.master_print(f"Start broadcasting the model. started: {test_utils.now()}")
-        # xm.broadcast_master_param(self._model) 
-        # xm.master_print(f"Finished broadcasting the model. {test_utils.now()}")
-
-        # if xm.is_master_ordinal():
-        #     self.writer = test_utils.get_summary_writer(logdir=self.config.run.output_dir)  
-
+        server = xp.start_server(self.config.run.profiler_port)
+                
     def run(self):        
         best_val_loss = float('inf')                
         patience = self.config.run.patience or 3
@@ -101,11 +96,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         epoch_val_loss = 0 
         
         try:
-            
-            xm.master_print(f"Creating the dataloaders: {test_utils.now()}")
+                        
             self.logger.info("Creating the dataloaders")
-            self._dataloaders = self.create_dataloaders()
-            xm.master_print(f"Fininhed Creating the dataloaders: {test_utils.now()}")
+            self._dataloaders = self.create_dataloaders()            
 
             if not self._dataloaders.get("train") and not self.config.run.evaluate:
                 raise ValueError("Training dataloader is empty")
@@ -190,19 +183,12 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         
         return noised_image_inputs
     
-    def train(self, epoch):
+    def train(self, epoch):                
         
-        xm.master_print(f"Getting train from memory : {test_utils.now()}")
-        train_loader = self._dataloaders["train"]
-        
-        xm.master_print(f"Wrap data to MpDeviceLoader : {test_utils.now()}")
-        train_loader = pl.MpDeviceLoader(train_loader, self.device)
-        xm.master_print(f"Finis.. Wrap data to MpDeviceLoader : {test_utils.now()}")
-        
+        train_loader = self._dataloaders["train"]                
+        train_loader = pl.MpDeviceLoader(train_loader, self.device)                
         if len(train_loader) == 0:
-            return float("inf")
-        
-        # tracker = xm.RateTracker()
+            return float("inf")                
         self.model.train()
         running_loss = 0.0
         
@@ -210,36 +196,24 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         noise_level = self.config.run.noise_level
                                 
         for step, batch_sample in enumerate(train_loader):
-            xm.master_print(f"step {step}: {test_utils.now()}")
-            if step % accumulated_gradients == 0:
-                xm.master_print(f"zero_grad() {step}: {test_utils.now()}")
-                self.optimizer.zero_grad() 
+            with xp.StepTrace('train', step_num=step):
+                with xp.Trace('build_graph'):                
+                    if step % accumulated_gradients == 0:                    
+                        self.optimizer.zero_grad() 
 
-            if noise_level > 0:                
-                batch_sample["image"] = self.add_noise(image_inputs, noise_level)
-                                                                                        
-            
-            with xla_amp.autocast(enabled=self.config.run.amp, device=self.device): 
-                xm.master_print(f"pass batch in the {step} to model: {test_utils.now()}")
-                outputs = self.model(batch_sample)
-                xm.master_print("passed")
-                loss = outputs["loss"]
-                xm.master_print(f"loss: {loss}")                                                                
-            
-            xm.master_print("back prop")
-            loss.backward() 
-            xm.master_print("finished back prop")
+                    if noise_level > 0:                
+                        batch_sample["image"] = self.add_noise(batch_sample["image"], noise_level)
+                                                                                                                    
+                    with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                     
+                        outputs = self.model(batch_sample)                    
+                        loss = outputs["loss"]                                                    
+                    loss.backward()
 
-            if (step + 1) % accumulated_gradients == 0:
-                xm.master_print("opmizer")
-                xm.optimizer_step(self.optimizer, barrier=False)
-                xm.master_print("scheduler")
-                self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                
-                xm.master_print("mark step")
-                xm.mark_step()
-                                  
-            # loss.detach() to avoid unnecessary computation graph retention                                    
-            running_loss += loss.detach().item()                                                                                          
+                if (step + 1) % accumulated_gradients == 0:                    
+                    xm.optimizer_step(self.optimizer)                    
+                    self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                                                                                            
+                # loss.detach() to avoid unnecessary computation graph retention                                    
+                running_loss += loss.detach().item()                                                                                          
                                         
         avg_loss = xm.mesh_reduce("running_loss", running_loss, lambda x: sum(x) / len(x)) / len(train_loader)            
         
@@ -261,18 +235,12 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self.model.eval()
 
         for _, batch_sample in enumerate(val_loader):
-            
-            if noise_level > 0:
-                image_inputs = batch_sample["image"]
-                noised_image_inputs = self.add_noise(image_inputs, noise_level)
-                batch_sample["image"] = noised_image_inputs                        
-            
-            outputs = self.model(batch_sample)               
-            loss = outputs["loss"]                
-            running_eval_loss += loss.item()                        
-
-            xm.mark_step()
-
+            with xp.StepTrace('eval'):
+                if noise_level > 0:                    
+                    batch_sample["image"] = self.add_noise(batch_sample["image"], noise_level)                                
+                outputs = self.model(batch_sample)               
+                loss = outputs["loss"]                
+                running_eval_loss += loss.item()                                    
         eval_avg_loss = xm.mesh_reduce("running_eval_loss", running_eval_loss, lambda x: sum(x) / len(x)) / len(val_loader)                    
                                 
         return eval_avg_loss

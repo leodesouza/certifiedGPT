@@ -24,7 +24,7 @@ model:
 
 datasets:
   vqav2:
-    batch_size: 6    
+    batch_size: 32    
     vis_processor:
       train:
         name: "blip2_image_train"
@@ -84,3 +84,4 @@ run:
 #  world_size: 1
 #  dist_url: "env://"
   distributed: True
+  profiler_port: 9012 
