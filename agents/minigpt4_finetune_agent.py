@@ -206,45 +206,22 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         noise_level = self.config.run.noise_level
                                 
         for step, batch_sample in enumerate(train_loader):
+
             self.optimizer.zero_grad() 
+
             if noise_level > 0:
                 image_inputs = batch_sample["image"]
                 noised_image_inputs = self.add_noise(image_inputs, noise_level)
                 batch_sample["image"] = noised_image_inputs
-            
-            # batch_sample = prepare_sample(
-            #     batch_sample
-            # )
-                                    
+                                                            
             # self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)
             
             with xla_amp.autocast(enabled=self.config.run.amp, device=self.device): 
                 outputs = self.model(batch_sample)
-                loss = outputs["loss"]
-                            
-            
-            if self.config.run.amp:
-                self._scaler.scale(loss).backward()
-            else:
-                loss.backward() 
-                        
-            if (step + 1) % accumulated_gradients == 0:
-                if self.config.run.amp:
-                    self._scaler.step(self.optimizer)
-                    self._scaler.update()
-                else:                        
-                    xm.optimizer_step(self.optimizer)
-                
-                xm.mark_step()
-
-                # tracker.add(self.config.datasets.vqav2.batch_size)
-                # xm.add_step_closure(
-                #     train_update(
-                #         args=(self.device, step, loss, tracker, epoch, self.writer)                        
-                #     ),
-                #     run_async=True
-                # )                                
-            
+                loss = outputs["loss"]                                                                
+            loss.backward() 
+            xm.optimizer_step(self.optimizer)
+                                  
             # running_loss += loss.detach()  # Reduce unnecessary computation graph expansion
             running_loss += loss.item()                                                        
                                 
