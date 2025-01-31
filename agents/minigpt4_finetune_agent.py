@@ -210,8 +210,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         noise_level = self.config.run.noise_level
                                 
         for step, batch_sample in enumerate(train_loader):
-            
+            xm.master_print(f"step {step}: {test_utils.now()}")
             if step % accumulated_gradients == 0:
+                xm.master_print(f"zero_grad() {step}: {test_utils.now()}")
                 self.optimizer.zero_grad() 
 
             if noise_level > 0:                
@@ -219,14 +220,22 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                                                                                         
             
             with xla_amp.autocast(enabled=self.config.run.amp, device=self.device): 
+                xm.master_print(f"pass batch in the {step} to model: {test_utils.now()}")
                 outputs = self.model(batch_sample)
-                loss = outputs["loss"]                                                                
+                xm.master_print("passed")
+                loss = outputs["loss"]
+                xm.master_print(f"loss: {loss}")                                                                
             
+            xm.master_print("back prop")
             loss.backward() 
+            xm.master_print("finished back prop")
 
             if (step + 1) % accumulated_gradients == 0:
+                xm.master_print("opmizer")
                 xm.optimizer_step(self.optimizer, barrier=False)
+                xm.master_print("scheduler")
                 self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                
+                xm.master_print("mark step")
                 xm.mark_step()
                                   
             # loss.detach() to avoid unnecessary computation graph retention                                    
