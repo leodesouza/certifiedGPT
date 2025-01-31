@@ -82,11 +82,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self._device = xm.xla_device()    
         self._model = self.build_model()
         self._setup_wandb(self._model)
-        self._start_epoch = 0
-        self._scaler = None
+        self._start_epoch = 0        
         self._tpu_metrics = TPUMetrics() 
         
-
         xm.broadcast_master_param(self._model) 
 
         # if xm.is_master_ordinal():
@@ -113,9 +111,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             self.logger.info(
                 f"Start epoch: {self.start_epoch}. Max epoch: {self.max_epoch}"
             )
-
-            self._scaler = xla_amp.GradScaler()
-
+            
             if xm.is_master_ordinal():     
                 if self.config.run.noise_level > 0:
                     xm.master_print(f"Noise level: {self.config.run.noise_level} will be applied to the image inputs")                           
