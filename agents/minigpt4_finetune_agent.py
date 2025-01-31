@@ -24,7 +24,7 @@ from tqdm import tqdm
 import wandb
 import datetime
 
-torch.autograd.set_detect_anomaly(False)
+# torch.autograd.set_detect_anomaly(False) doesnt work for TPU
 
 # rank and world size are inferred from XLA Device
 # source: https://github.com/pytorch/xla/
