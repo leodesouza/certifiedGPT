@@ -51,7 +51,7 @@ class VQAv2Dataset(BaseDataset):
         run_config = self.config = registry.get_configuration_class("configuration")
         self.cache_path = os.path.join(run_config.run.tmp_dir, "image_cache.pkl")
         if os.path.exists(self.cache_path):
-            with open(self.cach_path, "rb") as cached_file:
+            with open(self.cache_path, "rb") as cached_file:
                 self._image = pickle.load(cached_file)
             xm.master_print(f'loading {len(self._images)} images from cache:')
         
