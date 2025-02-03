@@ -45,17 +45,20 @@ class VQAv2Dataset(BaseDataset):
         self.logger.info(
             f"Filter annotations that contains images int the path: {vis_paths}"
         )
-        exist_annotation = []
-
+        
         self._images = []
         run_config = self.config = registry.get_configuration_class("configuration")
         file_name = f"{self.split}_image_cache.pkl"
         self.cache_path = os.path.join(run_config.run.tmp_dir, file_name)
+
+        xm.master_print(f'Trying to load {self.split} images from cache path: {self.cache_path}')
+        self.cache_path = os.path.join(run_config.run.tmp_dir, file_name)
         if os.path.exists(self.cache_path):
             with open(self.cache_path, "rb") as cached_file:
+                xm.master_print(f'Loading {self.split} images from cache')
                 self._images = pickle.load(cached_file)
-            xm.master_print(f'loading {len(self._images)} images from cache:')
-        
+                xm.master_print(f'{len(self._images)} images loaded for {self.split} split')
+                    
         try:
 
             self.questions = []
@@ -100,7 +103,7 @@ class VQAv2Dataset(BaseDataset):
             if len(self._images) > 0:
                 self.images = self._images
             else:                
-                xm.master_print(f'saving {len(self.images)} images to cache. Path: {run_config.run.tmp_dir}')
+                xm.master_print(f'saving {len(self.images)} {self.split} images to cache. Path: {run_config.run.tmp_dir}')
                 with open(self.cache_path, "wb") as cached_file:
                     pickle.dump(self.images, cached_file)
 
