@@ -99,7 +99,7 @@ class VQAv2Dataset(BaseDataset):
             if len(self._images) > 0:
                 self.images = self._images
             else:                
-                xm.master_print(f'saving {len(self._images)} images to cache. Path: {run_config.run.tmp_dir}')
+                xm.master_print(f'saving {len(self.images)} images to cache. Path: {run_config.run.tmp_dir}')
                 with open(self.cache_path, "wb") as cached_file:
                     pickle.dump(self.images, cached_file)
 
