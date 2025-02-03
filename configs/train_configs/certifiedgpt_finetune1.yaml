@@ -84,5 +84,4 @@ run:
 
 #  world_size: 1
 #  dist_url: "env://"
-  distributed: True
-  profiler_port: 9012 
+  distributed: True  
