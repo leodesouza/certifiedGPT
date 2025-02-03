@@ -48,8 +48,8 @@ class VQAv2Dataset(BaseDataset):
         exist_annotation = []
 
         self._images = []
-        
-        self.cache_path = os.path.join(self.config.run.tmp_dir, "image_cache.pkl")
+        run_config = self.config = registry.get_configuration_class("configuration")
+        self.cache_path = os.path.join(run_config.run.tmp_dir, "image_cache.pkl")
         if os.path.exists(self.cache_path):
             with open(self.cach_path, "rb") as cached_file:
                 self._image = pickle.load(cached_file)
