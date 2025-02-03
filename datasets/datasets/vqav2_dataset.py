@@ -15,6 +15,7 @@ import torch_xla.core.xla_model as xm
 
 
 class VQAv2Dataset(BaseDataset):
+    
     def __init__(
         self,
         vis_processor,
@@ -31,7 +32,7 @@ class VQAv2Dataset(BaseDataset):
             vis_paths=vis_paths,
             annotation_paths=annotation_paths,
         )
-
+        
         self.instruction_template = [
             "[vqa] {}",
             "[vqa] Based on the image, respond to this question with a short answer: {}",
@@ -46,7 +47,13 @@ class VQAv2Dataset(BaseDataset):
         )
         exist_annotation = []
 
-        self._images = []        
+        self._images = []
+        
+        self.cache_path = os.path.join(self.config.run.tmp_dir, "image_cache.pkl")
+        if os.path.exists(self.cache_path):
+            with open(self.cach_path, "rb") as cached_file:
+                self._image = pickle.load(cached_file)
+            xm.master_print(f'loading {len(self._images)} images from cache:')
         
         try:
 
@@ -71,23 +78,31 @@ class VQAv2Dataset(BaseDataset):
 
                 self.questions.append(question)
 
-                image_id = annotation.get("image_id")
-                if image_id is None:
-                    print(f"Warning: Missing 'image_id' in annotation: {annotation}")
-                    continue
-                
-                file_name = f"COCO_{split}2014_{image_id:012d}.jpg"
-                image_path = os.path.join(self.vis_paths, file_name)
-                                
-                
-                image = Image.open(image_path).convert("RGB")
-                image = self.vis_processor(image)
-                self.images.append(
-                    {
-                        "image_id": image_id,
-                        "image": image
-                    }
-                )            
+                if not self._images:
+                    image_id = annotation.get("image_id")
+                    if image_id is None:
+                        print(f"Warning: Missing 'image_id' in annotation: {annotation}")
+                        continue
+                    
+                    file_name = f"COCO_{split}2014_{image_id:012d}.jpg"
+                    image_path = os.path.join(self.vis_paths, file_name)
+                                                    
+                    image = Image.open(image_path).convert("RGB")
+                    image = self.vis_processor(image)
+                    self.images.append(
+                        {
+                            "image_id": image_id,
+                            "image": image
+                        }
+                    )            
+
+            if len(self._images) > 0:
+                self.images = self._images
+            else:                
+                xm.master_print(f'saving {len(self._images)} images to cache. Path: {self.run.tmp_dir}')
+                with open(self.cache_path, "wb") as cached_file:
+                    pickle.dump(self.images, cached_file)
+
 
             self.logger.info("Loading annotations. Done!")
             xm.master_print(f"Loading {split} annotations. Done!")
@@ -192,7 +207,7 @@ class VQAv2Dataset(BaseDataset):
             "question_id": data["question_id"],
             "instruction_input": instruction,
             "answer": data["answer"],
-        }
+        }       
 
     @property
     def split_name(self):
