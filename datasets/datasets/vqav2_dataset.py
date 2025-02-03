@@ -58,6 +58,8 @@ class VQAv2Dataset(BaseDataset):
                 xm.master_print(f'Loading {self.split} images from cache')
                 self._images = pickle.load(cached_file)
                 xm.master_print(f'{len(self._images)} images loaded for {self.split} split')
+        else:
+            xm.master_print(f'cache file was not found for {self.split} split. Images will be processed and saved')
                     
         try:
 
