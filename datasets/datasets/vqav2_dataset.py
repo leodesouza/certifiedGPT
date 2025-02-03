@@ -53,7 +53,7 @@ class VQAv2Dataset(BaseDataset):
         self.cache_path = os.path.join(run_config.run.tmp_dir, file_name)
         if os.path.exists(self.cache_path):
             with open(self.cache_path, "rb") as cached_file:
-                self._image = pickle.load(cached_file)
+                self._images = pickle.load(cached_file)
             xm.master_print(f'loading {len(self._images)} images from cache:')
         
         try:
