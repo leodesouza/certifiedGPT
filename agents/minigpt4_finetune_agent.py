@@ -208,7 +208,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
             if (step + 1) % accumulated_gradients == 0:                    
                 xm.optimizer_step(self.optimizer)                    
-                self.lr_scheduler.step(cur_epoch=epoch, cur_step=step) 
+                # self.lr_scheduler.step(cur_epoch=epoch, cur_step=step) 
                 if self.config.run.wandb:                                                                    
                         wandb.log({
                             "epoch": epoch,
