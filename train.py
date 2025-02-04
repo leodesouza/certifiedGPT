@@ -85,8 +85,9 @@ def enable_print():
     sys.stdout = sys.__stdout__
 
 def main(index):
-
-    xr.initialize_cache(f'tmp/xla_cache{index}', readonly=False)
+    cache_file = os.path.expanduser(f'~/tmp/xla_cache{index}')
+    
+    xr.initialize_cache(cache_file, readonly=False)
     
     disable_print()
 
