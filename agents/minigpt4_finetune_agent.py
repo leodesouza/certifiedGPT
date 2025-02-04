@@ -207,7 +207,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 loss = outputs["loss"]                                                    
             loss.backward()
 
-            if (step) % accumulated_gradients == 0:
+            if (step + 1) % accumulated_gradients == 0:
                 xm.master_print(f"start: reduce_gradients step: {step} - {(test_utils.now())}")                                                                                                                
                 xm.reduce_gradients(self.optimizer)
                 xm.master_print(f"stop: reduce_gradients step: {step} - {(test_utils.now())}")
