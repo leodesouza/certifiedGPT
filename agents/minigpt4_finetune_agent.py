@@ -228,7 +228,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             # loss.detach() to avoid unnecessary computation graph retention                                    
             running_loss += loss.detach().item()                                                                                          
                                         
-        avg_loss = xm.mesh_reduce("running_loss", running_loss, lambda x: sum(x) / len(x)) / len(train_loader)            
+        avg_loss = xm.mesh_reduce("running_loss", running_loss, lambda x: sum(x) / len(x))            
+        avg_loss /= len(train_loader) # to avoid double averaging
         
         xm.master_print(f"current_time: {(test_utils.now())}. Step: {step} executed.")
                                                  
@@ -257,7 +258,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     self._tpu_metrics.log_tpu_metrics(step)                      
 
             running_eval_loss += loss.detach().item()                                    
-        eval_avg_loss = xm.mesh_reduce("running_eval_loss", running_eval_loss, lambda x: sum(x) / len(x)) / len(val_loader)                    
+        eval_avg_loss = xm.mesh_reduce("running_eval_loss", running_eval_loss, lambda x: sum(x) / len(x))                    
+        eval_avg_loss /= len(val_loader)
                                 
         return eval_avg_loss
     
