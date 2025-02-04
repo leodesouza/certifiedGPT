@@ -124,22 +124,22 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     epoch_train_loss = self.train(epoch)
                     xm.master_print(f"Training epoch: {epoch} ended: {test_utils.now()}")                    
 
-                if self.config.run.has_val_split:
+                # if self.config.run.has_val_split:
                                             
-                    xm.master_print(f"Evaluation epoch: {epoch} started: {test_utils.now()}")
-                    epoch_val_loss = self.eval(epoch)                    
-                    xm.master_print(f"Evaluation epoch: {epoch} ended: {test_utils.now()}")
+                #     xm.master_print(f"Evaluation epoch: {epoch} started: {test_utils.now()}")
+                #     epoch_val_loss = self.eval(epoch)                    
+                #     xm.master_print(f"Evaluation epoch: {epoch} ended: {test_utils.now()}")
                                                                             
-                    if epoch_val_loss < best_val_loss:                        
-                        best_val_loss = epoch_val_loss                    
-                        wait = 0
-                        self.save_checkpoint(self.model, epoch)
-                    else:
-                        wait += 1
+                #     if epoch_val_loss < best_val_loss:                        
+                #         best_val_loss = epoch_val_loss                    
+                #         wait = 0
+                #         self.save_checkpoint(self.model, epoch)
+                #     else:
+                #         wait += 1
                     
-                    if wait >= patience:
-                        self.logger.info(f"Early Stopping at epoch: {epoch}")
-                        break
+                #     if wait >= patience:
+                #         self.logger.info(f"Early Stopping at epoch: {epoch}")
+                #         break
 
             
                 if xm.is_master_ordinal():                        
@@ -254,8 +254,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             outputs = self.model(batch_sample)               
             loss = outputs["loss"]
             if self.config.run.wandb:
-                    xm.master_print(f"epoch: {epoch}. step: {step}. val_loss: {loss.detach().item()}")                                                                                            
-                    self._tpu_metrics.log_tpu_metrics(step)                      
+                    xm.master_print(f"epoch: {epoch}. step: {step + 1}. val_loss: {loss.detach().item()}")                                                                                            
+                    self._tpu_metrics.log_tpu_metrics(step + 1)                      
 
             running_eval_loss += loss.detach().item()                                    
         eval_avg_loss = xm.mesh_reduce("running_eval_loss", running_eval_loss, lambda x: sum(x) / len(x))                    
