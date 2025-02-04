@@ -4,6 +4,10 @@
 # See LICENSE.md for the full license text or visit the repo at:
 # https://github.com/Vision-CAIR/MiniGPT-4
 #
+import torch_xla.experimental.compile_cache as xcc
+
+xcc.enable()
+
 import os 
 import time
 import torch
@@ -208,7 +212,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
             if (step) % accumulated_gradients == 0:
                 xm.master_print(f"start: reduce_gradients step: {step} - {(test_utils.now())}")                                                                                                                
-                xm.reduce_gradients(self.model)
+                xm.reduce_gradients(self.optimizer)
                 xm.master_print(f"stop: reduce_gradients step: {step} - {(test_utils.now())}")
 
                 xm.master_print(f"start: optimizer_step step: {step} - {(test_utils.now())}")
