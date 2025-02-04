@@ -28,14 +28,14 @@ datasets:
     vis_processor:
       train:
         name: "blip2_image_train"
-        image_size: 448
+        image_size: 224
         # mean: (0.4612911641597748, 0.4411545395851135, 0.40491899847984314)
         # std: (0.49849939346313477, 0.4965251386165619, 0.49087637662887573)
         min_scale: 0.5
         max_scale: 1.0
       val:
         name: "blip2_image_val"
-        image_size: 448
+        image_size: 224
         # mean: (0.457837849855423, 0.4374278485774994, 0.4012486934661865)
         # std: (0.49821919202804565, 0.4960692822933197, 0.49015116691589355)
         min_scale: 0.5
