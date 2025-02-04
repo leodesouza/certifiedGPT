@@ -151,18 +151,18 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                                      train_loss: {epoch_train_loss}   
                                      val_loss: {epoch_val_loss}""")
                     
-                    if self.config.run.wandb:
+                    # if self.config.run.wandb:
                                             
-                        xm.master_print(f"Logging the metrics to wandb")
-                        wandb.log({
-                            "epoch": epoch,
-                            "train_loss": epoch_train_loss,
-                            "val_loss": epoch_val_loss,
-                            "learning_rate":self.optimizer.param_groups[0]["lr"]
-                        })
+                    #     xm.master_print(f"Logging the metrics to wandb")
+                    #     wandb.log({
+                    #         "epoch": epoch,
+                    #         "train_loss": epoch_train_loss,
+                    #         "val_loss": epoch_val_loss,
+                    #         "learning_rate":self.optimizer.param_groups[0]["lr"]
+                    #     })
 
-                        self._tpu_metrics.log_tpu_metrics(step)
-                        step += 1                       
+                    #     self._tpu_metrics.log_tpu_metrics(step)
+                    #     step += 1                       
             
             
             
@@ -208,7 +208,16 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
             if (step + 1) % accumulated_gradients == 0:                    
                 xm.optimizer_step(self.optimizer)                    
-                # self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                                                                                            
+                self.lr_scheduler.step(cur_epoch=epoch, cur_step=step) 
+                if self.config.run.wandb:                                                                    
+                        wandb.log({
+                            "epoch": epoch,
+                            "train_loss": loss.item(),                            
+                            "learning_rate":self.optimizer.param_groups[0]["lr"]
+                        })
+
+                        self._tpu_metrics.log_tpu_metrics(step)
+                        step += 1                                                                                                                  
             # loss.detach() to avoid unnecessary computation graph retention                                    
             running_loss += loss.detach().item()                                                                                          
                                         
@@ -231,12 +240,20 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         self.model.eval()
 
-        for _, batch_sample in enumerate(val_loader):
+        for step, batch_sample in enumerate(val_loader):
             with xp.StepTrace('eval'):
                 if noise_level > 0:                    
                     batch_sample["image"] = self.add_noise(batch_sample["image"], noise_level)                                
                 outputs = self.model(batch_sample)               
-                loss = outputs["loss"]                
+                loss = outputs["loss"]
+                if self.config.run.wandb:                                                                    
+                    wandb.log({
+                        "epoch": epoch,                            
+                        "val_loss": loss.item()                            
+                    })
+
+                    self._tpu_metrics.log_tpu_metrics(step)
+                    step += 1                                                                                                                                  
                 running_eval_loss += loss.item()                                    
         eval_avg_loss = xm.mesh_reduce("running_eval_loss", running_eval_loss, lambda x: sum(x) / len(x)) / len(val_loader)                    
                                 
