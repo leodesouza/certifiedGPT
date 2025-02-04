@@ -210,7 +210,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 xm.optimizer_step(self.optimizer)                    
                 # self.lr_scheduler.step(cur_epoch=epoch, cur_step=step) 
                 if self.config.run.wandb:
-                        xm.master_print(f"epoch: {epoch}. step: {step}. train_loss: {loss.detach().item()}. lr: {self.optimizer.param_groups[0]["lr"]}")                                                                                            
+                        xm.master_print(f"epoch: {epoch}. step: {step}. train_loss: {loss.detach().item()}")                                                                                            
                         self._tpu_metrics.log_tpu_metrics(step)
                         step += 1                                                                                                                  
             # loss.detach() to avoid unnecessary computation graph retention                                    
