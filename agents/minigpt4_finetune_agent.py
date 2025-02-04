@@ -206,13 +206,13 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 loss = outputs["loss"]                                                    
             loss.backward()
 
-            if (step + 1) % accumulated_gradients == 0:                    
+            if (step) % accumulated_gradients == 0:                    
+                xm.reduce_gradients()
                 xm.optimizer_step(self.optimizer)                    
                 # self.lr_scheduler.step(cur_epoch=epoch, cur_step=step) 
                 if self.config.run.wandb:
                         xm.master_print(f"epoch: {epoch}. step: {step}. train_loss: {loss.detach().item()}")                                                                                            
-                        self._tpu_metrics.log_tpu_metrics(step)
-                        step += 1                                                                                                                  
+                        self._tpu_metrics.log_tpu_metrics(step)                                                                                                                                          
             # loss.detach() to avoid unnecessary computation graph retention                                    
             running_loss += loss.detach().item()                                                                                          
                                         
