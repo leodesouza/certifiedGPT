@@ -207,12 +207,15 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             loss.backward()
 
             if (step) % accumulated_gradients == 0:                    
-                xm.reduce_gradients()
-                xm.optimizer_step(self.optimizer)                    
+                xm.reduce_gradients(self.model)
+                xm.optimizer_step(self.optimizer, barrier=False)
+                xm.mark_step()
+
                 # self.lr_scheduler.step(cur_epoch=epoch, cur_step=step) 
                 if self.config.run.wandb:
                         xm.master_print(f"epoch: {epoch}. step: {step}. train_loss: {loss.detach().item()}")                                                                                            
-                        self._tpu_metrics.log_tpu_metrics(step)                                                                                                                                          
+                        self._tpu_metrics.log_tpu_metrics(step)
+                                                                                                                                                         
             # loss.detach() to avoid unnecessary computation graph retention                                    
             running_loss += loss.detach().item()                                                                                          
                                         
@@ -235,18 +238,16 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         self.model.eval()
 
-        for step, batch_sample in enumerate(val_loader):
-            with xp.StepTrace('eval'):
-                if noise_level > 0:                    
-                    batch_sample["image"] = self.add_noise(batch_sample["image"], noise_level)                                
-                outputs = self.model(batch_sample)               
-                loss = outputs["loss"]
-                if self.config.run.wandb:
-                        xm.master_print(f"epoch: {epoch}. step: {step}. val_loss: {loss.detach().item()}")                                                                                            
-                        self._tpu_metrics.log_tpu_metrics(step)
-                        step += 1  
+        for step, batch_sample in enumerate(val_loader):            
+            if noise_level > 0:                    
+                batch_sample["image"] = self.add_noise(batch_sample["image"], noise_level)                                
+            outputs = self.model(batch_sample)               
+            loss = outputs["loss"]
+            if self.config.run.wandb:
+                    xm.master_print(f"epoch: {epoch}. step: {step}. val_loss: {loss.detach().item()}")                                                                                            
+                    self._tpu_metrics.log_tpu_metrics(step)                      
 
-                running_eval_loss += loss.detach().item()                                    
+            running_eval_loss += loss.detach().item()                                    
         eval_avg_loss = xm.mesh_reduce("running_eval_loss", running_eval_loss, lambda x: sum(x) / len(x)) / len(val_loader)                    
                                 
         return eval_avg_loss
