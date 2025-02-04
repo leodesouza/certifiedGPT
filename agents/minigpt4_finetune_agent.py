@@ -4,9 +4,6 @@
 # See LICENSE.md for the full license text or visit the repo at:
 # https://github.com/Vision-CAIR/MiniGPT-4
 #
-import torch_xla.experimental.compile_cache as xcc
-
-xcc.enable()
 
 import os 
 import time
