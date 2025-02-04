@@ -114,9 +114,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     xm.master_print(f"Noise level: {self.config.run.noise_level} will be applied to the image inputs")                           
                 else:                    
                     xm.master_print(f"No noise will be applied to the image inputs")
-        
-            self._pre_compile_graph(self.model)
-
+                    
             for epoch in range(self.start_epoch, self.max_epoch):
                 
                                 
@@ -429,16 +427,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             # validation metric
             if(self.config.run.evaluate):
                 wandb.define_metric("accuracy", step_metric="epoch")
-                # wandb.define_metric("perplexity", step_metric="epoch")
-    
-    def _pre_compile_graph(self, model):
-        xm.master_print(f"start: _pre_compile_graph - {(test_utils.now())}")                
-        input = torch.randn(6, 3, 448, 448).to(self.device)
-        with torch.no_grad():
-            _ = model(input)
-        xm.mark_step()
-        xm.master_print(f"stop: _pre_compile_graph - {(test_utils.now())}")
-
+                # wandb.define_metric("perplexity", step_metric="epoch")        
              
     
         
