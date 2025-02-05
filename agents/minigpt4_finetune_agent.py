@@ -196,6 +196,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         noise_level = self.config.run.noise_level
                                 
         for step, batch_sample in enumerate(train_loader):                            
+            step += 1
+
             if step % accumulated_gradients == 0:                    
                 self.optimizer.zero_grad() 
 
@@ -206,8 +208,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 outputs = self.model(batch_sample)                    
                 loss = outputs["loss"]                                                    
             loss.backward()
-
-            step += 1
+            
             if (step) % accumulated_gradients == 0:
                 xm.master_print(f"start: reduce_gradients step: {step} - {(test_utils.now())}")                                                                                                                
                 xm.reduce_gradients(self.optimizer)
