@@ -197,17 +197,26 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                                 
         for step, batch_sample in enumerate(train_loader):                            
             step += 1
-
-            if step % accumulated_gradients == 0:                    
+            
+            if step % accumulated_gradients == 0:
+                xm.master_print(f"start: zero_grad() step: {step} - {(test_utils.now())}")                    
                 self.optimizer.zero_grad() 
+                xm.master_print(f"stop: zero_grad() step: {step} - {(test_utils.now())}")
 
             if noise_level > 0:                
                 batch_sample["image"] = self.add_noise(batch_sample["image"], noise_level)
-                                                                                                            
-            with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                     
-                outputs = self.model(batch_sample)                    
-                loss = outputs["loss"]                                                    
+
+            xm.master_print(f"start: autocast() step: {step} - {(test_utils.now())}")                                                                                                            
+            with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                     
+                xm.master_print(f"start: pass batch to model step: {step} - {(test_utils.now())}")
+                outputs = self.model(batch_sample)
+                xm.master_print(f"stop: pass batch to model step: {step} - {(test_utils.now())}")                    
+                loss = outputs["loss"]
+            xm.master_print(f"end: autocast() step: {step} - {(test_utils.now())}")                                                    
+
+            xm.master_print(f"start: backward() : {step} - {(test_utils.now())}")
             loss.backward()
+            xm.master_print(f"stop: backward() : {step} - {(test_utils.now())}")
             
             if (step) % accumulated_gradients == 0:
                 xm.master_print(f"start: reduce_gradients step: {step} - {(test_utils.now())}")                                                                                                                
