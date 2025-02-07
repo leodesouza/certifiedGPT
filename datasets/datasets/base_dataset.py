@@ -33,7 +33,8 @@ class BaseDataset(Dataset):
                 self.questions.extend(json.load(open(question_path, "r"))["questions"])
 
         self.annotations = []
-        self.images = []
+        self.images_dict = {}
+        self.questions_dict = {}
 
         self.logger.info("Loading annotations json files")
         for ann_path in annotation_paths:
