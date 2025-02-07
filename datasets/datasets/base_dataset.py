@@ -24,6 +24,7 @@ class BaseDataset(Dataset):
         self.vis_paths = vis_paths
 
         self.questions = []
+        self.images = [] 
 
         self.logger.info("Loading dataset ...")
         self.logger.info("Loading questions json files")
