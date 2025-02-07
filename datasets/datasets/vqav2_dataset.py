@@ -41,7 +41,7 @@ class VQAv2Dataset(BaseDataset):
 
         xm.master_print(f'Loading {split} split')
         self.split = split
-        self.questions_dict = {q["question_id"]: q for q in self.questions}
+        self.questions_dict = {q["question_id"]: q for q in self.questions}        
         self.images_dict = {}
 
         self.logger.info(
@@ -55,22 +55,19 @@ class VQAv2Dataset(BaseDataset):
             xm.master_print(f'Loading annotations...')
             
             for annotation in self.annotations:
-                # question_id = annotation.get("question_id")
-                # if question_id is None:
-                #     self.logger.info(
-                #         f"Warning: Missing 'question_id' in annotation: {annotation}"
-                #     )
-                #     continue
+                question_id = annotation.get("question_id")
+                if question_id is None:
+                    self.logger.info(
+                        f"Warning: Missing 'question_id' in annotation: {annotation}"
+                    )
+                    continue
 
-                # question = self.questions_dict.get(question_id)
-                # if question is None:
-                #     self.logger.info(
-                #         f"Warning: Question with 'question_id' {question_id} is missing in questions_dict."
-                #     )
-                #     continue
-
-                # self.questions.append(question)
-
+                question = self.questions_dict.get(question_id)
+                if question is None:
+                    self.logger.info(
+                        f"Warning: Question with 'question_id' {question_id} is missing in questions_dict."
+                    )
+                    continue                
                 
                 image_id = annotation.get("image_id")
                 if image_id is None:
