@@ -134,27 +134,35 @@ class VQAv2Dataset(BaseDataset):
                 raise ValueError(f"No answers found for question_id {question_id}")
 
             weight = 1 / num_answer
-            answer_weights = collections.defaultdict(float)
+            answer_weights = {}
 
-            for answer_obj in all_answers:
-                ans = answer_obj.get("answer")
-                if not ans:
+            for answer in all_answers:
+                
+                answer_confidence = answer.get("answer_confidence")
+                answer = answer.get("answer")
+
+                if not answer:
                     continue
 
-                confidence_map = {'yes':2, 'maybe': 1}
-                confidence = confidence_map.get(answer_obj.get("answer_confidence"), 0)
-                answer_weights[answer] += weight * confidence
+                confidence = 0 
+                if answer_confidence == 'yes':
+                    confidence = 2
+                elif  answer_confidence == 'maybe':
+                    confidence = 1                
+
+                weight *= confidence
+                if answer in answer_weights:
+                    answer_weights[answer] += weight
+                else:
+                    answer_weights[answer] = weight
+
 
             if not answer_weights:
                 raise ValueError(
                     f"No valid answers processed for question_id {question_id}"
                 )
-                        
-            # answers, weights = zip(*answer_weights.items())            
-            # answer = random.choices(answers, weights=weights, k=1)            
-            # answer = answer[0]
-            # answer = self.text_processor(answer)
 
+                        
             answers = list(answer_weights.keys())
             weights = list(answer_weights.values())
             answer = random.choices(answers, weights=weights, k=1)
