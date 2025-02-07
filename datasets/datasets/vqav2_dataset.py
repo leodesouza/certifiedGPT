@@ -166,6 +166,7 @@ class VQAv2Dataset(BaseDataset):
 
     def __getitem__(self, index):
         data = self.get_data(index)
+        print(f"data:{data}")
         instruction = random.choice(self.instruction_template).format(data["question"])
         instruction = "<Img><ImageHere></Img> {} ".format(instruction)
 
