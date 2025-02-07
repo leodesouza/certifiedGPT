@@ -106,7 +106,6 @@ def main(index):
             
 if __name__ == "__main__":
     
-    import torch_xla as xla    
-     
-    
-    xla.launch(main, args=(), debug_single_process=True)   
+    import torch_xla as xla             
+    # xla.launch(main, args=(), debug_single_process=True)   
+    xla.launch(main, args=())   
