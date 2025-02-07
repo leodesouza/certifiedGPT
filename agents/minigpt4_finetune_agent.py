@@ -299,7 +299,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             builder_instance = builder()
             dataset = builder_instance.build_datasets()
             datasets[name] = dataset
-
+        
+        xm.master_print(f"datasets: {datasets}")
         return datasets
 
     def create_dataloaders(self):
