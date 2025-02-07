@@ -53,6 +53,9 @@ class VQAv2Dataset(BaseDataset):
             self.questions = []
 
             xm.master_print(f'Loading annotations...')
+
+            xm.master_print(f'annotations {len(self.annotations)}')
+            xm.master_print(f'question {len(self.questions_dict)}')
             
             for annotation in self.annotations:
                 question_id = annotation.get("question_id")
@@ -82,6 +85,7 @@ class VQAv2Dataset(BaseDataset):
                 self.images_dict[image_id] = image                             
             
             self.logger.info("Loading annotations. Done!")
+            xm.master_print(f'images {len(self.images_dict)}')
             xm.master_print(f"Loading {split} annotations. Done!")
 
         except Exception as e:            
