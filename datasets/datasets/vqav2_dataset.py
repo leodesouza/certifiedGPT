@@ -10,8 +10,8 @@ from pathlib import Path
 from datasets.datasets.base_dataset import BaseDataset
 from PIL import Image
 from common.registry import registry
-import pickle
 import torch_xla.core.xla_model as xm
+import collections
 
 
 class VQAv2Dataset(BaseDataset):
@@ -134,39 +134,24 @@ class VQAv2Dataset(BaseDataset):
                 raise ValueError(f"No answers found for question_id {question_id}")
 
             weight = 1 / num_answer
-            answer_weights = {}
+            answer_weights = collections.defaultdict(float)
 
-            for answer in all_answers:
-                
-                answer_confidence = answer.get("answer_confidence")
-                answer = answer.get("answer")
-
-                if not answer:
+            for answer_obj in all_answers:
+                ans = answer_obj.get("answer")
+                if not ans:
                     continue
 
-                confidence = 0 
-                if answer_confidence == 'yes':
-                    confidence = 2
-                elif  answer_confidence == 'maybe':
-                    confidence = 1                
-
-                weight * confidence
-                if answer in answer_weights:
-                    answer_weights[answer] += weight
-                else:
-                    answer_weights[answer] = weight
-
+                confidence_map = {'yes':2, 'maybe': 1}
+                confidence = confidence_map.get(answer_obj.get("answer_confidence"), 0)
+                answer_weights[answer] += weight * confidence
 
             if not answer_weights:
                 raise ValueError(
                     f"No valid answers processed for question_id {question_id}"
                 )
-
                         
-            answers = list(answer_weights.keys())
-            weights = list(answer_weights.values())
-            answer = random.choices(answers, weights=weights, k=1)
-            answer = answer[0]
+            answers, weights = zip(*answer_weights.items())            
+            answer = random.choices(answers, weights=weights, k=1)[0]            
             answer = self.text_processor(answer)
 
             return {
