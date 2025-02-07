@@ -82,7 +82,7 @@ class VQAv2Dataset(BaseDataset):
                                                 
                 image = Image.open(image_path).convert("RGB")
                 image = self.vis_processor(image)
-                self.images_dict["image_id"] = image                             
+                self.images_dict[image_id] = image                             
             
             self.logger.info("Loading annotations. Done!")
             xm.master_print(f"Loading {split} annotations. Done!")
@@ -101,7 +101,7 @@ class VQAv2Dataset(BaseDataset):
                 or "question_id" not in annotation
                 or "answers" not in annotation
             ):
-                raise ValueError(f" Invalid annotation at index {index}: {annotation}")
+                raise ValueError(f"Invalid annotation at index {index}: {annotation}")
             
             question_id = annotation["question_id"]
             question = self.questions_dict.get(question_id)
