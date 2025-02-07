@@ -300,7 +300,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             dataset = builder_instance.build_datasets()
             datasets[name] = dataset
         
-        xm.master_print(f"datasets: {datasets}")
+        
         return datasets
 
     def create_dataloaders(self):
@@ -311,7 +311,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         for dataset_name in dataset_names:
 
-            dataset = datasets[dataset_name]
+            dataset = datasets[dataset_name]            
 
             for split in dataset.values():
                 num_records = len(split)

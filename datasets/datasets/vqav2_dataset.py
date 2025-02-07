@@ -12,7 +12,6 @@ from PIL import Image
 from common.registry import registry
 import pickle
 import torch_xla.core.xla_model as xm
-import collections
 
 
 class VQAv2Dataset(BaseDataset):
@@ -41,21 +40,19 @@ class VQAv2Dataset(BaseDataset):
 
         xm.master_print(f'Loading {split} split')
         self.split = split
-        self.questions_dict = {q["question_id"]: q for q in self.questions}        
-        self.images_dict = {}
+        questions_dict = {q["question_id"]: q for q in self.questions}
 
         self.logger.info(
             f"Filter annotations that contains images int the path: {vis_paths}"
         )
-                                                    
+        
+        self._images = []
+                                    
         try:
 
             self.questions = []
 
             xm.master_print(f'Loading annotations...')
-
-            xm.master_print(f'annotations {len(self.annotations)}')
-            xm.master_print(f'question {len(self.questions_dict)}')
             
             for annotation in self.annotations:
                 question_id = annotation.get("question_id")
@@ -65,27 +62,34 @@ class VQAv2Dataset(BaseDataset):
                     )
                     continue
 
-                question = self.questions_dict.get(question_id)
+                question = questions_dict.get(question_id)
                 if question is None:
                     self.logger.info(
                         f"Warning: Question with 'question_id' {question_id} is missing in questions_dict."
                     )
-                    continue                
-                
-                image_id = annotation.get("image_id")
-                if image_id is None:
-                    print(f"Warning: Missing 'image_id' in annotation: {annotation}")
                     continue
-                
-                file_name = f"COCO_{split}2014_{image_id:012d}.jpg"
-                image_path = os.path.join(self.vis_paths, file_name)
-                                                
-                image = Image.open(image_path).convert("RGB")
-                image = self.vis_processor(image)
-                self.images_dict[image_id] = image                             
+
+                self.questions.append(question)
+
+                if not self._images:
+                    image_id = annotation.get("image_id")
+                    if image_id is None:
+                        print(f"Warning: Missing 'image_id' in annotation: {annotation}")
+                        continue
+                    
+                    file_name = f"COCO_{split}2014_{image_id:012d}.jpg"
+                    image_path = os.path.join(self.vis_paths, file_name)
+                                                    
+                    image = Image.open(image_path).convert("RGB")
+                    image = self.vis_processor(image)
+                    self.images.append(
+                        {
+                            "image_id": image_id,
+                            "image": image
+                        }
+                    )            
             
             self.logger.info("Loading annotations. Done!")
-            xm.master_print(f'images {len(self.images_dict)}')
             xm.master_print(f"Loading {split} annotations. Done!")
 
         except Exception as e:            
@@ -95,9 +99,6 @@ class VQAv2Dataset(BaseDataset):
     def get_data(self, index):
 
         try:
-            xm.master_print(f"get_data annotations: {len(self.annotations)}")
-            xm.master_print(f"question annotations: {len(self.questions_dict)}")
-            xm.master_print(f"images annotations: {len(self.images_dict)}")
             annotation = self.annotations[index]
 
             if (
@@ -105,13 +106,12 @@ class VQAv2Dataset(BaseDataset):
                 or "question_id" not in annotation
                 or "answers" not in annotation
             ):
-                raise ValueError(f"Invalid annotation at index {index}: {annotation}")
+                raise ValueError(f" Invalid annotation at index {index}: {annotation}")
             
             question_id = annotation["question_id"]
-            question = self.questions_dict.get(question_id)
-            
-            xm.master_print(f"question: {question}")
-                            
+            question = next(
+                filter(lambda q: q["question_id"] == question_id, self.questions), None
+            )
             question = self.text_processor(question["question"])
 
             if question is None:
@@ -120,7 +120,10 @@ class VQAv2Dataset(BaseDataset):
                 )
                         
             image_id = annotation.get("image_id")            
-            image = self.images_dict.get(image_id)
+            image = next(
+                filter(lambda i: i["image_id"] == image_id, self.images), 
+                None
+            )
 
             if image is None:
                 raise ValueError(f"Image was not found for image_id: {image_id}")
@@ -134,24 +137,39 @@ class VQAv2Dataset(BaseDataset):
                 raise ValueError(f"No answers found for question_id {question_id}")
 
             weight = 1 / num_answer
-            answer_weights = collections.defaultdict(float)
+            answer_weights = {}
 
-            for answer in all_answers:                                
-                ans = answer.get("answer")
-                if not ans:
+            for answer in all_answers:
+                
+                answer_confidence = answer.get("answer_confidence")
+                answer = answer.get("answer")
+
+                if not answer:
                     continue
-                confidence_map = {"yes": 2, "mayber": 1}
-                confidence = confidence_map.get(answer.get("answer_confidence"), 0)
-                xm.master_print(f"confidence: {confidence}")
-                answer_weights[answer] += weight * confidence                                                                
+
+                confidence = 0 
+                if answer_confidence == 'yes':
+                    confidence = 2
+                elif  answer_confidence == 'maybe':
+                    confidence = 1                
+
+                weight * confidence
+                if answer in answer_weights:
+                    answer_weights[answer] += weight
+                else:
+                    answer_weights[answer] = weight
+
 
             if not answer_weights:
                 raise ValueError(
                     f"No valid answers processed for question_id {question_id}"
                 )
 
-            answers, weights = zip(*answer_weights.items())
-            answer = random.choices(answers, weights=weights, k=1)[0]                                                                    
+                        
+            answers = list(answer_weights.keys())
+            weights = list(answer_weights.values())
+            answer = random.choices(answers, weights=weights, k=1)
+            answer = answer[0]
             answer = self.text_processor(answer)
 
             return {
