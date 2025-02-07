@@ -151,7 +151,8 @@ class VQAv2Dataset(BaseDataset):
                 )
                         
             answers, weights = zip(*answer_weights.items())            
-            answer = random.choices(answers, weights=weights, k=1)[0]            
+            answer = random.choices(answers, weights=weights, k=1)            
+            answer = answer[0]
             answer = self.text_processor(answer)
 
             return {
