@@ -42,7 +42,8 @@ class VQAv2Dataset(BaseDataset):
         xm.master_print(f'Loading {split} split')
         self.split = split
         self.questions_dict = {q["question_id"]: q for q in self.questions}                
-        xm.master_print(f'questions_dict: {self.questions_dict[0]}')
+        key = next(self.questions_dict)
+        xm.master_print(f'questions_dict: {self.questions_dict[key]}')
         self.logger.info(
             f"Filter annotations that contains images int the path: {vis_paths}"
         )
