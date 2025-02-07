@@ -197,10 +197,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                                 
         for step, batch_sample in enumerate(train_loader):                            
             step += 1
-            
-            if step % accumulated_gradients == 0:                
-                self.optimizer.zero_grad()                 
-
+                        
             if noise_level > 0:                
                 batch_sample["image"] = self.add_noise(batch_sample["image"], noise_level)
             
@@ -210,7 +207,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             loss.backward()
             xm.master_print(f"backward() : {step} - {(test_utils.now())}")
             
-            if (step) % accumulated_gradients == 0:                
+            if step % accumulated_gradients == 0:                
                 xm.reduce_gradients(self.optimizer)                                
                 xm.optimizer_step(self.optimizer, barrier=False)                
                 xm.master_print(f"start: mark_step step: {step} - {(test_utils.now())}")
@@ -221,6 +218,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 if self.config.run.wandb:
                         xm.master_print(f"epoch: {epoch}. step: {step}. train_loss: {loss.detach().item()} - {(test_utils.now())}")                                                                                            
                         self._tpu_metrics.log_tpu_metrics(step)
+
+                self.optimizer.zero_grad()
                                                                                                                                                          
             # loss.detach() to avoid unnecessary computation graph retention                                    
             running_loss += loss.detach().item()                                                                                          
