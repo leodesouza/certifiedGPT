@@ -150,7 +150,7 @@ class VQAv2Dataset(BaseDataset):
                 elif  answer_confidence == 'maybe':
                     confidence = 1                
 
-                # weight *= confidence
+                weight = weight * confidence
                 if answer in answer_weights:
                     answer_weights[answer] += weight
                 else:
