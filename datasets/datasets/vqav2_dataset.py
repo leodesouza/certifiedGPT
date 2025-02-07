@@ -134,7 +134,7 @@ class VQAv2Dataset(BaseDataset):
                 raise ValueError(f"No answers found for question_id {question_id}")
 
             weight = 1 / num_answer
-            answer_weights = {}
+            answer_weights = collections.defaultdict(float)
 
             for answer in all_answers:
                 
@@ -150,16 +150,13 @@ class VQAv2Dataset(BaseDataset):
                 elif  answer_confidence == 'maybe':
                     confidence = 1                
 
-                weight *= confidence
-                if answer in answer_weights:
-                    answer_weights[answer] += weight
-                else:
-                    answer_weights[answer] = weight
-
-                total_weight = sum(answer_weights.values())
-                if total_weight > 0:
-                    for weight in answer_weights: 
-                        answer_weights[weight] /= total_weight
+                answer_weights[answer] += confidence
+                
+            total_weight = sum(answer_weights.values())
+            if total_weight > 0:
+                for answer in answer_weights:
+                    answer_weights[answer] /= total_weight
+              
                         
             answers = list(answer_weights.keys())
             weights = list(answer_weights.values())
