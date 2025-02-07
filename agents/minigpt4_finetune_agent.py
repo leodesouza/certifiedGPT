@@ -218,15 +218,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             loss.backward()
             xm.master_print(f"stop: backward() : {step} - {(test_utils.now())}")
             
-            if (step) % accumulated_gradients == 0:
-                xm.master_print(f"start: reduce_gradients step: {step} - {(test_utils.now())}")                                                                                                                
-                xm.reduce_gradients(self.optimizer)
-                xm.master_print(f"stop: reduce_gradients step: {step} - {(test_utils.now())}")
-
-                xm.master_print(f"start: optimizer_step step: {step} - {(test_utils.now())}")
-                xm.optimizer_step(self.optimizer, barrier=False)
-                xm.master_print(f"stop: optimizer_step step: {step} - {(test_utils.now())}")
-
+            if (step) % accumulated_gradients == 0:                
+                xm.reduce_gradients(self.optimizer)                                
+                xm.optimizer_step(self.optimizer, barrier=False)                
                 xm.master_print(f"start: mark_step step: {step} - {(test_utils.now())}")
                 xm.mark_step()
                 xm.master_print(f"stop: mark_step step: {step} - {(test_utils.now())}")

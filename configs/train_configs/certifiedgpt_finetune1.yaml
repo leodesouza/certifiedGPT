@@ -48,8 +48,7 @@ datasets:
 
 run:
   agent: image_text_finetune
-  max_epoch: 5
-  num_workers: 8
+  max_epoch: 5  
   accumulated_gradients: 3
   patience: 1
   noise_level: 0
@@ -82,6 +81,7 @@ run:
   wandb_api_key: ${env:WANDB_API_KEY}
   wandb_name: "finetuned_certifiedgpt_vqa"  
 
-#  world_size: 1
-#  dist_url: "env://"
+# DataLoader
   distributed: False  
+  num_workers: 0 # n of workers to load data
+  
