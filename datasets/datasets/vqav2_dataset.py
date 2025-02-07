@@ -150,8 +150,14 @@ class VQAv2Dataset(BaseDataset):
                     f"No valid answers processed for question_id {question_id}"
                 )
                         
-            answers, weights = zip(*answer_weights.items())            
-            answer = random.choices(answers, weights=weights, k=1)            
+            # answers, weights = zip(*answer_weights.items())            
+            # answer = random.choices(answers, weights=weights, k=1)            
+            # answer = answer[0]
+            # answer = self.text_processor(answer)
+
+            answers = list(answer_weights.keys())
+            weights = list(answer_weights.values())
+            answer = random.choices(answers, weights=weights, k=1)
             answer = answer[0]
             answer = self.text_processor(answer)
 
