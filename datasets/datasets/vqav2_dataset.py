@@ -150,18 +150,16 @@ class VQAv2Dataset(BaseDataset):
                 elif  answer_confidence == 'maybe':
                     confidence = 1                
 
-                weight = weight * confidence
+                weight *= confidence
                 if answer in answer_weights:
                     answer_weights[answer] += weight
                 else:
                     answer_weights[answer] = weight
 
-
-            if not answer_weights:
-                raise ValueError(
-                    f"No valid answers processed for question_id {question_id}"
-                )
-
+                total_weight = sum(answer_weights.values())
+                if total_weight > 0:
+                    for weight in answer_weights: 
+                        answer_weights[weight] /= total_weight
                         
             answers = list(answer_weights.keys())
             weights = list(answer_weights.values())
