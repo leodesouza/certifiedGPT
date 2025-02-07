@@ -95,6 +95,9 @@ class VQAv2Dataset(BaseDataset):
     def get_data(self, index):
 
         try:
+            xm.master_print(f"get_data annotations: {len(self.annotations)}")
+            xm.master_print(f"question annotations: {len(self.questions_dict)}")
+            xm.master_print(f"images annotations: {len(self.images_dict)}")
             annotation = self.annotations[index]
 
             if (
