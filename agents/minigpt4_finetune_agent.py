@@ -84,11 +84,10 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self._model = self.build_model()
         self._setup_wandb(self._model)
         self._start_epoch = 0        
-        self._tpu_metrics = TPUMetrics()         
-        server = xp.start_server(9012) 
+        self._tpu_metrics = TPUMetrics()                 
                 
     def run(self):         
-              
+        server = xp.start_server(9012)       
         best_val_loss = float('inf')                
         patience = self.config.run.patience or 3
         wait = 0
@@ -212,14 +211,13 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         noise_level = self.config.run.noise_level        
         tracker = xm.RateTracker()           
 
-        for step, batch_sample in enumerate(train_loader):
-            xp.trace_detached('localhost:9012', self.profile_logdir)   
+        for step, batch_sample in enumerate(train_loader):            
             step += 1                                    
             if noise_level > 0:                
                 batch_sample["image"] = self.add_noise(batch_sample["image"], noise_level)
             
             with xp.StepTrace('train', step_num=step):  
-                with xp.Trace('build_graph'):      
+                with xp.Trace('Feed_Forward'):      
                     self.optimizer.zero_grad()                                    
                     with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
                         outputs = self.model(batch_sample)                
