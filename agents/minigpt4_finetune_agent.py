@@ -194,8 +194,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         
         accumulated_gradients = self.config.run.accumulated_gradients or 1
         noise_level = self.config.run.noise_level
-                                
-        for step, batch_sample in enumerate(train_loader):               
+        profile_logdir = os.environ['PROFILE_LOGDIR']   
+        for step, batch_sample in enumerate(train_loader):
+            xp.trace_detached('localhost:9012', profile_logdir)               
             step += 1                                    
             if noise_level > 0:                
                 batch_sample["image"] = self.add_noise(batch_sample["image"], noise_level)
