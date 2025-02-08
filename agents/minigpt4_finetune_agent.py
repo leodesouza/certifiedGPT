@@ -196,34 +196,26 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         noise_level = self.config.run.noise_level
                                 
         for step, batch_sample in enumerate(train_loader):               
-            step += 1
-            xm.master_print(f"Exec step {step} - {(test_utils.now())}")                         
-                        
+            step += 1                                    
             if noise_level > 0:                
                 batch_sample["image"] = self.add_noise(batch_sample["image"], noise_level)
             
             with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
                 outputs = self.model(batch_sample)                
                 loss = outputs["loss"]                        
-            loss.backward()
-            xm.master_print(f"backward() : {step} - {(test_utils.now())}")
-            
+            loss.backward()                        
             if step % accumulated_gradients == 0:                
                 xm.reduce_gradients(self.optimizer)                                
-                xm.optimizer_step(self.optimizer)                
-
-                # xm.master_print(f"start: mark_step step: {step} - {(test_utils.now())}")
-                # xm.mark_step()
-                # xm.master_print(f"stop: mark_step step: {step} - {(test_utils.now())}")
-
-                # self.lr_scheduler.step(cur_epoch=epoch, cur_step=step) 
-                
+                xm.optimizer_step(self.optimizer)                                                
+                xm.mark_step()                
+                # self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                 
                 xm.master_print(f"epoch: {epoch}. step: {step}. train_loss: {loss.detach().item()} - {(test_utils.now())}")                                                                                                                    
 
                 self.optimizer.zero_grad()
                                                                                                                                                          
             # loss.detach() to avoid unnecessary computation graph retention                                    
             running_loss += loss.detach().item()                                                                                          
+            self._tpu_metrics.log_tpu_metrics()
                                         
         avg_loss = xm.mesh_reduce("running_loss", running_loss, lambda x: sum(x) / len(x))            
         avg_loss /= len(train_loader) # to avoid double averaging

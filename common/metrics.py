@@ -1,20 +1,7 @@
-import torch_xla.debug.metrics as metrics
-import wandb
+import torch_xla.core.xla_model as xm
+import torch_xla.debug.metrics as met
 
 class TPUMetrics:
-    def log_tpu_metrics(self, step):
-        metrics_report = metrics.metrics_report()
-        
-        utilization = self.parse_tpu_metrics(metrics_report)
-
-        wandb.log(utilization, step=step)
-
-    def parse_tpu_metrics(self, metrics_report):
-        metrics = {}
-        for line in metrics_report.splitlines():
-            if "utilization" in line:
-                key, value = line.split(":")
-                metrics[key.strip()] = float(value.strip())
-        return metrics 
-
-
+    def log_tpu_metrics(self):        
+            xm.master_print(f"Number of compilations: {met.metric_data('CompileTime')[:1]}")                                                                                                                    
+    
