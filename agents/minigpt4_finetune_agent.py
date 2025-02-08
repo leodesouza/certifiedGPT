@@ -13,7 +13,6 @@ from torch_xla import runtime as xr
 import torch_xla.core.xla_model as xm
 import torch_xla.distributed.parallel_loader as pl
 import torch_xla.test.test_utils as test_utils
-import torch_xla.debug.profiler as xp
 
 from torch.utils.data import DataLoader, DistributedSampler
 import torch_xla.amp as xla_amp
@@ -31,6 +30,10 @@ import datetime
 # rank and world size are inferred from XLA Device
 # source: https://github.com/pytorch/xla/
 dist.init_process_group(backend='xla', init_method='xla://')
+
+import torch_xla.debug.profiler as xp
+server = xp.start_server(9012)
+
 
 
 def train_update(device, step, loss, tracker, epoch, writer):
@@ -94,6 +97,11 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         step = 1
         epoch_train_loss = 0
         epoch_val_loss = 0 
+        self.profile_logdir = os.environ['PROFILE_LOGDIR']
+        self.writer = None
+
+        if xm.is_master_ordinal():            
+            self.writer = test_utils.get_summary_writer(self.profile_logdir)
         
         try:
                         
@@ -168,6 +176,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             
             
             xm.master_print(f"Finished the training loop {test_utils.now()}")
+            test_utils.close_summary_writer(self.writer)
             # test_utils.close_summary_writer(self.writer)
             
 
@@ -183,6 +192,15 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         
         return noised_image_inputs
     
+    def _train_update(device, x, loss, tracker, writer):
+      test_utils.print_training_update(
+        device,
+        x,
+        loss.item(),
+        tracker.rate(),
+        tracker.global_rate(),
+        summary_writer=writer)
+      
     def train(self, epoch):                
         
         train_loader = self._dataloaders["train"]                
@@ -193,26 +211,31 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         running_loss = 0.0
         
         accumulated_gradients = self.config.run.accumulated_gradients or 1
-        noise_level = self.config.run.noise_level
-        profile_logdir = os.environ['PROFILE_LOGDIR']   
+        noise_level = self.config.run.noise_level        
+        tracker = xm.RateTracker()           
+
         for step, batch_sample in enumerate(train_loader):
-            xp.trace_detached('localhost:9012', profile_logdir)               
+            xp.trace_detached('localhost:9012', self.profile_logdir)   
             step += 1                                    
             if noise_level > 0:                
                 batch_sample["image"] = self.add_noise(batch_sample["image"], noise_level)
             
-            with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
-                outputs = self.model(batch_sample)                
-                loss = outputs["loss"]                        
-            loss.backward()                        
+            with xp.StepTrace('train', step_num=step):  
+                with xp.Trace('build_graph'):      
+                    self.optimizer.zero_grad()                                    
+                    with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
+                        outputs = self.model(batch_sample)                
+                        loss = outputs["loss"]                        
+                    loss.backward()                        
+
             if step % accumulated_gradients == 0:                
                 xm.reduce_gradients(self.optimizer)                                
                 xm.optimizer_step(self.optimizer)                                                
                 xm.mark_step()                
                 # self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                 
-                xm.master_print(f"epoch: {epoch}. step: {step}. train_loss: {loss.detach().item()} - {(test_utils.now())}")                                                                                                                    
-
-                self.optimizer.zero_grad()
+                xm.master_print(f"epoch: {epoch}. step: {step}. train_loss: {loss.detach().item()} - {(test_utils.now())}")                                                                                                                                    
+                xp.add_step_closure(
+                    self._train_update, args=(self.device, step, loss, tracker, self.writer))
                                                                                                                                                          
             # loss.detach() to avoid unnecessary computation graph retention                                    
             running_loss += loss.detach().item()                                                                                          
