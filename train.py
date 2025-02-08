@@ -85,6 +85,9 @@ def enable_print():
     sys.stdout = sys.__stdout__
 
 def main(index):
+    import torch_xla.debug.profiler as xp
+    server = xp.start_server(9012)
+    
     cache_file = os.path.expanduser(f'~/tmp/xla_cache{index}')
     
     xr.initialize_cache(cache_file, readonly=False)

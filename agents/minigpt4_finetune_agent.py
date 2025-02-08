@@ -31,11 +31,6 @@ import datetime
 # source: https://github.com/pytorch/xla/
 dist.init_process_group(backend='xla', init_method='xla://')
 
-import torch_xla.debug.profiler as xp
-server = xp.start_server(9012)
-
-
-
 def train_update(device, step, loss, tracker, epoch, writer):
     test_utils.print_training_update(
         device, 
