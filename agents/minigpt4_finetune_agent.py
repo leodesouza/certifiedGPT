@@ -85,8 +85,10 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self._setup_wandb(self._model)
         self._start_epoch = 0        
         self._tpu_metrics = TPUMetrics()         
+        server = xp.start_server(9012) 
                 
-    def run(self):        
+    def run(self):         
+              
         best_val_loss = float('inf')                
         patience = self.config.run.patience or 3
         wait = 0
