@@ -24,6 +24,7 @@ from graphs.losses.cross_entropy_loss import CrossEntropyLoss
 from tqdm import tqdm
 import wandb
 import datetime
+import torch_xla.debug.profiler as xp
 
 # torch.autograd.set_detect_anomaly(False) doesnt work for TPU
 
