@@ -40,7 +40,7 @@ def train_update(device, step, loss, tracker, epoch, writer):
         tracker.rate(),
         tracker.global_rate(),
         epoch,
-        summary_writer=writer()
+        summary_writer=writer
     )
 
 def apply_to_sample(f, sample):
@@ -96,8 +96,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self.profile_logdir = os.environ['PROFILE_LOGDIR']
         self.writer = None
 
-        if xm.is_master_ordinal():            
-            self.writer = test_utils.get_summary_writer(self.profile_logdir)
+        #if xm.is_master_ordinal():            
+        self.writer = test_utils.get_summary_writer(self.profile_logdir)
         
         try:
                         
@@ -171,7 +171,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             
             
             
-            xm.master_print(f"Finished the training loop {test_utils.now()}")
+            xm.master_print(f"Finished the training loop {test_utils.now()}")            
             test_utils.close_summary_writer(self.writer)
             # test_utils.close_summary_writer(self.writer)
             
