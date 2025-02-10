@@ -229,7 +229,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 xm.mark_step()                
                 # self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                 
                 xm.master_print(f"epoch: {epoch}. step: {step}. train_loss: {loss.detach().item()} - {(test_utils.now())}")                                                                                                                                    
-                xp.add_step_closure(
+                xm.add_step_closure(
                     self._train_update, args=(self.device, step, loss, tracker, self.writer))
                                                                                                                                                          
             # loss.detach() to avoid unnecessary computation graph retention                                    
