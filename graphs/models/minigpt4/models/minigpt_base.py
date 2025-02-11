@@ -282,7 +282,8 @@ class MiniGPTBase(BaseModel):
             # prepare the embedding to condition and the embedding to regress
             cond_embeds, cond_atts, regress_embeds, regress_atts, part_targets = \
                 self.preparing_embedding(samples)
-
+            
+            xm.mark_step()
             # concat the embedding to condition and the embedding to regress
             inputs_embeds, attention_mask, input_lens = \
                 self.concat_emb_input_output(cond_embeds, cond_atts, regress_embeds, regress_atts)
@@ -317,7 +318,7 @@ class MiniGPTBase(BaseModel):
 
             return {"loss": loss}
         except Exception as e:
-            self.logger.info(f"Forward error: {e}")
+            xm.master_print(f"Forward error: {e}")
 
     def embed_tokens(self, token_ids):
         if hasattr(self.llama_model.base_model, 'model'):  ## lora wrapped model
