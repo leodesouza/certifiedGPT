@@ -278,7 +278,7 @@ class MiniGPTBase(BaseModel):
 
     def forward(self, samples, reduction='mean'):
         try: 
-            # xm.mark_step()
+            xm.mark_step()
             # prepare the embedding to condition and the embedding to regress
             cond_embeds, cond_atts, regress_embeds, regress_atts, part_targets = \
                 self.preparing_embedding(samples)
