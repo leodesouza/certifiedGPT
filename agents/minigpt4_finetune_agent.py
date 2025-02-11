@@ -94,10 +94,10 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         epoch_train_loss = 0
         epoch_val_loss = 0 
         self.profile_logdir = os.environ['PROFILE_LOGDIR']
-        self.writer = None
-
-        #if xm.is_master_ordinal():            
-        self.writer = test_utils.get_summary_writer(self.profile_logdir)
+        
+        if xm.is_master_ordinal():            
+            self.writer = None
+            self.writer = test_utils.get_summary_writer(self.profile_logdir)
         
         try:
                         
@@ -172,7 +172,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             
             
             xm.master_print(f"Finished the training loop {test_utils.now()}")            
-            test_utils.close_summary_writer(self.writer)
+            if xm.is_master_ordinal():
+                test_utils.close_summary_writer(self.writer)
             # test_utils.close_summary_writer(self.writer)
             
 
@@ -229,8 +230,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 xm.mark_step()                
                 # self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                 
                 xm.master_print(f"epoch: {epoch}. step: {step}. train_loss: {loss.detach().item()} - {(test_utils.now())}")                                                                                                                                    
-                xm.add_step_closure(
-                    self._train_update, args=(self.device, step, loss, tracker, self.writer))
+                if xm.is_master_ordinal():
+                    xm.add_step_closure(
+                      self._train_update, args=(self.device, step, loss, tracker, self.writer))
                                                                                                                                                          
             # loss.detach() to avoid unnecessary computation graph retention                                    
             running_loss += loss.detach().item()                                                                                          
