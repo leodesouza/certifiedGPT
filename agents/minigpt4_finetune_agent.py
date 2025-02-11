@@ -169,12 +169,15 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     #     self._tpu_metrics.log_tpu_metrics(step)
                     #     step += 1                       
             
-            
+                test_utils.write_to_summary(
+                    self.writer,
+                    epoch,
+                    dict_to_write={'train/loss': epoch_train_loss},
+                    write_xla_metrics=True)
             
             xm.master_print(f"Finished the training loop {test_utils.now()}")            
-            if xm.is_master_ordinal():
-                test_utils.close_summary_writer(self.writer)
-            # test_utils.close_summary_writer(self.writer)
+            
+            test_utils.close_summary_writer(self.writer)
             
 
         except Exception as e:
