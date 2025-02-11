@@ -172,7 +172,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 xm.master_print(f"epoch: {epoch}. step: {step}. train_loss: {loss.detach().item()} - {(test_utils.now())}")
             # loss.detach() to avoid unnecessary computation graph retention                                    
             running_loss += loss.detach().item()             
-            self._tpu_metrics.log_tpu_metrics()
+            # self._tpu_metrics.log_tpu_metrics()
                                         
         avg_loss = xm.mesh_reduce("running_loss", running_loss, lambda x: sum(x) / len(x))            
         avg_loss /= len(train_loader) # to avoid double averaging
