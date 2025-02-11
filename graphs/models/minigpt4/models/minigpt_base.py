@@ -4,8 +4,6 @@ import random
 import torch
 torch.serialization.add_safe_globals(['numpy.core.multiarray._reconstruct'])
 
-
-import torch_xla
 from torch_xla.amp import autocast as autocast
 import torch_xla.core.xla_model as xm
 import torch.nn as nn
@@ -279,44 +277,47 @@ class MiniGPTBase(BaseModel):
         return cond_embeds, cond_atts, regress_embeds, regress_atts, part_targets
 
     def forward(self, samples, reduction='mean'):
-        xm.mark_step()
-        # prepare the embedding to condition and the embedding to regress
-        cond_embeds, cond_atts, regress_embeds, regress_atts, part_targets = \
-            self.preparing_embedding(samples)
+        try: 
+            xm.mark_step()
+            # prepare the embedding to condition and the embedding to regress
+            cond_embeds, cond_atts, regress_embeds, regress_atts, part_targets = \
+                self.preparing_embedding(samples)
 
-        # concat the embedding to condition and the embedding to regress
-        inputs_embeds, attention_mask, input_lens = \
-            self.concat_emb_input_output(cond_embeds, cond_atts, regress_embeds, regress_atts)
+            # concat the embedding to condition and the embedding to regress
+            inputs_embeds, attention_mask, input_lens = \
+                self.concat_emb_input_output(cond_embeds, cond_atts, regress_embeds, regress_atts)
 
-        # get bos token embedding
-        bos = torch.ones_like(part_targets[:, :1]) * self.llama_tokenizer.bos_token_id
-        bos_embeds = self.embed_tokens(bos)
-        bos_atts = cond_atts[:, :1]
+            # get bos token embedding
+            bos = torch.ones_like(part_targets[:, :1]) * self.llama_tokenizer.bos_token_id
+            bos_embeds = self.embed_tokens(bos)
+            bos_atts = cond_atts[:, :1]
 
-        xm.mark_step()
-        # add bos token at the begining
-        inputs_embeds = torch.cat([bos_embeds, inputs_embeds], dim=1)
-        attention_mask = torch.cat([bos_atts, attention_mask], dim=1)
+            xm.mark_step()
+            # add bos token at the begining
+            inputs_embeds = torch.cat([bos_embeds, inputs_embeds], dim=1)
+            attention_mask = torch.cat([bos_atts, attention_mask], dim=1)
 
-        # ensemble the final targets
-        targets = torch.ones([inputs_embeds.shape[0], inputs_embeds.shape[1]],
-                             dtype=torch.long).to(self.device).fill_(-100)
+            # ensemble the final targets
+            targets = torch.ones([inputs_embeds.shape[0], inputs_embeds.shape[1]],
+                                dtype=torch.long).to(self.device).fill_(-100)
 
-        for i, target in enumerate(part_targets):
-            targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos
+            for i, target in enumerate(part_targets):
+                targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos
 
-        with self.maybe_autocast():
-            outputs = self.llama_model(
-                inputs_embeds=inputs_embeds,
-                attention_mask=attention_mask,
-                return_dict=True,
-                labels=targets,
-                reduction=reduction
-            )
-        loss = outputs.loss
-        xm.mark_step()
+            with self.maybe_autocast():
+                outputs = self.llama_model(
+                    inputs_embeds=inputs_embeds,
+                    attention_mask=attention_mask,
+                    return_dict=True,
+                    labels=targets,
+                    reduction=reduction
+                )
+            loss = outputs.loss
+            xm.mark_step()
 
-        return {"loss": loss}
+            return {"loss": loss}
+        except Exception as e:
+            self.logger.info(f"Forward error: {e}")
 
     def embed_tokens(self, token_ids):
         if hasattr(self.llama_model.base_model, 'model'):  ## lora wrapped model
