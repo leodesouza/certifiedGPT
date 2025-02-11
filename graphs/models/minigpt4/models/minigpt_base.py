@@ -139,59 +139,59 @@ class MiniGPTBase(BaseModel):
                 wrapped_atts[i, :length] = 1
             return wrapped_embs, wrapped_atts
 
-    # def concat_emb_input_output(self, input_embs, input_atts, output_embs, output_atts):
-    #     """
-    #     Concatenate the batched input embedding and batched output embedding together.
-    #     Both the input and the output embedding should be right padded.
-    #     """
-    #     input_lens = []
-    #     cat_embs = []
-    #     cat_atts = []
-    #     for i in range(input_embs.size(0)):
-    #         input_len = input_atts[i].sum()
-    #         input_lens.append(input_len)
-    #         cat_embs.append(
-    #             torch.cat([
-    #                 input_embs[i][:input_len],
-    #                 output_embs[i],
-    #                 input_embs[i][input_len:]
-    #             ])
-    #         )
-    #         cat_atts.append(
-    #             torch.cat([
-    #                 input_atts[i][:input_len],
-    #                 output_atts[i],
-    #                 input_atts[i][input_len:]
-    #             ])
-    #         )
-    #     cat_embs = torch.stack(cat_embs)
-    #     cat_atts = torch.stack(cat_atts)
-    #     return cat_embs, cat_atts, input_lens
-
     def concat_emb_input_output(self, input_embs, input_atts, output_embs, output_atts):
         """
         Concatenate the batched input embedding and batched output embedding together.
         Both the input and the output embedding should be right padded.
-        Optimized for PyTorch XLA.
         """
-
-        # Compute input lengths in a single vectorized operation
-        input_lens = input_atts.sum(dim=1)
-
-        # Create masks for slicing
-        batch_size, max_seq_len, embed_dim = input_embs.shape
-        
-        # Create batch indices
-        batch_indices = torch.arange(batch_size, device=input_embs.device)
-
-        # Gather valid input embeddings up to input_lens
-        gathered_inputs = input_embs[batch_indices, :input_lens]  # Efficient slicing
-
-        # Concatenate input + output + remaining padding
-        cat_embs = torch.cat([gathered_inputs, output_embs, input_embs[batch_indices, input_lens:]], dim=1)
-        cat_atts = torch.cat([input_atts[batch_indices, :input_lens], output_atts, input_atts[batch_indices, input_lens:]], dim=1)
-
+        input_lens = []
+        cat_embs = []
+        cat_atts = []
+        for i in range(input_embs.size(0)):
+            input_len = input_atts[i].sum()
+            input_lens.append(input_len)
+            cat_embs.append(
+                torch.cat([
+                    input_embs[i][:input_len],
+                    output_embs[i],
+                    input_embs[i][input_len:]
+                ])
+            )
+            cat_atts.append(
+                torch.cat([
+                    input_atts[i][:input_len],
+                    output_atts[i],
+                    input_atts[i][input_len:]
+                ])
+            )
+        cat_embs = torch.stack(cat_embs)
+        cat_atts = torch.stack(cat_atts)
         return cat_embs, cat_atts, input_lens
+
+    # def concat_emb_input_output(self, input_embs, input_atts, output_embs, output_atts):
+    #     """
+    #     Concatenate the batched input embedding and batched output embedding together.
+    #     Both the input and the output embedding should be right padded.
+    #     Optimized for PyTorch XLA.
+    #     """
+
+    #     # Compute input lengths in a single vectorized operation
+    #     input_lens = input_atts.sum(dim=1)
+
+    #     # Create masks for slicing
+    #     batch_size, max_seq_len, embed_dim = input_embs.shape
+        
+    #     # Create batch indices
+    #     batch_indices = torch.arange(batch_size, device=input_embs.device)
+
+    #     # Gather valid input embeddings up to input_lens
+    #     gathered_inputs = input_embs[batch_indices, :input_lens]  # Efficient slicing
+
+    #     # Concatenate input + output + remaining padding
+    #     cat_embs = torch.cat([gathered_inputs, output_embs, input_embs[batch_indices, input_lens:]], dim=1)
+    #     cat_atts = torch.cat([input_atts[batch_indices, :input_lens], output_atts, input_atts[batch_indices, input_lens:]], dim=1)
+
+    #     return cat_embs, cat_atts, input_lens
 
     def tokenize_conversation(self, conv_q, conv_a):
         """concatenate conversation and make sure the model is only trained to regress the answer"""
