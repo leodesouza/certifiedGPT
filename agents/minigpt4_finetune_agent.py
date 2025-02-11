@@ -84,7 +84,22 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self._model = self.build_model()
         self._setup_wandb(self._model)
         self._start_epoch = 0        
-        self._tpu_metrics = TPUMetrics()                 
+        self._tpu_metrics = TPUMetrics()   
+        self.profile_logdir = os.environ['PROFILE_LOGDIR']
+        
+        if xm.is_master_ordinal():        
+            # os.environ["XLA_IR_DEBUG"] = "1"
+            # os.environ["XLA_HLO_DEBUG"] = "1"
+
+            profile_port = 9012
+            # duration_ms = 30000        
+            profile_logdir = os.environ['PROFILE_LOGDIR']
+            xm.master_print(f"profile_logdir: {profile_logdir}")                               
+            xp.start_server(profile_port)
+            # xp.trace_detached(f'localhost:{profile_port}', profile_logdir, duration_ms=duration_ms)    
+            self.writer = None
+            self.writer = test_utils.get_summary_writer(self.profile_logdir)
+                      
                 
     def run(self):                 
         best_val_loss = float('inf')                
@@ -92,12 +107,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         wait = 0
         step = 1
         epoch_train_loss = 0
-        epoch_val_loss = 0 
-        self.profile_logdir = os.environ['PROFILE_LOGDIR']
-        
-        if xm.is_master_ordinal():            
-            self.writer = None
-            self.writer = test_utils.get_summary_writer(self.profile_logdir)
+        epoch_val_loss = 0         
         
         try:
                         
