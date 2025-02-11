@@ -8,8 +8,10 @@ import sys
 import numpy as np
 import torch
 import torch_xla.distributed.xla_multiprocessing as xmp
+import torch_xla.core.xla_model as xm
 import torch_xla.runtime as xr
 from omegaconf import OmegaConf
+import torch_xla.debug.profiler as xp
 
 
 # local imports 
@@ -85,11 +87,9 @@ def enable_print():
     sys.stdout = sys.__stdout__
 
 def main(rank):
-
-    if rank == 0:
-        import torch_xla.debug.profiler as xp
-        xp.start_server(9012)                
-
+    profile_port = 9012
+    duration_ms = 30000        
+    profile_logdir = os.environ['PROFILE_LOGDIR']
     cache_file = os.path.expanduser(f'~/tmp/xla_cache{rank}')
     
     xr.initialize_cache(cache_file, readonly=False)
@@ -104,13 +104,19 @@ def main(rank):
     setup_seeds(config)    
     register_variables()    
 
+    xm.master_print(f"profile_logdir: {profile_logdir}")                               
+    xp.start_server(profile_port)
+    xp.trace_detached(f'localhost:{profile_port}', profile_logdir, duration_ms=duration_ms)
+    
     agent = agents.setup_agent(config)
     agent.run()
     agent.finalize()
     
             
 if __name__ == "__main__":
-    
+    os.environ["XLA_IR_DEBUG"] = "1"
+    os.environ["XLA_HLO_DEBUG"] = "1"
+
     import torch_xla as xla             
     # xla.launch(main, args=(), debug_single_process=True)   
     xla.launch(main, args=())   
