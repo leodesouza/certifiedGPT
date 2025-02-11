@@ -73,8 +73,7 @@ class VQAv2Dataset(BaseDataset):
 
                 if not self._images:
                     image_id = annotation.get("image_id")
-                    if image_id is None:
-                        print(f"Warning: Missing 'image_id' in annotation: {annotation}")
+                    if image_id is None:                        
                         continue
                     
                     file_name = f"COCO_{split}2014_{image_id:012d}.jpg"
