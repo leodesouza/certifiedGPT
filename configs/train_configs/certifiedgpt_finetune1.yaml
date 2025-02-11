@@ -82,6 +82,6 @@ run:
   wandb_name: "finetuned_certifiedgpt_vqa"  
 
 # DataLoader
-  distributed: False  
-  num_workers: 1 # n of workers to load data
+  distributed: True  
+  num_workers: 2 # n of workers to load data
   
