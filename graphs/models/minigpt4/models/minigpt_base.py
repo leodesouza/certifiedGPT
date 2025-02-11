@@ -7,6 +7,7 @@ torch.serialization.add_safe_globals(['numpy.core.multiarray._reconstruct'])
 
 import torch_xla
 from torch_xla.amp import autocast as autocast
+import torch_xla.core.xla_model as xm
 import torch.nn as nn
 
 from common.registry import registry
@@ -278,6 +279,7 @@ class MiniGPTBase(BaseModel):
         return cond_embeds, cond_atts, regress_embeds, regress_atts, part_targets
 
     def forward(self, samples, reduction='mean'):
+        xm.mark_step()
         # prepare the embedding to condition and the embedding to regress
         cond_embeds, cond_atts, regress_embeds, regress_atts, part_targets = \
             self.preparing_embedding(samples)
@@ -291,6 +293,7 @@ class MiniGPTBase(BaseModel):
         bos_embeds = self.embed_tokens(bos)
         bos_atts = cond_atts[:, :1]
 
+        xm.mark_step()
         # add bos token at the begining
         inputs_embeds = torch.cat([bos_embeds, inputs_embeds], dim=1)
         attention_mask = torch.cat([bos_atts, attention_mask], dim=1)
@@ -311,6 +314,7 @@ class MiniGPTBase(BaseModel):
                 reduction=reduction
             )
         loss = outputs.loss
+        xm.mark_step()
 
         return {"loss": loss}
 

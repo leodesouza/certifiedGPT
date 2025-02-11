@@ -154,8 +154,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         
         for step, batch_sample in enumerate(train_loader):            
             step += 1                                    
-            if noise_level > 0:                
-                batch_sample["image"] = self.add_noise(batch_sample["image"], noise_level)
+            # if noise_level > 0:                
+            #     batch_sample["image"] = self.add_noise(batch_sample["image"], noise_level)
                         
             self.optimizer.zero_grad()                                    
             with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
@@ -170,8 +170,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 # self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                 
                 xm.master_print(f"epoch: {epoch}. step: {step}. train_loss: {loss.detach().item()} - {(test_utils.now())}")                                                                                                                                                                                                                                                                                             
             # loss.detach() to avoid unnecessary computation graph retention                                    
-            running_loss += loss.detach().item()                                                                                          
-            self._tpu_metrics.log_tpu_metrics()
+            running_loss += loss.detach().item() 
+            if xm.is_master_ordinal():                                                                                         
+                self._tpu_metrics.log_tpu_metrics()
                                         
         avg_loss = xm.mesh_reduce("running_loss", running_loss, lambda x: sum(x) / len(x))            
         avg_loss /= len(train_loader) # to avoid double averaging
@@ -193,9 +194,10 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         self.model.eval()
 
-        for step, batch_sample in enumerate(val_loader):            
-            if noise_level > 0:                    
-                batch_sample["image"] = self.add_noise(batch_sample["image"], noise_level)                                
+        for step, batch_sample in enumerate(val_loader):   
+
+            # if noise_level > 0:                    
+            #     batch_sample["image"] = self.add_noise(batch_sample["image"], noise_level)                                
             outputs = self.model(batch_sample)               
             loss = outputs["loss"]
             if self.config.run.wandb:

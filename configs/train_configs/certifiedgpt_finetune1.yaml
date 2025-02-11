@@ -24,7 +24,7 @@ model:
 
 datasets:
   vqav2:
-    batch_size: 32    
+    batch_size: 16    
     vis_processor:
       train:
         name: "blip2_image_train"
