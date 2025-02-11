@@ -7,72 +7,32 @@
 
 import os 
 import time
+import datetime
+
+#Torch 
 import torch
 import torch.distributed as dist
+from torch.utils.data import DataLoader, DistributedSampler
+
+#Pytorch XLA
 from torch_xla import runtime as xr
 import torch_xla.core.xla_model as xm
 import torch_xla.distributed.parallel_loader as pl
 import torch_xla.test.test_utils as test_utils
-
-from torch.utils.data import DataLoader, DistributedSampler
 import torch_xla.amp as xla_amp
+
+
+import wandb
+from tqdm import tqdm
 
 from agents.base import BaseAgent
 from common.metrics import TPUMetrics
 from common.registry import registry
 from graphs.losses.cross_entropy_loss import CrossEntropyLoss
-from tqdm import tqdm
-import wandb
-import datetime
-import torch_xla.debug.profiler as xp
-
-# torch.autograd.set_detect_anomaly(False) doesnt work for TPU
 
 # rank and world size are inferred from XLA Device
 # source: https://github.com/pytorch/xla/
 dist.init_process_group(backend='xla', init_method='xla://')
-
-def train_update(device, step, loss, tracker, epoch, writer):
-    test_utils.print_training_update(
-        device, 
-        step,
-        loss.item(),
-        tracker.rate(),
-        tracker.global_rate(),
-        epoch,
-        summary_writer=writer
-    )
-
-def apply_to_sample(f, sample):
-    if len(sample) == 0:
-        return {}
-
-    def _apply(x):
-        if torch.is_tensor(x):
-            return f(x)
-        elif isinstance(x, dict):
-            return {key: _apply(value) for key, value in x.items()}
-        elif isinstance(x, list):
-            return [_apply(x) for x in x]
-        else:
-            return x
-
-    return _apply(sample)
-
-
-def move_to_xla(sample):
-    def _move_to_xla(tensor):
-        return tensor.to(xm.xla_device())
-
-    return apply_to_sample(_move_to_xla, sample)
-
-
-def prepare_sample(samples, xla_enabled=True):
-    if xla_enabled:
-        samples = move_to_xla(samples)
-    return samples
-
-
 
 @registry.register_agent("image_text_finetune")
 class MiniGPT4FineTuneAgent(BaseAgent):
@@ -86,21 +46,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self._start_epoch = 0        
         self._tpu_metrics = TPUMetrics()   
         self.profile_logdir = os.environ['PROFILE_LOGDIR']
-        
-        if xm.is_master_ordinal():        
-            # os.environ["XLA_IR_DEBUG"] = "1"
-            # os.environ["XLA_HLO_DEBUG"] = "1"
-
-            profile_port = 9012
-            # duration_ms = 30000        
-            profile_logdir = os.environ['PROFILE_LOGDIR']
-            xm.master_print(f"profile_logdir: {profile_logdir}")                               
-            xp.start_server(profile_port)
-            # xp.trace_detached(f'localhost:{profile_port}', profile_logdir, duration_ms=duration_ms)    
-            self.writer = None
-            self.writer = test_utils.get_summary_writer(self.profile_logdir)
-                      
-                
+                                              
     def run(self):                 
         best_val_loss = float('inf')                
         patience = self.config.run.patience or 3
@@ -177,18 +123,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     #     })
 
                     #     self._tpu_metrics.log_tpu_metrics(step)
-                    #     step += 1                       
+                    #     step += 1                                                   
             
-                test_utils.write_to_summary(
-                    self.writer,
-                    epoch,
-                    dict_to_write={'train/loss': epoch_train_loss},
-                    write_xla_metrics=True)
-            
-            xm.master_print(f"Finished the training loop {test_utils.now()}")            
-            
-            test_utils.close_summary_writer(self.writer)
-            
+            xm.master_print(f"Finished the training loop {test_utils.now()}")                                                
 
         except Exception as e:
               xm.master_print(f"Error on agent run: {test_utils.now()}. Details: {e}")
@@ -202,14 +139,6 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         
         return noised_image_inputs
     
-    def _train_update(device, x, loss, tracker, writer):
-      test_utils.print_training_update(
-        device,
-        x,
-        loss.item(),
-        tracker.rate(),
-        tracker.global_rate(),
-        summary_writer=writer)
       
     def train(self, epoch):                
         
@@ -222,31 +151,24 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         
         accumulated_gradients = self.config.run.accumulated_gradients or 1
         noise_level = self.config.run.noise_level        
-        tracker = xm.RateTracker()           
-
+        
         for step, batch_sample in enumerate(train_loader):            
             step += 1                                    
             if noise_level > 0:                
                 batch_sample["image"] = self.add_noise(batch_sample["image"], noise_level)
-            
-            with xp.StepTrace('train', step_num=step):  
-                with xp.Trace('Feed_Forward'):      
-                    self.optimizer.zero_grad()                                    
-                    with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
-                        outputs = self.model(batch_sample)                
-                        loss = outputs["loss"]                        
-                    loss.backward()                        
+                        
+            self.optimizer.zero_grad()                                    
+            with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
+                outputs = self.model(batch_sample)                
+                loss = outputs["loss"]                        
+            loss.backward()                        
 
             if step % accumulated_gradients == 0:                
                 xm.reduce_gradients(self.optimizer)                                
                 xm.optimizer_step(self.optimizer)                                                
                 xm.mark_step()                
                 # self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                 
-                xm.master_print(f"epoch: {epoch}. step: {step}. train_loss: {loss.detach().item()} - {(test_utils.now())}")                                                                                                                                    
-                if xm.is_master_ordinal():
-                    xm.add_step_closure(
-                      self._train_update, args=(self.device, step, loss, tracker, self.writer))
-                                                                                                                                                         
+                xm.master_print(f"epoch: {epoch}. step: {step}. train_loss: {loss.detach().item()} - {(test_utils.now())}")                                                                                                                                                                                                                                                                                             
             # loss.detach() to avoid unnecessary computation graph retention                                    
             running_loss += loss.detach().item()                                                                                          
             self._tpu_metrics.log_tpu_metrics()
