@@ -16,7 +16,7 @@ python3 train.py \
         --noise_level=${NOISE_LEVEL} \
         --max_epochs=${MAX_EPOCHS} \
         --batch_size=${BATCH_SIZE} \
-        --checkpoint_name=${CHECKPOINT_NAME}
+        --checkpoint_name=${CHECKPOINT_NAME} 2>&1 | tee training_report.log
     
 # nohup python3 train.py \
 #         --config-path=${CONFIG_PATH} \
