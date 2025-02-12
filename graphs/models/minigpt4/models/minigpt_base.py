@@ -309,7 +309,7 @@ class MiniGPTBase(BaseModel):
             cond_embeds, cond_atts, regress_embeds, regress_atts, part_targets = \
                 self.preparing_embedding(samples)
             
-            xm.mark_step()
+            #xm.mark_step()
             # concat the embedding to condition and the embedding to regress
             inputs_embeds, attention_mask, input_lens = \
                 self.concat_emb_input_output(cond_embeds, cond_atts, regress_embeds, regress_atts)
@@ -319,7 +319,7 @@ class MiniGPTBase(BaseModel):
             bos_embeds = self.embed_tokens(bos)
             bos_atts = cond_atts[:, :1]
 
-            xm.mark_step()
+            # xm.mark_step()
             # add bos token at the begining
             inputs_embeds = torch.cat([bos_embeds, inputs_embeds], dim=1)
             attention_mask = torch.cat([bos_atts, attention_mask], dim=1)
@@ -328,7 +328,7 @@ class MiniGPTBase(BaseModel):
             targets = torch.ones([inputs_embeds.shape[0], inputs_embeds.shape[1]],
                                 dtype=torch.long).to(self.device).fill_(-100)
 
-            xm.mark_step()
+            # xm.mark_step()
             for i, target in enumerate(part_targets):
                 targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos
 
