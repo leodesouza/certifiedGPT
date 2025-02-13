@@ -170,35 +170,48 @@ class MiniGPTBase(BaseModel):
         # cat_atts = torch.stack(cat_atts)
         # return cat_embs, cat_atts, input_lens
 
-        def body(carry, x):
-            input_emb, input_att, output_emb, output_att = x
-            input_len = input_att.sum()
+        # def body(carry, x):
+        #     input_emb, input_att, output_emb, output_att = x
+        #     input_len = input_att.sum()
 
-            cat_emb = torch.cat([
-                input_emb[:input_len],
-                output_emb,
-                input_emb[input_len:]
-            ])
+        #     cat_emb = torch.cat([
+        #         input_emb[:input_len],
+        #         output_emb,
+        #         input_emb[input_len:]
+        #     ])
 
-            cat_att = torch.cat([
-                input_att[:input_len],
-                output_att,
-                input_att[input_len:]
-            ])
+        #     cat_att = torch.cat([
+        #         input_att[:input_len],
+        #         output_att,
+        #         input_att[input_len:]
+        #     ])
 
-            carry.append(input_len)
-            return carry, (cat_emb, cat_att)
+        #     carry.append(input_len)
+        #     return carry, (cat_emb, cat_att)
         
-        input_lens, (cat_emb, cat_atts) = torch_xla.scan(
-            body,
-            init=[],
-            xs = (input_embs, input_atts, output_embs, output_atts)
-        )
+        # input_lens, (cat_emb, cat_atts) = torch_xla.scan(
+        #     body,
+        #     init=[],
+        #     xs = (input_embs, input_atts, output_embs, output_atts)
+        # )
 
-        return torch.stack(cat_emb), torch.stack(cat_atts), input_lens    
-        
-        
+        # return torch.stack(cat_emb), torch.stack(cat_atts), input_lens
 
+        device = xm.xla_device()
+    
+        input_embs = input_embs.to(device)
+        input_atts = input_atts.to(device)
+        output_embs = output_embs.to(device)
+        output_atts = output_atts.to(device)
+
+        input_lens = input_atts.sum(dim=1) 
+        
+        cat_embs = torch.cat([input_embs[:, :input_lens], output_embs, input_embs[:, input_lens:]], dim=1)
+        cat_atts = torch.cat([input_atts[:, :input_lens], output_atts, input_atts[:, input_lens:]], dim=1)
+
+        xm.mark_step()
+
+        return cat_embs, cat_atts, input_lens                    
     
     def tokenize_conversation(self, conv_q, conv_a):
         """concatenate conversation and make sure the model is only trained to regress the answer"""
