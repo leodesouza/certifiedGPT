@@ -4,9 +4,11 @@ import random
 import torch
 torch.serialization.add_safe_globals(['numpy.core.multiarray._reconstruct'])
 
+import torch_xla
 from torch_xla.amp import autocast as autocast
 import torch_xla.core.xla_model as xm
 import torch.nn as nn
+
 
 from common.registry import registry
 from graphs.models.minigpt4.models.base_model import BaseModel
@@ -144,56 +146,60 @@ class MiniGPTBase(BaseModel):
         Concatenate the batched input embedding and batched output embedding together.
         Both the input and the output embedding should be right padded.
         """
-        input_lens = []
-        cat_embs = []
-        cat_atts = []
-        for i in range(input_embs.size(0)):
-            input_len = input_atts[i].sum()
-            input_lens.append(input_len)
-            cat_embs.append(
-                torch.cat([
-                    input_embs[i][:input_len],
-                    output_embs[i],
-                    input_embs[i][input_len:]
-                ])
-            )
-            cat_atts.append(
-                torch.cat([
-                    input_atts[i][:input_len],
-                    output_atts[i],
-                    input_atts[i][input_len:]
-                ])
-            )
-        cat_embs = torch.stack(cat_embs)
-        cat_atts = torch.stack(cat_atts)
-        return cat_embs, cat_atts, input_lens
+        # input_lens = []
+        # cat_embs = []
+        # cat_atts = []
+        # for i in range(input_embs.size(0)):
+        #     input_len = input_atts[i].sum()
+        #     input_lens.append(input_len)
+        #     cat_embs.append(
+        #         torch.cat([
+        #             input_embs[i][:input_len],
+        #             output_embs[i],
+        #             input_embs[i][input_len:]
+        #         ])
+        #     )
+        #     cat_atts.append(
+        #         torch.cat([
+        #             input_atts[i][:input_len],
+        #             output_atts[i],
+        #             input_atts[i][input_len:]
+        #         ])
+        #     )
+        # cat_embs = torch.stack(cat_embs)
+        # cat_atts = torch.stack(cat_atts)
+        # return cat_embs, cat_atts, input_lens
 
-    # def concat_emb_input_output(self, input_embs, input_atts, output_embs, output_atts):
-    #     """
-    #     Concatenate batched input embedding and batched output embedding together.
-    #     Optimized for PyTorch XLA (avoids frequent device-to-host transfers).
-    #     """
+        def body(carry, x):
+            input_emb, input_att, output_emb, output_att = x
+            input_len = input_att.sum()
 
-    #     # Compute input lengths in a single vectorized operation
-    #     input_lens = input_atts.sum(dim=1)
+            cat_emb = torch.cat([
+                input_emb[:input_len],
+                output_emb,
+                input_emb[input_len:]
+            ])
 
-    #     # Gather valid input embeddings efficiently
-    #     batch_indices = torch.arange(input_embs.shape[0], device=input_embs.device)
+            cat_att = torch.cat([
+                input_att[:input_len],
+                output_att,
+                input_att[input_len:]
+            ])
 
-    #     # Slice input embeddings dynamically
-    #     gathered_inputs = input_embs[batch_indices, :input_lens]
+            carry.append(input_len)
+            return carry, (cat_emb, cat_att)
+        
+        input_lens, (cat_emb, cat_atts) = torch_xla.scan(
+            body,
+            init=[],
+            xs = (input_embs, input_atts, output_embs, output_atts)
+        )
 
-    #     # Concatenate efficiently on TPU
-    #     cat_embs = torch.cat([gathered_inputs, output_embs, input_embs[batch_indices, input_lens:]], dim=1)
-    #     cat_atts = torch.cat([input_atts[batch_indices, :input_lens], output_atts, input_atts[batch_indices, input_lens:]], dim=1)
+        return torch.stack(cat_emb), torch.stack(cat_atts), input_lens    
+        
+        
 
-    #     # Ensure tensors remain on TPU
-    #     cat_embs, cat_atts, input_lens = xu.tensors_to((cat_embs, cat_atts, input_lens), device=input_embs.device)
-
-    #     return cat_embs, cat_atts, input_lens
-
-  
-
+    
     def tokenize_conversation(self, conv_q, conv_a):
         """concatenate conversation and make sure the model is only trained to regress the answer"""
 
