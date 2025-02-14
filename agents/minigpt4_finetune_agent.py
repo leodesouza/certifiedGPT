@@ -150,17 +150,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         noised_image_inputs = image_inputs + torch.rand_like(image_inputs) * noise_level
         
         return noised_image_inputs      
-
-    def _train_update(device, x, loss, tracker, writer):
-        test_utils.print_training_update(
-            device,
-            x,
-            loss.item(),
-            tracker.rate(),
-            tracker.global_rate(),
-            summary_writer=writer
-
-        )
+    
 
     def train(self, epoch):                
         
@@ -197,14 +187,14 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 xm.optimizer_step(self.optimizer)   
                 tracker.add(self.config.datasets.vqav2.batch_size)
                 xm.add_step_closure(
-                    self._train_update, args=(self.device, step, loss, self.writer)
+                    _train_update, args=(self.device, step, loss.item(), self.writer)
                 )                                                             
                 # self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)
                 # xp.trace(logdir=self.profile_logdir,service_addr=self.service_addr)                                 
 
-            xm.master_print(f"epoch: {epoch}. step: {step}. train_loss: {loss.detach().item()} - {(test_utils.now())}")
+            xm.master_print(f"epoch: {epoch}. step: {step}. train_loss: {loss.item()} - {(test_utils.now())}")
             # loss.detach() to avoid unnecessary computation graph retention                                    
-            running_loss += loss.detach().item()             
+            running_loss += loss.item()             
             #self._tpu_metrics.log_tpu_metrics()
                                         
         avg_loss = xm.mesh_reduce("running_loss", running_loss, lambda x: sum(x) / len(x))            
@@ -410,7 +400,19 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             # validation metric
             if(self.config.run.evaluate):
                 wandb.define_metric("accuracy", step_metric="epoch")
-                # wandb.define_metric("perplexity", step_metric="epoch")        
+                # wandb.define_metric("perplexity", step_metric="epoch")
+                # 
+
+def _train_update(device, x, loss, tracker, writer):
+        test_utils.print_training_update(
+            device,
+            x,
+            loss,
+            tracker.rate(),
+            tracker.global_rate(),
+            summary_writer=writer
+
+        )                        
              
     
         
