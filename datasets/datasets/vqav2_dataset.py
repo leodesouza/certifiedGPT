@@ -44,9 +44,7 @@ class VQAv2Dataset(BaseDataset):
 
         self.logger.info(
             f"Filter annotations that contains images int the path: {vis_paths}"
-        )
-        
-        self._images = []
+        )                
                                     
         try:
 
@@ -70,24 +68,7 @@ class VQAv2Dataset(BaseDataset):
                     continue
 
                 self.questions.append(question)
-
-                if not self._images:
-                    image_id = annotation.get("image_id")
-                    if image_id is None:                        
-                        continue
-                    
-                    file_name = f"COCO_{split}2014_{image_id:012d}.jpg"
-                    image_path = os.path.join(self.vis_paths, file_name)
-                                                    
-                    image = Image.open(image_path).convert("RGB")
-                    image = self.vis_processor(image)
-                    self.images.append(
-                        {
-                            "image_id": image_id,
-                            "image": image
-                        }
-                    )            
-            
+                            
             self.logger.info("Loading annotations. Done!")
             xm.master_print(f"Loading {split} annotations. Done!")
 
@@ -119,20 +100,19 @@ class VQAv2Dataset(BaseDataset):
                     f"Invalid or missing question for question_id {question_id}"
                 )
                         
-            image_id = annotation.get("image_id")            
-            image = self.images_dict.get(image_id)
-            if image is None:
-                raise ValueError(f"Image was not found for image_id: {image_id}")
+            image_id = annotation.get("image_id")                                
+            file_name = f"COCO_{self.split}2014_{image_id:012d}.jpg"
+            image_path = os.path.join(self.vis_paths, file_name)                                            
+            image = Image.open(image_path).convert("RGB")
+            image = self.vis_processor(image)
             
-            image = image["image"]
             
             all_answers = annotation["answers"]
             num_answer = len(all_answers)
 
             if num_answer == 0:
                 raise ValueError(f"No answers found for question_id {question_id}")
-
-            weight = 1 / num_answer
+            
             answer_weights = collections.defaultdict(float)
 
             for answer in all_answers:

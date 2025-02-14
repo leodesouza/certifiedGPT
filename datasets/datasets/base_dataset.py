@@ -22,6 +22,7 @@ class BaseDataset(Dataset):
                  split="train"):
 
         self.vis_paths = vis_paths
+        self.split = split
 
         self.questions = []
         self.images = [] 
