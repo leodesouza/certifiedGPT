@@ -48,6 +48,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self._start_epoch = 0        
         self._tpu_metrics = TPUMetrics()   
         self.profile_logdir = self.config.run.profile_logdir
+        self.writer = None
+        if xm.is_master_ordinal():
+            self.writer = test_utils.get_summary_writer(self.profile_logdir)
                                                               
     def run(self):                 
         best_val_loss = float('inf')                
@@ -125,8 +128,15 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     #     })
 
                     #     self._tpu_metrics.log_tpu_metrics(step)
-                    #     step += 1                                                   
-            
+                    #     step += 1    
+                test_utils.write_to_summary(
+                    self.writer,
+                    epoch,
+                    dict_to_write={'train/loss': epoch_train_loss},
+                    write_xla_metrics=True
+                )
+                                                               
+            test_utils.close_summary_writer(self.writer)
             xm.master_print(f"Finished the training loop {test_utils.now()}")                                                
 
         except Exception as e:
@@ -141,17 +151,32 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         
         return noised_image_inputs      
 
+    def _train_update(device, x, loss, tracker, writer):
+        test_utils.print_training_update(
+            device,
+            x,
+            loss.item(),
+            tracker,
+            tracker.global_rate(),
+            summary_writer=writer
+
+        )
+
     def train(self, epoch):                
         
         train_loader = self._dataloaders["train"]                
         train_loader = pl.MpDeviceLoader(train_loader, self.device)                
+
         if len(train_loader) == 0:
             return float("inf")                
+        
+        tracker = xm.RateTracker()
         self.model.train()
         running_loss = 0.0
         
         accumulated_gradients = self.config.run.accumulated_gradients or 1
-        noise_level = self.config.run.noise_level        
+        noise_level = self.config.run.noise_level    
+            
         
         for step, batch_sample in enumerate(train_loader):             
             step += 1                                    
@@ -169,7 +194,11 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
             if step % accumulated_gradients == 0:                
                 xm.reduce_gradients(self.optimizer)                                
-                xm.optimizer_step(self.optimizer, barrier=True)                                                                
+                xm.optimizer_step(self.optimizer, barrier=True)   
+                tracker.add(self.datasets.vqav2.batch_size)
+                xm.add_step_closure(
+                    self._train_update, args(self.device, step, loss, writer )
+                )                                                             
                 # self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)
                 # xp.trace(logdir=self.profile_logdir,service_addr=self.service_addr)                                 
 
