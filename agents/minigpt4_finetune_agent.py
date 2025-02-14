@@ -155,19 +155,23 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         
         for step, batch_sample in enumerate(train_loader):             
             step += 1                                    
+            xp.trace_detached('localhost:9012', self.profile_logdir, duration_ms=2000)
+
             xm.master_print(f"Processing epoch: {epoch}. step: {step} - {(test_utils.now())}")                       
-            self.optimizer.zero_grad()                                    
-            with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
-                outputs = self.model(batch_sample)                
-                loss = outputs["loss"]                        
-            loss.backward()                                     
+
+            with xp.StepTrace('train',step_num=step):
+                with xp.Trace('build_graph'):                        
+                    self.optimizer.zero_grad()                                    
+                    with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
+                        outputs = self.model(batch_sample)                
+                        loss = outputs["loss"]                        
+                    loss.backward()                                     
 
             if step % accumulated_gradients == 0:                
                 xm.reduce_gradients(self.optimizer)                                
                 xm.optimizer_step(self.optimizer, barrier=True)                                                                
                 # self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)
-                # xp.trace(logdir=self.profile_logdir,service_addr=self.service_addr)                 
-                xp.trace_detached('localhost:9012', self.profile_logdir)
+                # xp.trace(logdir=self.profile_logdir,service_addr=self.service_addr)                                 
 
             xm.master_print(f"epoch: {epoch}. step: {step}. train_loss: {loss.detach().item()} - {(test_utils.now())}")
             # loss.detach() to avoid unnecessary computation graph retention                                    
