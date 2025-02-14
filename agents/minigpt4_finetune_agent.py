@@ -166,7 +166,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 xm.reduce_gradients(self.optimizer)                                
                 xm.optimizer_step(self.optimizer, barrier=True)                                                                
                 # self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)
-                xp.trace(self.profile_logdir)                 
+                xp.trace(logdir=self.profile_logdir)                 
 
             xm.master_print(f"epoch: {epoch}. step: {step}. train_loss: {loss.detach().item()} - {(test_utils.now())}")
             # loss.detach() to avoid unnecessary computation graph retention                                    
