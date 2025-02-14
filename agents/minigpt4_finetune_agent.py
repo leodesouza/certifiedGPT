@@ -156,7 +156,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             device,
             x,
             loss.item(),
-            tracker,
+            tracker.rate(),
             tracker.global_rate(),
             summary_writer=writer
 
