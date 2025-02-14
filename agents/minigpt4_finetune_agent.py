@@ -10,12 +10,11 @@ import time
 import datetime
 
 #Torch 
-import torch
+import torch_xla.debug.profiler as xp
 import torch.distributed as dist
 from torch.utils.data import DataLoader, DistributedSampler
 
 #Pytorch XLA
-import torch_xla
 
 from torch_xla import runtime as xr
 import torch_xla.core.xla_model as xm
@@ -155,11 +154,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         
         for step, batch_sample in enumerate(train_loader):             
             step += 1                                    
-            xm.master_print(f"Processing epoch: {epoch}. step: {step} - {(test_utils.now())}")           
-
-            # if noise_level > 0:                
-            #     batch_sample["image"] = self.add_noise(batch_sample["image"], noise_level)
-            
+            xm.master_print(f"Processing epoch: {epoch}. step: {step} - {(test_utils.now())}")                       
             self.optimizer.zero_grad()                                    
             with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
                 outputs = self.model(batch_sample)                
@@ -169,12 +164,13 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             if step % accumulated_gradients == 0:                
                 xm.reduce_gradients(self.optimizer)                                
                 xm.optimizer_step(self.optimizer, barrier=True)                                                                
-                # self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                 
+                # self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)
+                xp.trace(self.profile_logdir)                 
 
             xm.master_print(f"epoch: {epoch}. step: {step}. train_loss: {loss.detach().item()} - {(test_utils.now())}")
             # loss.detach() to avoid unnecessary computation graph retention                                    
             running_loss += loss.detach().item()             
-            # self._tpu_metrics.log_tpu_metrics()
+            #self._tpu_metrics.log_tpu_metrics()
                                         
         avg_loss = xm.mesh_reduce("running_loss", running_loss, lambda x: sum(x) / len(x))            
         avg_loss /= len(train_loader) # to avoid double averaging
