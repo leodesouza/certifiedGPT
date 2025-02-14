@@ -49,8 +49,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self._tpu_metrics = TPUMetrics()   
         self.profile_logdir = self.config.run.profile_logdir
         self.writer = None
-        if xm.is_master_ordinal():
-            self.writer = test_utils.get_summary_writer(self.profile_logdir)
+        # if xm.is_master_ordinal():
+        self.writer = test_utils.get_summary_writer(self.profile_logdir)
                                                               
     def run(self):                 
         best_val_loss = float('inf')                
