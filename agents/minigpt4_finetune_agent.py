@@ -47,7 +47,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self._setup_wandb(self._model)
         self._start_epoch = 0        
         self._tpu_metrics = TPUMetrics()   
-        self.profile_logdir = os.environ['PROFILE_LOGDIR']
+        self.profile_logdir = self.config.run.profile_logdir
                                                       
     def run(self):                 
         best_val_loss = float('inf')                
