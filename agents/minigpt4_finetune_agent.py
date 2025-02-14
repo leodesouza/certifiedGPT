@@ -10,6 +10,7 @@ import time
 import datetime
 
 #Torch 
+import torch
 import torch_xla.debug.profiler as xp
 import torch.distributed as dist
 from torch.utils.data import DataLoader, DistributedSampler
