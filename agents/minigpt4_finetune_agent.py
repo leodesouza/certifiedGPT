@@ -48,10 +48,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self._start_epoch = 0        
         self._tpu_metrics = TPUMetrics()   
         self.profile_logdir = os.environ['PROFILE_LOGDIR']
-        self.compiled_step_fn = torch_xla.compile(
-            self.step_fn, full_graph=True, name="decoder_step_fn"
-        )
-                                              
+                                                      
     def run(self):                 
         best_val_loss = float('inf')                
         patience = self.config.run.patience or 3
@@ -142,18 +139,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         noised_image_inputs = image_inputs + torch.rand_like(image_inputs) * noise_level
         
-        return noised_image_inputs
-    
-    def step_fn(self, sample):
-        self.optimizer.zero_grad()                                    
-        with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
-            outputs = self.model(sample)                
-            loss = outputs["loss"]                        
-        loss.backward()                        
-        xm.reduce_gradients(self.optimizer)                                
-        xm.optimizer_step(self.optimizer)   
-
-        return loss
+        return noised_image_inputs      
 
     def train(self, epoch):                
         
@@ -174,20 +160,17 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             # if noise_level > 0:                
             #     batch_sample["image"] = self.add_noise(batch_sample["image"], noise_level)
             
+            self.optimizer.zero_grad()                                    
+            with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
+                outputs = self.model(batch_sample)                
+                loss = outputs["loss"]                        
+            loss.backward()                                     
 
-            # self.optimizer.zero_grad()                                    
-            # with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
-            #     outputs = self.model(batch_sample)                
-            #     loss = outputs["loss"]                        
-            # loss.backward()             
-            #            
-            loss = self.compiled_step_fn(batch_sample)
-
-            # if step % accumulated_gradients == 0:                
-            #     xm.reduce_gradients(self.optimizer)                                
-            #     xm.optimizer_step(self.optimizer)                                                
-            #     xm.mark_step()                
+            if step % accumulated_gradients == 0:                
+                xm.reduce_gradients(self.optimizer)                                
+                xm.optimizer_step(self.optimizer, barrier=True)                                                                
                 # self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                 
+
             xm.master_print(f"epoch: {epoch}. step: {step}. train_loss: {loss.detach().item()} - {(test_utils.now())}")
             # loss.detach() to avoid unnecessary computation graph retention                                    
             running_loss += loss.detach().item()             
