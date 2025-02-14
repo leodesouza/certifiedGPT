@@ -197,7 +197,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 xm.optimizer_step(self.optimizer)   
                 tracker.add(self.config.datasets.vqav2.batch_size)
                 xm.add_step_closure(
-                    self._train_update, args(self.device, step, loss, self.writer)
+                    self._train_update, args=(self.device, step, loss, self.writer)
                 )                                                             
                 # self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)
                 # xp.trace(logdir=self.profile_logdir,service_addr=self.service_addr)                                 
