@@ -195,7 +195,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             if step % accumulated_gradients == 0:                
                 xm.reduce_gradients(self.optimizer)                                
                 xm.optimizer_step(self.optimizer)   
-                tracker.add(self.datasets.vqav2.batch_size)
+                tracker.add(self.config.datasets.vqav2.batch_size)
                 xm.add_step_closure(
                     self._train_update, args(self.device, step, loss, self.writer)
                 )                                                             
