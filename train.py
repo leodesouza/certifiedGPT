@@ -83,9 +83,9 @@ def enable_print():
     sys.stdout = sys.__stdout__
 
 def main(rank):    
-    #if rank == 0:
-        # import torch_xla.debug.profiler as xp
-        # server = xp.start_server(9012)  
+    if rank == 0:
+        import torch_xla.debug.profiler as xp
+        server = xp.start_server(9012)  
     
     cache_file = os.path.expanduser(f'~/tmp/xla_cache{rank}')
     
