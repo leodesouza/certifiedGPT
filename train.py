@@ -82,10 +82,13 @@ def disable_print():
 def enable_print():
     sys.stdout = sys.__stdout__
 
-def main(rank):    
+def main(rank):
+    args = parse_args()
+    config = Config(args)    
+
     if rank == 0:
         import torch_xla.debug.profiler as xp
-        server = xp.start_server(9012)  
+        server = xp.start_server(config.run.profiler_port)  
     
     cache_file = os.path.expanduser(f'~/tmp/xla_cache{rank}')
     
@@ -95,9 +98,7 @@ def main(rank):
 
     import agents
     
-    setup_logger()
-    args = parse_args()
-    config = Config(args)
+    setup_logger()    
     setup_seeds(config)    
     register_variables()        
     
