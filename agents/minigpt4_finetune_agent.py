@@ -170,10 +170,10 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         
         for step, batch_sample in enumerate(train_loader):             
             step += 1
-            if epoch == self.config.run.profile_epoch and step == self.config.profile_step:                                    
-                xp.trace_detached(f'localhost:{self.config.run.profiler_port}', 
-                                  self.profile_logdir, 
-                                  duration_ms=5000)
+            #if epoch == self.config.run.profile_epoch and step == self.config.profile_step:                                    
+            xp.trace_detached(f'localhost:{self.config.run.profiler_port}', 
+                                self.profile_logdir, 
+                                duration_ms=5000)
 
             xm.master_print(f"Processing epoch: {epoch}. step: {step} - {(test_utils.now())}")                       
 
