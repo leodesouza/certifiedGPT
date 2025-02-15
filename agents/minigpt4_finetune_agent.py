@@ -169,8 +169,11 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             
         
         for step, batch_sample in enumerate(train_loader):             
-            step += 1                                    
-            xp.trace_detached('localhost:9012', self.profile_logdir, duration_ms=5000)
+            step += 1
+            if epoch == self.config.run.profile_epoch and step == self.config.profile_step:                                    
+                xp.trace_detached(f'localhost:{self.config.run.profiler_port}', 
+                                  self.profile_logdir, 
+                                  duration_ms=5000)
 
             xm.master_print(f"Processing epoch: {epoch}. step: {step} - {(test_utils.now())}")                       
 
@@ -184,7 +187,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
             if step % accumulated_gradients == 0:                
                 xm.reduce_gradients(self.optimizer)                                
-                xm.optimizer_step(self.optimizer)   
+                xm.optimizer_step(self.optimizer, barrier=False) 
+                xm.mark_step()  
                 tracker.add(self.config.datasets.vqav2.batch_size)
                 xm.add_step_closure(
                     _train_update, args=(self.device, step, loss.item(), tracker, self.writer)

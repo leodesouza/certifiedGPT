@@ -83,6 +83,9 @@ run:
 
   #profile
   profile_logdir: ${env:PROFILE_LOGDIR}  
+  profile_epoch: 1
+  profile_step: 5
+  profiler_port: 9012
 
 # DataLoader
   distributed: False  
