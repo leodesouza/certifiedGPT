@@ -183,7 +183,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
                         outputs = self.model(batch_sample)                
                         loss = outputs["loss"]                        
-                    loss.backward()                                     
+                    loss.backward() 
+                
+                self.writer.add_scalar('train_loss', step, loss.item(), step)
 
                 if step % accumulated_gradients == 0:                
                     xm.reduce_gradients(self.optimizer)                                
@@ -193,9 +195,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                         xm.add_step_closure(
                             _train_update, args=(self.device, step, loss.item(), tracker, self.writer)
                         )                                                             
-                    # self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)
-                    xp.trace(f"localhost:{self.config.run.profiler_port}", logdir="logs", duration_ms=self.config.run.duration_ms)
-                    #                                              
+                    # self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                    
             xm.master_print(f"epoch: {epoch}. step: {step}. train_loss: {loss.item()} - {(test_utils.now())}")
               
             # loss.detach() to avoid unnecessary computation graph retention                                    
