@@ -350,7 +350,7 @@ class MiniGPTBase(BaseModel):
                 target_len = len(target)
                 start_idx = input_lens[i] + 1 
                 if start_idx + target_len <= targets.size(1):
-                    targets[i, start_idx:start_idx + target_len] = target
+                    targets[i, start_idx:start_idx + target_len] = target[:target_len]
 
             with self.maybe_autocast():
                 outputs = self.llama_model(
