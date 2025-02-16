@@ -178,8 +178,7 @@ class MiniGPTBase(BaseModel):
         batch_size = input_embs.size(0)
 
         for i in range(batch_size):
-            input_len = input_lens[i].item()
-            input_lens.append(input_len)
+            input_len = input_lens[i].item()            
             cat_emb = torch.cat([
                     input_embs[i][:input_len],
                     output_embs[i],
