@@ -175,12 +175,12 @@ class MiniGPTBase(BaseModel):
         cat_atts = []
 
         input_lens = input_atts.sum(dim=1)
-        batch_size = input_embs.size(0)
+        batch_size = input_embs.size(0) # extract the  batch size 
 
         for i in range(batch_size):
             input_len = input_lens[i].item()            
             cat_emb = torch.cat([
-                    input_embs[i][:input_len],
+                    input_embs[i][:input_len], # tensor indexing
                     output_embs[i],
                     input_embs[i][input_len:]
                 ])
@@ -334,21 +334,26 @@ class MiniGPTBase(BaseModel):
             inputs_embeds = torch.cat([bos_embeds, inputs_embeds], dim=1)
             attention_mask = torch.cat([bos_atts, attention_mask], dim=1)
 
-            # ensemble the final targets
+            #Preallocate targets tensor with -100
+            #Ensemble the final targets
             targets = torch.ones([inputs_embeds.shape[0], inputs_embeds.shape[1]],
                                 dtype=torch.long).to(self.device).fill_(-100)
-
+            
+            
+            
             # for i, target in enumerate(part_targets):
             #     targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos
+
+            indices = torch.arrange(targets.shape[1], device=self.device).expand(len(part_targets), -1)       
+            start_positions = input_lens[:,None] + 1
+            lengths = torch.tensor([len(t) for t in part_targets], device=self.device)[:,None]
+
+            mask = (indices >= start_positions) & (indices < start_positions + lengths)
+
+            concat_targets = torch.cat(part_targets)
             
-            max_target_len = max(len(t) for t in part_targets)
-            #vectorized
-            indices = torch.arange(max_target_len, device=xm.xla_device()).expand(len(part_targets), -1)
+            targets[mask] = concat_targets
 
-            target_lens = torch.tensor([len(t) for t in part_targets], device=xm.xla_device())
-            mask = (indices >= (input_lens[:, None] + 1)) & (indices < (input_lens[:, None] + 1 + target_lens[:, None]))
-
-            targets[mask] = torch.cat(part_targets)                        
 
             with self.maybe_autocast():
                 outputs = self.llama_model(
