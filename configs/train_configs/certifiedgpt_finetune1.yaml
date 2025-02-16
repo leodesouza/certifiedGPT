@@ -84,9 +84,10 @@ run:
   #profile
   profile_logdir: ${env:PROFILE_LOGDIR}  
   profile_epoch: 0
-  profile_step: 10
+  profile_step: 5
   profiler_port: 9012
   duration_ms: 60000
+  XRT_TPU_CONFIG_PORT: 51011
 
 # DataLoader
   distributed: False  
