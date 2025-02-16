@@ -84,7 +84,7 @@ run:
   #profile
   profile_logdir: ${env:PROFILE_LOGDIR}  
   profile_epoch: 0
-  profile_step: 5
+  profile_step: 10
   profiler_port: 9012
   duration_ms: 60000
 
