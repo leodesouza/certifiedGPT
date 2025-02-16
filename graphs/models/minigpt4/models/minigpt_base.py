@@ -329,7 +329,7 @@ class MiniGPTBase(BaseModel):
             bos_embeds = self.embed_tokens(bos)
             bos_atts = cond_atts[:, :1]
 
-            # xm.mark_step()
+            
             # add bos token at the begining
             inputs_embeds = torch.cat([bos_embeds, inputs_embeds], dim=1)
             attention_mask = torch.cat([bos_atts, attention_mask], dim=1)
@@ -341,6 +341,7 @@ class MiniGPTBase(BaseModel):
             # for i, target in enumerate(part_targets):
             #     targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos
             
+            xm.mark_step()
             for i, target in enumerate(part_targets):
                 target_len = len(target)
                 start_idx = input_lens[i] + 1  # +1 for BOS token

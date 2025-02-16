@@ -170,10 +170,10 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         
         for step, batch_sample in enumerate(train_loader):             
             step += 1
-            if epoch == self.config.run.profile_epoch and step == self.config.run.profile_step:                                    
-                xp.trace_detached(f'localhost:{self.config.run.profiler_port}', 
-                                    self.profile_logdir, 
-                                    duration_ms=self.config.run.duration_ms)
+            # if epoch == self.config.run.profile_epoch and step == self.config.run.profile_step:                                    
+            #     xp.trace_detached(f'localhost:{self.config.run.profiler_port}', 
+            #                         self.profile_logdir, 
+            #                         duration_ms=self.config.run.duration_ms)
 
             xm.master_print(f"Processing epoch: {epoch}. step: {step} - {(test_utils.now())}")                       
 
@@ -188,11 +188,11 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 if step % accumulated_gradients == 0:                
                     xm.reduce_gradients(self.optimizer)                                
                     xm.optimizer_step(self.optimizer, barrier=False)                 
-                    tracker.add(self.config.datasets.vqav2.batch_size)
-                    if step % 4 == 0:
-                        xm.add_step_closure(
-                            _train_update, args=(self.device, step, loss.item(), tracker, self.writer)
-                        )                                                             
+                    # tracker.add(self.config.datasets.vqav2.batch_size)
+                    # if step % 4 == 0:
+                    #     xm.add_step_closure(
+                    #         _train_update, args=(self.device, step, loss.item(), tracker, self.writer)
+                    #     )                                                             
                     # self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                    
             xm.master_print(f"epoch: {epoch}. step: {step}. train_loss: {loss.item()} - {(test_utils.now())}")
               
