@@ -194,7 +194,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                             _train_update, args=(self.device, step, loss.item(), tracker, self.writer)
                         )                                                             
                     # self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)
-                    xp.trace(f"localhost:{self.config.run.XRT_TPU_CONFIG_PORT}", logdir="logs", duration_ms=self.config.run.duration_ms)
+                    xp.trace(f"localhost:{self.config.run.profiler_port}", logdir="logs", duration_ms=self.config.run.duration_ms)
                     #                                              
             xm.master_print(f"epoch: {epoch}. step: {step}. train_loss: {loss.item()} - {(test_utils.now())}")
               
