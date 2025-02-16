@@ -340,15 +340,10 @@ class MiniGPTBase(BaseModel):
 
             # for i, target in enumerate(part_targets):
             #     targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos
-
-            max_target_len = max(len(t) for t in part_targets)
             
-            #preallocates a tensor with fixed size and fills with -100
-            targets = torch.full((len(part_targets), max_target_len), fill_value=-100, device=xm.xla_device())
-
             for i, target in enumerate(part_targets):
                 target_len = len(target)
-                start_idx = input_lens[i] + 1 
+                start_idx = input_lens[i] + 1  # +1 for BOS token
                 if start_idx + target_len <= targets.size(1):
                     targets[i, start_idx:start_idx + target_len] = target[:target_len]
 
