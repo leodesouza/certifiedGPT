@@ -185,17 +185,16 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                         loss = outputs["loss"]                        
                     loss.backward()                                     
 
-            if step % accumulated_gradients == 0:                
-                xm.reduce_gradients(self.optimizer)                                
-                xm.optimizer_step(self.optimizer, barrier=False)                 
-                tracker.add(self.config.datasets.vqav2.batch_size)
-                xm.add_step_closure(
-                    _train_update, args=(self.device, step, loss.item(), tracker, self.writer)
-                )                                                             
-                # self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)
-                # xp.trace(logdir=self.profile_logdir,service_addr=self.service_addr)                                 
-
-            xm.mark_step()
+                if step % accumulated_gradients == 0:                
+                    xm.reduce_gradients(self.optimizer)                                
+                    xm.optimizer_step(self.optimizer, barrier=False)                 
+                    tracker.add(self.config.datasets.vqav2.batch_size)
+                    xm.add_step_closure(
+                        _train_update, args=(self.device, step, loss.item(), tracker, self.writer)
+                    )                                                             
+                    # self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)
+                    # xp.trace(logdir=self.profile_logdir,service_addr=self.service_addr)
+                    #                                              
             xm.master_print(f"epoch: {epoch}. step: {step}. train_loss: {loss.item()} - {(test_utils.now())}")
               
             # loss.detach() to avoid unnecessary computation graph retention                                    
