@@ -349,7 +349,7 @@ class MiniGPTBase(BaseModel):
 
             mask = (indices >= start_positions) & (indices < start_positions + lengths)
 
-            flattened = torch.cat([t.to(self.device) for t in part_targets], dim=0)
+            flattened = torch.cat([t for t in part_targets], dim=0).to(self.device)
             
             targets[mask] = flattened
 
