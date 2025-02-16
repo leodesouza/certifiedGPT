@@ -183,9 +183,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
                         outputs = self.model(batch_sample)                
                         loss = outputs["loss"]                        
-                    loss.backward() 
-                
-                self.writer.add_scalar('train_loss', step, loss.item(), step)
+                    loss.backward()                                 
 
                 if step % accumulated_gradients == 0:                
                     xm.reduce_gradients(self.optimizer)                                

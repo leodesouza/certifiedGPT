@@ -289,6 +289,7 @@ class MiniGPTBase(BaseModel):
             self.llama_tokenizer.padding_side = "right"
             text = [t + self.end_sym for t in samples["answer"]]
 
+            # tokenize and convert answer totensor using llama  
             regress_tokens = self.llama_tokenizer(
                 text,
                 return_tensors="pt",
@@ -301,8 +302,10 @@ class MiniGPTBase(BaseModel):
 
             regress_token_ids = regress_tokens.input_ids
             regress_atts = regress_tokens.attention_mask
+
+            #part_targets replaces padding token IDs (specified by pad_token_id) with -100
             part_targets = regress_token_ids.masked_fill(
-                regress_token_ids == self.llama_tokenizer.pad_token_id, -100
+                regress_token_ids == self.llama_tokenizer.pad_token_id, -100 # -100 to be ignored by cross entropy loss
             )
 
         regress_embeds = self.embed_tokens(regress_token_ids)
@@ -335,9 +338,19 @@ class MiniGPTBase(BaseModel):
             targets = torch.ones([inputs_embeds.shape[0], inputs_embeds.shape[1]],
                                 dtype=torch.long).to(self.device).fill_(-100)
 
-            # xm.mark_step()
+            # for i, target in enumerate(part_targets):
+            #     targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos
+
+            max_target_len = max(len(t) for t in part_targets)
+            
+            #preallocates a tensor with fixed size and fills with -100
+            targets = torch.full((len(part_targets), max_target_len), fill_value=-100, device=xm.xla_device())
+
             for i, target in enumerate(part_targets):
-                targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos
+                target_len = len(target)
+                start_idx = input_lens[i] + 1 
+                if start_idx + target_len <= targets.size(1):
+                    targets[i, start_idx:start_idx + target_len] = target
 
             with self.maybe_autocast():
                 outputs = self.llama_model(
