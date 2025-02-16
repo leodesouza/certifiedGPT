@@ -344,14 +344,14 @@ class MiniGPTBase(BaseModel):
             # for i, target in enumerate(part_targets):
             #     targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos
 
-            indices = torch.arrange(targets.shape[1], device=self.device).expand(len(part_targets), -1)       
+            indices = torch.arange(targets.shape[1], device=self.device).expand(len(part_targets), -1)       
             start_positions = input_lens[:,None] + 1
             lengths = torch.tensor([len(t) for t in part_targets], device=self.device)[:,None]
 
             mask = (indices >= start_positions) & (indices < start_positions + lengths)
 
             concat_targets = torch.cat(part_targets)
-            
+
             targets[mask] = concat_targets
 
 
