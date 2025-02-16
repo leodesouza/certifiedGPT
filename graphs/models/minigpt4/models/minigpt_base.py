@@ -341,12 +341,14 @@ class MiniGPTBase(BaseModel):
             # for i, target in enumerate(part_targets):
             #     targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos
             
-            xm.mark_step()
-            for i, target in enumerate(part_targets):
-                target_len = len(target)
-                start_idx = input_lens[i] + 1  # +1 for BOS token
-                if start_idx + target_len <= targets.size(1):
-                    targets[i, start_idx:start_idx + target_len] = target #target[:target_len]
+            max_target_len = max(len(t) for t in part_targets)
+            #vectorized
+            indices = torch.arange(max_target_len, device=xm.xla_device()).expand(len(part_targets), -1)
+
+            target_lens = torch.tensor([len(t) for t in part_targets], device=xm.xla_device())
+            mask = (indices >= (input_lens[:, None] + 1)) & (indices < (input_lens[:, None] + 1 + target_lens[:, None]))
+
+            targets[mask] = torch.cat(part_targets)                        
 
             with self.maybe_autocast():
                 outputs = self.llama_model(
