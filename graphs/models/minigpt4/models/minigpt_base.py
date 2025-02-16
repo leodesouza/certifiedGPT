@@ -339,8 +339,7 @@ class MiniGPTBase(BaseModel):
             targets = torch.ones([inputs_embeds.shape[0], inputs_embeds.shape[1]],
                                 dtype=torch.long).to(self.device).fill_(-100)
             
-            
-            
+                        
             # for i, target in enumerate(part_targets):
             #     targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos
 
@@ -350,9 +349,9 @@ class MiniGPTBase(BaseModel):
 
             mask = (indices >= start_positions) & (indices < start_positions + lengths)
 
-            concat_targets = torch.cat(part_targets)
-
-            targets[mask] = concat_targets
+            flattened = torch.cat([t for t in part_targets], dim=0)
+            
+            targets[mask] = flattened
 
 
             with self.maybe_autocast():
