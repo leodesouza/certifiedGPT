@@ -2,9 +2,11 @@
 
 export PJRT_DEVICE=TPU
 
-CHECKPOINT_NAME="finetuned_certifiedgpt_vqa"
-CONFIG_PATH='/home/swf_developer/certifiedGPT/configs/train_configs/certifiedgpt_finetune1.yaml'
-# CONFIG_PATH='/home/leonardosouza/certifiedGPT/configs/train_configs/cc_sbu_finetuning.yaml'
+# CHECKPOINT_NAME="vqav2_finetuning.yaml"
+# CONFIG_PATH='/home/swf_developer/certifiedGPT/configs/train_configs/certifiedgpt_finetune1.yaml'
+
+CHECKPOINT_NAME="finetuned_minigpt4_7b_stage2_0.pth"
+CONFIG_PATH='/home/leonardosouza/certifiedGPT/configs/train_configs/cc_sbu_finetuning.yaml'
 
 # Execute the Python training script
 

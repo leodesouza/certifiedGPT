@@ -9,5 +9,5 @@ datasets:
       images:
         train:
           path:
-               # - ${env:DATA_DIR}/image
-               - /home/leonardosouza/image/cc_sbu/image
+               - ${env:DATA_DIR}/image
+               

@@ -82,6 +82,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     xm.master_print(f"Training epoch: {epoch} started: {test_utils.now()}")
                     epoch_train_loss = self.train(epoch)
                     xm.master_print(f"Training epoch: {epoch} ended: {test_utils.now()}")                    
+                    if epoch_train_loss > best_val_loss:
+                        best_val_loss = epoch_train_loss
+                        self.save_checkpoint(self.model, epoch)
 
                 # if self.config.run.has_val_split:
                                             
@@ -145,12 +148,14 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         if len(train_loader) == 0:
             return float("inf")                                
-
-        self.model.train()
-        running_loss = 0.0
+        
+        running_loss = torch.tensor(0.0, device=self.device)
+        total_batches = torch.tensor(0, device=self.device)
         
         accumulated_gradients = self.config.run.accumulated_gradients or 1
         noise_level = self.config.run.noise_level    
+
+        self.model.train()
                     
         for step, batch_sample in enumerate(train_loader):             
             step += 1            
@@ -166,15 +171,18 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 xm.reduce_gradients(self.optimizer)                                
                 xm.optimizer_step(self.optimizer, barrier=False)                      
                 self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)
-                
+
             xm.mark_step()
 
             xm.master_print(f"epoch: {epoch}. step: {step}. train_loss: {loss.item()} - {(test_utils.now())}")
                           
-            running_loss += loss.detach().item()                         
+            running_loss += loss.detach()
+            total_batches += 1                         
                                         
-        avg_loss = xm.mesh_reduce("running_loss", running_loss, lambda x: sum(x) / len(x))            
-        avg_loss /= len(train_loader) # to avoid double averaging
+        global_train_loss = xm.mesh_reduce("running_loss", running_loss.item(), sum)            
+        global_total_batches = xm.mesh_reduce("total_batches", total_batches.item(), sum)
+
+        avg_loss = global_train_loss / global_total_batches
         
         xm.master_print(f"current_time: {(test_utils.now())}. Step: {step} executed.")
                                                  
@@ -182,7 +190,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
     @torch.no_grad()
     def eval(self, epoch):
-        running_eval_loss = 0
+        running_eval_loss = torch.tensor(0.0, device=self.device)
+        total_batches = torch.tensor(0, device=self.device)
 
         val_loader = self._dataloaders["val"]
         val_loader = pl.MpDeviceLoader(val_loader, self.device)        
@@ -193,19 +202,19 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         self.model.eval()
 
-        for step, batch_sample in enumerate(val_loader):   
-
-            # if noise_level > 0:                    
-            #     batch_sample["image"] = self.add_noise(batch_sample["image"], noise_level)                                
+        for step, batch_sample in enumerate(val_loader):               
             outputs = self.model(batch_sample)               
             loss = outputs["loss"]
             if self.config.run.wandb:
                     xm.master_print(f"epoch: {epoch}. step: {step + 1}. val_loss: {loss.detach().item()}")                                                                                            
                     self._tpu_metrics.log_tpu_metrics(step + 1)                      
 
-            running_eval_loss += loss.detach().item()                                    
-        eval_avg_loss = xm.mesh_reduce("running_eval_loss", running_eval_loss, lambda x: sum(x) / len(x))                    
-        eval_avg_loss /= len(val_loader)
+            running_eval_loss += loss.detach()
+            total_batches += 1
+
+        global_eval_loss = xm.mesh_reduce("running_eval_loss", running_eval_loss.item(), sum)                    
+        global_total_batches = xm.mesh_reduce("total_batches", total_batches.item(), sum)
+        eval_avg_loss = global_eval_loss / global_total_batches
                                 
         return eval_avg_loss
     
@@ -312,14 +321,14 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         if xm.is_master_ordinal():
 
-            self.logger.info("save in the main process")    
+            xm.master_print("Saving the checkpoint in the main process")    
 
             model_state_dict = self.return_state_dict_without_grad(model)
                         
             file_name = self.config.run.checkpoint_name
             file_name = f"{file_name}_epoch_{epoch}_noise_{self.config.run.noise_level}.pth"  
 
-            self.logger.info(f"checkpoint name: {file_name}")    
+            xm.master_print(f"Checkpoint name: {file_name}")    
             checkpoint = {
                 'epoch': epoch,
                 'model_state_dict': model_state_dict,                                                                                
@@ -328,13 +337,14 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             path = self.config.run.output_dir
 
             file_and_path = os.path.join(path, file_name)
-            self.logger.info(f"Saving Checkpoint in the path: {file_and_path}")   
+            xm.master_print(f"Saving Checkpoint in the path: {file_and_path}")   
             os.makedirs(path, exist_ok=True)    
             
             torch.save(checkpoint, file_and_path)
-            self.logger.info(f"Checkpoint saved at path: {file_and_path}")
+            xm.master_print(f"Checkpoint saved at path: {file_and_path}")
 
         #synchronize all the processes
+        #prevent race conditions
         xm.rendezvous("checkpoint_saved")
 
     def return_state_dict_without_grad(self, model):
