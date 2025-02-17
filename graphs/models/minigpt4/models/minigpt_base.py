@@ -176,7 +176,7 @@ class MiniGPTBase(BaseModel):
         cat_atts = []
                         
         input_lens = input_atts.sum(dim=1)
-        input_lens.to(self.device)                        
+        input_lens = input_lens.to(self.device)                        
         batch_size = input_embs.size(0) # extract the  batch size         
         
         for i in range(batch_size):
@@ -194,7 +194,7 @@ class MiniGPTBase(BaseModel):
                     input_atts[i][input_len:]
                 ])
             cat_atts.append(cat_att)   
-                 
+
         xm.mark_step()
             
         cat_embs = torch.stack(cat_embs)
