@@ -340,21 +340,21 @@ class MiniGPTBase(BaseModel):
             targets = torch.ones([inputs_embeds.shape[0], inputs_embeds.shape[1]],
                                 dtype=torch.long).to(self.device).fill_(-100)
 
-            def body_fn(i, val):
-                targets, input_lens, part_targets = val
+            # def body_fn(i, val):
+            #     targets, input_lens, part_targets = val
                 
-                start = input_lens[i] + 1
-                end = start + len(part_targets[i].shape[0])
-                updated_targets = targets.clone()
-                updated_targets = updated_targets.index_put_((torch.tensor([i], device=self.device), torch.arange(start, end, device=self.device)), part_targets[i])
+            #     start = input_lens[i] + 1
+            #     end = start + len(part_targets[i].shape[0])
+            #     updated_targets = targets.clone()
+            #     updated_targets = updated_targets.index_put_((torch.tensor([i], device=self.device), torch.arange(start, end, device=self.device)), part_targets[i])
 
-                return (updated_targets, input_lens, part_targets)
+            #     return (updated_targets, input_lens, part_targets)
             
-            targets, _, _ = fori_loop(0, len(part_targets), body_fn, (targets, input_lens, part_targets))
+            # targets, _, _ = fori_loop(0, len(part_targets), body_fn, (targets, input_lens, part_targets))
 
 
-            # for i, target in enumerate(part_targets):
-            #     targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos
+            for i, target in enumerate(part_targets):
+                targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos
             
 
             with self.maybe_autocast():

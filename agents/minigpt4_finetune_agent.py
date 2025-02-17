@@ -167,7 +167,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         accumulated_gradients = self.config.run.accumulated_gradients or 1
         noise_level = self.config.run.noise_level    
             
-        
+        xm.master_print(f"Compiling model: {epoch} - {(test_utils.now())}")
+        dynamo_model = torch.compile(self.model, backend='openxla')
+        xm.master_print(f"Finidhed Compiling model: {epoch} - {(test_utils.now())}")
         for step, batch_sample in enumerate(train_loader):             
             step += 1
             # if epoch == self.config.run.profile_epoch and step == self.config.run.profile_step:                                    
@@ -180,9 +182,11 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             with xp.StepTrace('train',step_num=step):
                 with xp.Trace('build_graph'):                        
                     self.optimizer.zero_grad()                                    
-                    with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
-                        outputs = self.model(batch_sample)                
-                        loss = outputs["loss"]                        
+                    # with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
+                    #outputs = self.model(batch_sample)
+                    outputs = dynamo_model(batch_sample)
+                                    
+                    loss = outputs["loss"]                        
                     loss.backward()                                 
 
                 if step % accumulated_gradients == 0:                
@@ -332,7 +336,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self.logger.info("Start building the model")
         model_type = registry.get_model_class(self.config.arch)
         model = model_type.from_config(self.config.model)        
-        model.to(self.device)
+        model.to(self.device)    
         return model
     
     def save_checkpoint(self, model, epoch):        
