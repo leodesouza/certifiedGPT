@@ -42,7 +42,7 @@ class CCSbuDataset(BaseDataset):
 
         img_file = '{}.jpg'.format(ann["image_id"])
         image_path = os.path.join(self.vis_paths, img_file)
-        self.logger.info(f'image log path:{image_path}')
+        print(f'image log path:{image_path}')
         image = Image.open(image_path).convert("RGB")
 
         image = self.vis_processor(image)
