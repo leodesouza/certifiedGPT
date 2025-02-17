@@ -339,25 +339,16 @@ class MiniGPTBase(BaseModel):
             #Ensemble the final targets
             targets = torch.ones([inputs_embeds.shape[0], inputs_embeds.shape[1]],
                                 dtype=torch.long).to(self.device).fill_(-100)
-            
-                        
-            # for i, target in enumerate(part_targets):
-            #     targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos
-
-            updated_targets = targets.clone().detach()
+                                    
             for i, target in enumerate(part_targets):
-                 start_idx = input_lens[i] + 1
-                 end_idx = start_idx + len(target)
-                 updated_targets[i, start_idx:end_idx] = target 
-
-            updated_targets = updated_targets.detach()     
+                targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos              
 
             with self.maybe_autocast():
                 outputs = self.llama_model(
                     inputs_embeds=inputs_embeds,
                     attention_mask=attention_mask,
                     return_dict=True,
-                    labels=updated_targets,
+                    labels=targets,
                     reduction=reduction
                 )
             loss = outputs.loss
