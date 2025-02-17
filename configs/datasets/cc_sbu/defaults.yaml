@@ -9,5 +9,6 @@ datasets:
       images:
         train:
           path:
-               - ${env:DATA_DIR}/image
+               #- ${env:DATA_DIR}/image
+               - /swf_developer@t1v-n-4b3d9bc9-w-0:~/sample_2
                
