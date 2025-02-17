@@ -8,6 +8,7 @@ import torch_xla
 from torch_xla.amp import autocast as autocast
 import torch_xla.core.xla_model as xm
 import torch.nn as nn
+import torch._dynamo.experimental as experimental
 
 
 from common.registry import registry
@@ -343,15 +344,27 @@ class MiniGPTBase(BaseModel):
             # for i, target in enumerate(part_targets):
             #     targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos
 
-            indices = torch.arange(targets.shape[1], device=self.device).expand(len(part_targets), -1)       
-            start_positions = input_lens[:,None] + 1
-            lengths = torch.tensor([len(t) for t in part_targets], device=self.device)[:,None]
+            def update_targets(i, targets, part_targets, input_lens):
+                target = part_targets[i]
+                target_len = len(target)
+                start_idx = input_lens[i] + 1
+                if start_idx + target_len <= targets.size(1):
+                    targets[i, start_idx:start_idx + target_len] = target
 
-            mask = (indices >= start_positions) & (indices < start_positions + lengths)
+            targets = experimental.fori_loop(0, len(part_targets), update_targets, targets, part_targets, input_lens)
 
-            flattened = torch.cat([t for t in part_targets], dim=0).to(self.device)
+            # for i, target in enumerate(part_targets):
+            #     targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos
+
+            # indices = torch.arange(targets.shape[1], device=self.device).expand(len(part_targets), -1)       
+            # start_positions = input_lens[:,None] + 1
+            # lengths = torch.tensor([len(t) for t in part_targets], device=self.device)[:,None]
+
+            # mask = (indices >= start_positions) & (indices < start_positions + lengths)
+
+            # flattened = torch.cat([t for t in part_targets], dim=0).to(self.device)
             
-            targets[mask] = flattened
+            # targets[mask] = flattened
 
 
             with self.maybe_autocast():
