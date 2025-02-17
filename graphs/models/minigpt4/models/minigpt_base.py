@@ -345,8 +345,8 @@ class MiniGPTBase(BaseModel):
             #     targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos
 
             def update_targets(targets, part_targets, input_lens):
-                batch_size = targets.size(0)
-                size_1 = targets.size(1)
+                batch_size = targets.size(0).item()
+                size_1 = targets.size(1).item()
 
                 for i in range(batch_size):                
                     target = part_targets[i]
