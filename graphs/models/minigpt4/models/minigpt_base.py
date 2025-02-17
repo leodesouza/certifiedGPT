@@ -350,7 +350,7 @@ class MiniGPTBase(BaseModel):
                  end_idx = start_idx + len(target)
                  updated_targets[i, start_idx:end_idx] = target 
 
-            updated_targets.detach().requires_grad()     
+            updated_targets = updated_targets.detach().requires_grad()     
 
             with self.maybe_autocast():
                 outputs = self.llama_model(
