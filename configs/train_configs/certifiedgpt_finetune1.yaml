@@ -71,7 +71,7 @@ run:
   output_dir: ${env:OUTPUT_DIR}
   tmp_dir: ${env:TMP}
         
-  amp: True
+  amp: False
   resume_ckpt_path: null
   evaluate: False
   train_splits: ["train"]
