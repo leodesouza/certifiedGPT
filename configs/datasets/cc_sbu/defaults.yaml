@@ -10,5 +10,5 @@ datasets:
         train:
           path:
                #- ${env:DATA_DIR}/image
-               - /home/swf_developer/sample_2/
+               - /home/swf_developer/sample_2
                
