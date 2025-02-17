@@ -8,7 +8,8 @@ import torch_xla
 from torch_xla.amp import autocast as autocast
 import torch_xla.core.xla_model as xm
 import torch.nn as nn
-import torch_xla.experimental.xla_torch as xt
+from torch_xla.utils.utils import fori_loop
+
 
 
 from common.registry import registry
@@ -349,11 +350,11 @@ class MiniGPTBase(BaseModel):
 
                 return (updated_targets, input_lens, part_targets)
             
-            targets, _, _ = xt.fori_loop(0, len(part_targets), body_fn, (targets, input_lens, part_targets))
+            targets, _, _ = fori_loop(0, len(part_targets), body_fn, (targets, input_lens, part_targets))
 
 
-            for i, target in enumerate(part_targets):
-                targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos
+            # for i, target in enumerate(part_targets):
+            #     targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos
             
 
             with self.maybe_autocast():
