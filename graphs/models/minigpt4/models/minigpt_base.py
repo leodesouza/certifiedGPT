@@ -336,12 +336,13 @@ class MiniGPTBase(BaseModel):
 
             #Preallocate targets tensor with -100
             #Ensemble the final targets
-            # targets = torch.ones([inputs_embeds.shape[0], inputs_embeds.shape[1]],
-            #                     dtype=torch.long).to(self.device).fill_(-100)
-
-            targets = torch.full_like(inputs_embeds, fill_value=-100, dtype=torch.long, device=self.device)                
+            targets = torch.ones([inputs_embeds.shape[0], inputs_embeds.shape[1]],
+                                dtype=torch.long).to(self.device).fill_(-100)
+            
             for i, target in enumerate(part_targets):
                 targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos              
+
+            xm.mark_step()
 
             with self.maybe_autocast():
                 outputs = self.llama_model(
