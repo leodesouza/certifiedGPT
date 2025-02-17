@@ -344,11 +344,13 @@ class MiniGPTBase(BaseModel):
             # for i, target in enumerate(part_targets):
             #     targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos
 
-            updated_targets = targets.clone()
+            updated_targets = targets.clone().detach()
             for i, target in enumerate(part_targets):
                  start_idx = input_lens[i] + 1
                  end_idx = start_idx + len(target)
-                 updated_targets[i, start_idx:end_idx] = target      
+                 updated_targets[i, start_idx:end_idx] = target 
+
+            updated_targets.detach().requires_grad()     
 
             with self.maybe_autocast():
                 outputs = self.llama_model(
