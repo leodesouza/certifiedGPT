@@ -90,6 +90,6 @@ run:
   duration_ms: 60000  
 
 # DataLoader
-  distributed: False  
+  distributed: True  
   num_workers: 2 # n of workers to load data
   
