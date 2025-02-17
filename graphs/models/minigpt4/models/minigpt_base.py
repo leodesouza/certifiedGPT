@@ -344,42 +344,18 @@ class MiniGPTBase(BaseModel):
             # for i, target in enumerate(part_targets):
             #     targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos
 
-            def update_targets(targets, part_targets, input_lens):
-                batch_size = targets.size(0).item()
-                size_1 = targets.size(1).item()
-
-                for i in range(batch_size):                
-                    target = part_targets[i]
-                    target_len = len(target)
-                    start_idx = input_lens[i] + 1
-                    if start_idx + target_len <= size_1:
-                        targets[i, start_idx:start_idx + target_len] = target
-                return targets
-            
-            input_lens.to(self.device)
-
-            targets = update_targets(targets, part_targets, input_lens)
-
-            # for i, target in enumerate(part_targets):
-            #     targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos
-
-            # indices = torch.arange(targets.shape[1], device=self.device).expand(len(part_targets), -1)       
-            # start_positions = input_lens[:,None] + 1
-            # lengths = torch.tensor([len(t) for t in part_targets], device=self.device)[:,None]
-
-            # mask = (indices >= start_positions) & (indices < start_positions + lengths)
-
-            # flattened = torch.cat([t for t in part_targets], dim=0).to(self.device)
-            
-            # targets[mask] = flattened
-
+            updated_targets = targets.clone()
+            for i, target in enumerate(part_targets):
+                 start_idx = input_lens[i] + 1
+                 end_idx = start_idx + len(target)
+                 updated_targets[i, start_idx:end_idx] = target      
 
             with self.maybe_autocast():
                 outputs = self.llama_model(
                     inputs_embeds=inputs_embeds,
                     attention_mask=attention_mask,
                     return_dict=True,
-                    labels=targets,
+                    labels=updated_targets,
                     reduction=reduction
                 )
             loss = outputs.loss
