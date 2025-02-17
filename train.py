@@ -86,9 +86,9 @@ def main(rank):
     args = parse_args()
     config = Config(args)    
         
-    # cache_file = os.path.expanduser(f'~/tmp/xla_cache{rank}')
+    cache_file = os.path.expanduser(f'~/tmp/xla_cache{rank}')
     
-    # xr.initialize_cache(cache_file, readonly=False)
+    xr.initialize_cache(cache_file, readonly=False)
     
     disable_print()
 
