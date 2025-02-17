@@ -344,14 +344,20 @@ class MiniGPTBase(BaseModel):
             # for i, target in enumerate(part_targets):
             #     targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos
 
-            def update_targets(i, targets, part_targets, input_lens):
-                target = part_targets[i]
-                target_len = len(target)
-                start_idx = input_lens[i] + 1
-                if start_idx + target_len <= targets.size(1):
-                    targets[i, start_idx:start_idx + target_len] = target
+            def update_targets(targets, part_targets, input_lens):
+                batch_size = targets.size(0)
 
-            targets = xla_utils.fori_loop(0, len(part_targets), update_targets, targets, part_targets, input_lens)
+                for i in range(batch_size):                
+                    target = part_targets[i]
+                    target_len = len(target)
+                    start_idx = input_lens[i] + 1
+                    if start_idx + target_len <= targets.size(1):
+                        targets[i, start_idx:start_idx + target_len] = target
+                return targets
+            
+            input_lens.to(self.device)
+
+            targets = update_targets(targets, part_targets, input_lens)
 
             # for i, target in enumerate(part_targets):
             #     targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos
