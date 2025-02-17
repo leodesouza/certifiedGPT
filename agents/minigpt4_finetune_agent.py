@@ -166,7 +166,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 xm.reduce_gradients(self.optimizer)                                
                 xm.optimizer_step(self.optimizer, barrier=False)                      
                 self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)
-            xm.mark_step()
+            # xm.mark_step()
 
             xm.master_print(f"epoch: {epoch}. step: {step}. train_loss: {loss.item()} - {(test_utils.now())}")
                           
