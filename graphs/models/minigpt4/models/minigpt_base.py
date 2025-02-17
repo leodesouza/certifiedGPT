@@ -8,7 +8,6 @@ import torch_xla
 from torch_xla.amp import autocast as autocast
 import torch_xla.core.xla_model as xm
 import torch.nn as nn
-from torch_xla.utils.utils import fori_loop
 
 
 
