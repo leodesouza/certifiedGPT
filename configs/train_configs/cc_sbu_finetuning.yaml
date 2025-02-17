@@ -45,7 +45,7 @@ run:
   accumulated_gradients: 1
   patience: 10
   noise_level: 0
-  checkpoint_name:"cc_sbu_finetuning"
+  checkpoint_name: "cc_sbu_finetuning"
   
   lr_sched: "linear_warmup_cosine_lr"
   init_lr: 3e-5 
