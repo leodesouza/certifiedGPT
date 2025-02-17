@@ -10,6 +10,8 @@ import torch
 import torch_xla.core.xla_model as xm
 import common
 from common.registry import registry
+import torch_xla.debug.profiler as xp
+import torch_xla.test.test_utils as test_utils
 
 
 class BaseAgent:
@@ -177,4 +179,4 @@ class BaseAgent:
     @property
     def logger(self):
         logger = registry.get_configuration_class("logger")
-        return logger
+        return logger            
