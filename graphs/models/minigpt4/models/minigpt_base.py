@@ -342,10 +342,8 @@ class MiniGPTBase(BaseModel):
             targets = torch.ones([inputs_embeds.shape[0], inputs_embeds.shape[1]],
                                 dtype=torch.long).to(self.device).fill_(-100)
 
-            targets.to(self.device)
-            input_lens.to(self.device)
-
-            xm.mark_step()
+            targets = targets.to(self.device)
+            input_lens = input_lens.to(self.device)            
 
             for i, target in enumerate(part_targets):
                 targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos
