@@ -8,7 +8,6 @@ import sys
 import numpy as np
 import torch
 import torch_xla.distributed.xla_multiprocessing as xmp
-import torch_xla.core.xla_model as xm
 import torch_xla.runtime as xr
 from omegaconf import OmegaConf
 
@@ -88,7 +87,7 @@ def main(rank):
         
     cache_file = os.path.expanduser(f'~/tmp/xla_cache{rank}')
     
-    xm.initialize_cache(cache_file, readonly=False)
+    xr.initialize_cache(cache_file, readonly=False)
     
     disable_print()
 
