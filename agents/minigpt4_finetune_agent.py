@@ -114,18 +114,17 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                                      train_loss: {epoch_train_loss}   
                                      val_loss: {epoch_val_loss}""")
                     
-                    # if self.config.run.wandb:
+                    if self.config.run.wandb:
                                             
-                    #     xm.master_print(f"Logging the metrics to wandb")
-                    #     wandb.log({
-                    #         "epoch": epoch,
-                    #         "train_loss": epoch_train_loss,
-                    #         "val_loss": epoch_val_loss,
-                    #         "learning_rate":self.optimizer.param_groups[0]["lr"]
-                    #     })
-
-                    #     self._tpu_metrics.log_tpu_metrics(step)
-                    #     step += 1                
+                        xm.master_print(f"Logging the metrics to wandb")
+                        wandb.log({
+                            "epoch": epoch,
+                            "train_loss": epoch_train_loss,
+                            "val_loss": 0,
+                            "learning_rate":self.optimizer.param_groups[0]["lr"]
+                        })
+                        
+                        step += 1                
             xm.master_print(f"Finished the training loop {test_utils.now()}")                                                
 
         except Exception as e:
@@ -171,6 +170,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 xm.reduce_gradients(self.optimizer)                                
                 xm.optimizer_step(self.optimizer, barrier=False)                      
                 self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)
+                if xm.is_master_ordinal():
+                   self._tpu_metrics.log_tpu_metrics(epoch, step)
 
             xm.mark_step()
 
