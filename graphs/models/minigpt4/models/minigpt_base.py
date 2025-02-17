@@ -8,7 +8,7 @@ import torch_xla
 from torch_xla.amp import autocast as autocast
 import torch_xla.core.xla_model as xm
 import torch.nn as nn
-import torch._dynamo.experimental as experimental
+import torch_xla.utils as xla_utils
 
 
 from common.registry import registry
@@ -351,7 +351,7 @@ class MiniGPTBase(BaseModel):
                 if start_idx + target_len <= targets.size(1):
                     targets[i, start_idx:start_idx + target_len] = target
 
-            targets = experimental.fori_loop(0, len(part_targets), update_targets, targets, part_targets, input_lens)
+            targets = xla_utils.fori_loop(0, len(part_targets), update_targets, targets, part_targets, input_lens)
 
             # for i, target in enumerate(part_targets):
             #     targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos
