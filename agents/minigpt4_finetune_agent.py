@@ -182,9 +182,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             with xp.StepTrace('train',step_num=step):
                 with xp.Trace('build_graph'):                        
                     self.optimizer.zero_grad()                                    
-                    # with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
-                    #outputs = self.model(batch_sample)
-                    outputs = dynamo_model(batch_sample)
+                    with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
+                        #outputs = self.model(batch_sample)
+                        outputs = dynamo_model(batch_sample)
                                     
                     loss = outputs["loss"]                        
                     loss.backward()                                 
