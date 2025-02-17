@@ -315,12 +315,11 @@ class MiniGPTBase(BaseModel):
 
     def forward(self, samples, reduction='mean'):
         try: 
-            # xm.mark_step()
+            
             # prepare the embedding to condition and the embedding to regress
             cond_embeds, cond_atts, regress_embeds, regress_atts, part_targets = \
                 self.preparing_embedding(samples)
-            
-            #xm.mark_step()
+                        
             # concat the embedding to condition and the embedding to regress
             inputs_embeds, attention_mask, input_lens = \
                 self.concat_emb_input_output(cond_embeds, cond_atts, regress_embeds, regress_atts)
@@ -337,9 +336,10 @@ class MiniGPTBase(BaseModel):
 
             #Preallocate targets tensor with -100
             #Ensemble the final targets
-            targets = torch.ones([inputs_embeds.shape[0], inputs_embeds.shape[1]],
-                                dtype=torch.long).to(self.device).fill_(-100)
-                                    
+            # targets = torch.ones([inputs_embeds.shape[0], inputs_embeds.shape[1]],
+            #                     dtype=torch.long).to(self.device).fill_(-100)
+
+            targets = torch.full_like(inputs_embeds, fill_value=-100, dtype=torch.long, device=self.device)                
             for i, target in enumerate(part_targets):
                 targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos              
 
@@ -352,8 +352,7 @@ class MiniGPTBase(BaseModel):
                     reduction=reduction
                 )
             loss = outputs.loss
-            ##xm.mark_step()
-
+            
             return {"loss": loss}
         except Exception as e:
             xm.master_print(f"Forward error: {e}")
