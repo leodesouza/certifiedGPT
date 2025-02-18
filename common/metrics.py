@@ -58,8 +58,7 @@ class TPUMetrics:
        if not os.path.exists(file_and_path):
           with open(file_and_path, 'w') as f:
             pass  
-       
-       xm.master_print(f"abrindo arquivo")  
+              
        with open(file_and_path, 'a') as file:
            file.write(log_message + "\n\n")
            
