@@ -41,7 +41,7 @@ datasets:
 
 run:
   agent: image_text_finetune
-  max_epoch: 10  
+  max_epoch: 5  
   accumulated_gradients: 1
   patience: 1
   noise_level: 0
@@ -72,4 +72,4 @@ run:
 
   # DataLoader
   distributed: True  
-  num_workers: 2 # n of workers to load data
+  num_workers: 4 # n of workers to load data
