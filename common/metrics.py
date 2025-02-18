@@ -41,14 +41,14 @@ class TPUMetrics:
        else:
             log_tpu_utilization = "TPUUtilization metric is not available."
 
-       log_message = (
-            f"Epoch{epoch} - Step:{step}"
+       log_message = "\n".join([
+            f"Epoch{epoch} - Step:{step}",
             f"TimeStamp: {timestamp}",
             f"{log_compile_time}",
             f"{log_device_status}",
             f"{log_memory_usage}",
             f"{log_tpu_utilization}"
-        )
+        ])
        
        path = self.config.run.output_dir
        file_and_path = os.path.join(path, f'{self.config.run.checkpoint_name}.txt')
