@@ -151,7 +151,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         total_batches = torch.tensor(0, device=self.device)
         
         accumulated_gradients = self.config.run.accumulated_gradients or 1
-        noise_level = self.config.run.noise_level    
+        noise_level = self.config.run.noise_level 
+        # max_step = len(train_loader)   
 
         self.model.train()
                     
@@ -171,9 +172,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                
 
             xm.mark_step()       
-                             
+
             step_loss = loss.detach()
-            if xm.is_master_ordinal():
+            if xm.is_master_ordinal() and step % 10 == 0:
                 self._tpu_metrics.log_tpu_metrics(epoch, step, step_loss)   
 
             running_loss += step_loss
