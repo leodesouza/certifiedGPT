@@ -84,7 +84,7 @@ run:
   device: "tpu"
   wandb: True
   wandb_api_key: ${env:WANDB_API_KEY}
-  wandb_name: "finetuned_certifiedgpt_vqa" 
+  wandb_name: "vqav2_finetuning_noise" 
 
   #profile
   enable_profile: False
