@@ -41,8 +41,7 @@ class CCSbuDataset(BaseDataset):
         ann = self.annotations[index]
 
         img_file = '{}.jpg'.format(ann["image_id"])
-        image_path = os.path.join(self.vis_paths, img_file)
-        print(f'image log path:{image_path}')
+        image_path = os.path.join(self.vis_paths, img_file)       
         image = Image.open(image_path).convert("RGB")
 
         image = self.vis_processor(image)
