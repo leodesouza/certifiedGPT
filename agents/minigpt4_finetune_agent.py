@@ -168,13 +168,14 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             if step % accumulated_gradients == 0:                
                 xm.reduce_gradients(self.optimizer)                                
                 xm.optimizer_step(self.optimizer, barrier=False)                      
-                self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)
-                if xm.is_master_ordinal():
-                   self._tpu_metrics.log_tpu_metrics(epoch, step)
+                self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                
 
             xm.mark_step()
 
-            xm.master_print(f"epoch: {epoch}. step: {step}. train_loss: {loss.item()} - {(test_utils.now())}")
+            if xm.is_master_ordinal():
+                   self._tpu_metrics.log_tpu_metrics(epoch, step, loss.item())
+
+            # xm.master_print(f"epoch: {epoch}. step: {step}. train_loss: {loss.item()} - {(test_utils.now())}")
                           
             running_loss += loss.detach()
             total_batches += 1                         

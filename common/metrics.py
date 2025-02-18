@@ -10,7 +10,7 @@ class TPUMetrics:
     def __init__(self):
          self.config = registry.get_configuration_class("configuration")
     
-    def log_tpu_metrics(self, epoch, step):  
+    def log_tpu_metrics(self, epoch, step, loss):  
    
        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -41,7 +41,9 @@ class TPUMetrics:
             log_tpu_utilization = "TPUUtilization metric is not available."
 
        log_message = "\n".join([
-            f"Epoch{epoch} - Step:{step}",
+            f"Epoch: {epoch}",
+            f"Step: {step}",
+            f"Loss: {loss}",
             f"TimeStamp: {timestamp}",
             f"{log_compile_time}",
             f"{log_device_status}",
