@@ -170,14 +170,13 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 xm.optimizer_step(self.optimizer, barrier=False)                      
                 self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                
 
-            xm.mark_step()
-
+            xm.mark_step()       
+                             
+            step_loss = loss.detach()
             if xm.is_master_ordinal():
-                   self._tpu_metrics.log_tpu_metrics(epoch, step, loss.item())
+                self._tpu_metrics.log_tpu_metrics(epoch, step, step_loss)   
 
-            # xm.master_print(f"epoch: {epoch}. step: {step}. train_loss: {loss.item()} - {(test_utils.now())}")
-                          
-            running_loss += loss.detach()
+            running_loss += step_loss
             total_batches += 1                         
                                         
         global_train_loss = xm.mesh_reduce("running_loss", running_loss.item(), sum)            
@@ -327,7 +326,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             model_state_dict = self.return_state_dict_without_grad(model)
                         
             file_name = self.config.run.checkpoint_name
-            file_name = f"{file_name}_epoch_{epoch}_noise_{self.config.run.noise_level}.pth"  
+            file_name = f"{file_name}_noise_{self.config.run.noise_level}.pth"  
 
             xm.master_print(f"Checkpoint name: {file_name}")    
             checkpoint = {
