@@ -25,7 +25,7 @@ model:
 # https://cloud.google.com/tpu/docs/performance-guide
 datasets:
   cc_sbu:
-    batch_size: 64
+    batch_size: 32
     vis_processor:
       train:
         name: "blip2_image_train"
