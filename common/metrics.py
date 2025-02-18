@@ -50,7 +50,11 @@ class TPUMetrics:
        
        path = self.config.run.output_dir
        file_and_path = os.path.join(path, f'{self.config.run.checkpoint_name}.txt')
-       os.makedirs(path, exist_ok=True)   
+       os.makedirs(path, exist_ok=True)  
+    
+       if not os.path.exists(file_and_path):
+          with open(file_and_path, 'w') as f:
+            pass  
         
        with open(file_and_path, 'a') as file:
            file.write(log_message)
