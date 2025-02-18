@@ -19,7 +19,7 @@ from torchvision import transforms
 @registry.register_processor("blip2_image_train")
 class Blip2ImageTrainProcessor(BaseProcessor):
     def __init__(
-        self, image_size=224, mean=None, std=None, min_scale=0.5, max_scale=1.0
+        self, image_size=448, mean=None, std=None, min_scale=0.5, max_scale=1.0
     ):
         super().__init__(image_size=image_size,mean=mean, std=std)
 
@@ -29,7 +29,7 @@ class Blip2ImageTrainProcessor(BaseProcessor):
 
     @classmethod
     def from_config(cls, config=None):
-        image_size = config.get("image_size", 224)
+        image_size = config.get("image_size", 448)
 
         mean = config.get("mean", None)
         # mean = ast.literal_eval(mean)
@@ -51,7 +51,7 @@ class Blip2ImageTrainProcessor(BaseProcessor):
 @registry.register_processor("blip2_image_val")
 class Blip2ImageEvalProcessor(BaseProcessor):
     def __init__(
-        self, image_size=224, mean=None, std=None, min_scale=0.5, max_scale=1.0
+        self, image_size=448, mean=None, std=None, min_scale=0.5, max_scale=1.0
     ):
         super().__init__(image_size=image_size, mean=mean, std=std)
 
@@ -61,7 +61,7 @@ class Blip2ImageEvalProcessor(BaseProcessor):
 
     @classmethod
     def from_config(cls, config=None):
-        image_size = config.get("image_size", 224)
+        image_size = config.get("image_size", 448)
 
         mean = config.get("mean", None)
         std = config.get("std", None)
