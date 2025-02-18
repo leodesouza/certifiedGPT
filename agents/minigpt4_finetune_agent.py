@@ -81,7 +81,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     xm.master_print(f"Training epoch: {epoch} started: {test_utils.now()}")
                     epoch_train_loss = self.train(epoch)
                     xm.master_print(f"Training epoch: {epoch} ended: {test_utils.now()}")                    
-                    if epoch_train_loss > best_val_loss:
+                    if epoch_train_loss < best_val_loss:
                         best_val_loss = epoch_train_loss
                         self.save_checkpoint(self.model, epoch)
 
