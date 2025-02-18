@@ -26,7 +26,7 @@ class MiniGPTBase(BaseModel):
     def __init__(
             self,
             vit_model="eva_clip_g",
-            img_size=224,
+            img_size=384,
             drop_path_rate=0,
             use_grad_checkpoint=False,
             vit_precision="fp16",
