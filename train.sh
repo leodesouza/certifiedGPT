@@ -2,7 +2,6 @@
 
 export PJRT_DEVICE=TPU
 
-CHECKPOINT_NAME="vqav2_finetuning_noise_0"
 CONFIG_PATH='/home/swf_developer/certifiedGPT/configs/train_configs/vqav2_finetuning.yaml'
 
 # CHECKPOINT_NAME="finetuned_minigpt4_7b_stage2_0_.pth"
@@ -11,5 +10,4 @@ CONFIG_PATH='/home/swf_developer/certifiedGPT/configs/train_configs/vqav2_finetu
 # Execute the Python training script
 
 python3 train.py \
-        --config-path=${CONFIG_PATH} \
-        --checkpoint_name=${CHECKPOINT_NAME}
+        --config-path=${CONFIG_PATH}        

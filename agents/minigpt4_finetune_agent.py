@@ -129,8 +129,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         except Exception as e:
               xm.master_print(f"Error on agent run: {test_utils.now()}. Details: {e}")
 
-    def add_noise(self, image_inputs, noise_level):
-        
+    def add_noise(self, image_inputs):
+        noise_level = self.config.run.noise_level 
         if noise_level < 0:
             raise ValueError("Noise level must be greater than 0")        
 
@@ -151,9 +151,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         total_batches = torch.tensor(0, device=self.device)
         
         accumulated_gradients = self.config.run.accumulated_gradients or 1
-        noise_level = self.config.run.noise_level 
-        # max_step = len(train_loader)   
-
+               
         self.model.train()
                     
         for step, batch_sample in enumerate(train_loader):             
@@ -174,7 +172,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             xm.mark_step()       
 
             step_loss = loss.detach()
-            if xm.is_master_ordinal() and step % 10 == 0:
+            if xm.is_master_ordinal() and step % 2 == 0:
                 self._tpu_metrics.log_tpu_metrics(epoch, step, step_loss)   
 
             running_loss += step_loss

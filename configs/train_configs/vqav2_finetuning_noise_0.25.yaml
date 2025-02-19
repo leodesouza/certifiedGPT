@@ -55,7 +55,7 @@ run:
   accumulated_gradients: 1
   patience: 1
   noise_level: 0
-  checkpoint_name: ${env:CHECKPOINT_NAME}
+  checkpoint_name: "vqav2_finetuning_noise_0.25"
       
   #Consider using other learning rate schedulers for small datasets
   # - Exponential Decay
