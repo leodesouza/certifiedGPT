@@ -206,9 +206,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                          
             outputs = self.model(batch_sample)               
             loss = outputs["loss"]
-            step_loss = loss.detach()
-            if xm.is_master_ordinal() and step % 5 == 0:
-               self._tpu_metrics.log_tpu_metrics(epoch, step, step_loss)                         
+            step_loss = loss.detach()                                  
 
             running_eval_loss += step_loss
             total_batches += 1
