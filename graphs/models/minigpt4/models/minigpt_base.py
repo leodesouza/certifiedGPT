@@ -173,13 +173,11 @@ class MiniGPTBase(BaseModel):
        
         cat_embs = []
         cat_atts = []
-
-        input_atts = input_atts.to(self.device)                        
-        input_lens = input_atts.sum(dim=1)                             
+        
+        # input_atts = input_atts.to(self.device)                        
+        input_lens = input_atts.sum(dim=1).detach().cpu()                            
         batch_size = input_embs.size(0) # extract the  batch size         
         
-        xm.mark_step()
-
         for i in range(batch_size):
             input_len = input_lens[i].item()            
             # input_len = input_lens[i].detach().item()
