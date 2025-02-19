@@ -184,16 +184,16 @@ class MiniGPTBase(BaseModel):
             # input_len = input_lens[i].item()            
             # input_len = input_lens[i].detach().item()
             cat_emb = torch.cat([
-                    input_embs[i][:input_lens[i].item()], # tensor indexing
+                    input_embs[i][:input_lens[i]], # tensor indexing
                     output_embs[i],
-                    input_embs[i][input_lens[i].item():]
+                    input_embs[i][input_lens[i]:]
                 ])
             cat_embs.append(cat_emb)
             
             cat_att = torch.cat([
-                    input_atts[i][:input_lens[i].item()],
+                    input_atts[i][:input_lens[i]],
                     output_atts[i],
-                    input_atts[i][input_lens[i].item():]
+                    input_atts[i][input_lens[i]:]
                 ])
             cat_atts.append(cat_att)   
 
