@@ -190,11 +190,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
     def eval(self, epoch):
         running_eval_loss = torch.tensor(0.0, device=self.device)
         total_batches = torch.tensor(0, device=self.device)
-
         val_loader = self._dataloaders["val"]
         val_loader = pl.MpDeviceLoader(val_loader, self.device)        
         
-
         if len(val_loader) == 0:
             return float("inf")
 
