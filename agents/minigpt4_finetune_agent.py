@@ -206,11 +206,11 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                          
             outputs = self.model(batch_sample)               
             loss = outputs["loss"]
-            if self.config.run.wandb:
-                    xm.master_print(f"epoch: {epoch}. step: {step + 1}. val_loss: {loss.detach().item()}")                                                                                            
-                    self._tpu_metrics.log_tpu_metrics(step + 1)                      
+            step_loss = loss.detach()
+            if xm.is_master_ordinal() and step % 5 == 0:
+               self._tpu_metrics.log_tpu_metrics(epoch, step, step_loss)                         
 
-            running_eval_loss += loss.detach()
+            running_eval_loss += step_loss
             total_batches += 1
 
         global_eval_loss = xm.mesh_reduce("running_eval_loss", running_eval_loss.item(), sum)                    
