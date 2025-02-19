@@ -325,7 +325,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             model_state_dict = self.return_state_dict_without_grad(model)
                         
             file_name = self.config.run.checkpoint_name
-            file_name = f"{file_name}_noise_{self.config.run.noise_level}.pth"  
+            file_name = f"{file_name}.pth"  
 
             xm.master_print(f"Checkpoint name: {file_name}")    
             checkpoint = {
