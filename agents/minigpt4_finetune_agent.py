@@ -73,41 +73,34 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 if self.config.run.noise_level > 0:
                     xm.master_print(f"Noise level: {self.config.run.noise_level} will be applied to the image inputs")                           
                 else:                    
-                    xm.master_print(f"No noise will be applied to the image inputs")
+                    xm.master_print("No noise will be applied to the image inputs")
                     
             for epoch in range(self.start_epoch, self.max_epoch):                                                
                 # training step
                 if not self.config.evaluate_only:                    
                     xm.master_print(f"Training epoch: {epoch} started: {test_utils.now()}")
                     epoch_train_loss = self.train(epoch)
-                    xm.master_print(f"Training epoch: {epoch} ended: {test_utils.now()}")                    
-                    if epoch_train_loss < best_val_loss:
-                        best_val_loss = epoch_train_loss
-                        self.save_checkpoint(self.model, epoch)
+                    xm.master_print(f"Training epoch: {epoch} ended: {test_utils.now()}")                                        
 
-                # if self.config.run.has_val_split:
+                if self.config.run.has_val_split:
                                             
-                #     xm.master_print(f"Evaluation epoch: {epoch} started: {test_utils.now()}")
-                #     epoch_val_loss = self.eval(epoch)                    
-                #     xm.master_print(f"Evaluation epoch: {epoch} ended: {test_utils.now()}")
+                    xm.master_print(f"Evaluation epoch: {epoch} started: {test_utils.now()}")
+                    epoch_val_loss = self.eval(epoch)                    
+                    xm.master_print(f"Evaluation epoch: {epoch} ended: {test_utils.now()}")
                                                                             
-                #     if epoch_val_loss < best_val_loss:                        
-                #         best_val_loss = epoch_val_loss                    
-                #         wait = 0
-                #         self.save_checkpoint(self.model, epoch)
-                #     else:
-                #         wait += 1
+                    if epoch_val_loss < best_val_loss:                        
+                        best_val_loss = epoch_val_loss                    
+                        wait = 0
+                        self.save_checkpoint(self.model, epoch)
+                    else:
+                        wait += 1
                     
-                #     if wait >= patience:
-                #         self.logger.info(f"Early Stopping at epoch: {epoch}")
-                #         break
+                    if wait >= patience:
+                        self.logger.info(f"Early Stopping at epoch: {epoch}")
+                        break
 
             
-                if xm.is_master_ordinal():                        
-
-                    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")         
-                    self.logger.info(f"current_time: {current_time}. epoch: {epoch} executed.")   
-
+                if xm.is_master_ordinal():                                       
                                     
                     xm.master_print(f"""epoch: {epoch}   
                                      train_loss: {epoch_train_loss}   
@@ -115,11 +108,11 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     
                     if self.config.run.wandb:
                                             
-                        xm.master_print(f"Logging the metrics to wandb")
+                        xm.master_print("Logging the metrics to wandb")
                         wandb.log({
                             "epoch": epoch,
                             "train_loss": epoch_train_loss,
-                            "val_loss": 0,
+                            "val_loss": epoch_val_loss,
                             "learning_rate":self.optimizer.param_groups[0]["lr"]
                         })
                         
@@ -200,14 +193,17 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         val_loader = self._dataloaders["val"]
         val_loader = pl.MpDeviceLoader(val_loader, self.device)        
-        noise_level = self.config.run.noise_level
+        
 
         if len(val_loader) == 0:
             return float("inf")
 
         self.model.eval()
 
-        for step, batch_sample in enumerate(val_loader):               
+        for step, batch_sample in enumerate(val_loader): 
+
+            self.add_noise(batch_sample, self.config.run.noise_level)  
+                         
             outputs = self.model(batch_sample)               
             loss = outputs["loss"]
             if self.config.run.wandb:
