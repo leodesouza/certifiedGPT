@@ -129,14 +129,17 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         except Exception as e:
               xm.master_print(f"Error on agent run: {test_utils.now()}. Details: {e}")
 
-    def add_noise(self, image_inputs):
-        noise_level = self.config.run.noise_level 
-        if noise_level < 0:
-            raise ValueError("Noise level must be greater than 0")        
-
-        noised_image_inputs = image_inputs + torch.rand_like(image_inputs) * noise_level
+    def add_noise(self, batch_sample, noise_level):
         
-        return noised_image_inputs      
+        if noise_level < 0:
+            raise ValueError("Noise level must be greater than 0")   
+         
+        image = batch_sample["image"]    
+
+        noise = torch.rand_like(image) * noise_level
+
+        batch_sample["image"] = image + noise
+            
     
 
     def train(self, epoch):                
@@ -155,7 +158,10 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self.model.train()
                     
         for step, batch_sample in enumerate(train_loader):             
-            step += 1            
+            step += 1  
+
+            self.add_noise(batch_sample, self.config.run.noise_level)    
+
             xm.master_print(f"Processing epoch: {epoch}. step: {step} - {(test_utils.now())}")                       
             
             self.optimizer.zero_grad()                                    
