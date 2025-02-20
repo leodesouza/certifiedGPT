@@ -52,7 +52,7 @@ datasets:
 
 run:
   agent: image_text_finetune
-  max_epoch: 12  
+  max_epoch: 10  
   accumulated_gradients: 1
   patience: 1
   noise_level: 0
@@ -63,11 +63,16 @@ run:
   # - Plateau-Based Decay
 
   lr_sched: "linear_warmup_cosine_lr"  
-  init_lr: 3e-5 # is max_lr in warmup_lr_schedule 
-  min_lr: 1e-5 # used in cosine_lr_schedule
-  warmup_lr: 1e-6 # is init_lr in warmup_lr_schedule  
-  warmup_steps: 8
-  iters_per_epoch: 8
+  
+  #linear_warmup_cosine_lr -> warmup_lr_schedule
+  warmup_steps: 47
+  warmup_start_lr: 1e-6   
+  warmup_max_lr: 1e-5        
+  iters_per_epoch: 47
+
+  #linear_warmup_cosine_lr -> cosine_lr_schedule
+  init_lr: 1e-5 
+  min_lr: 1e-6
   weight_decay: 0.05
   beta1: 0.9
   beta2: 0.999

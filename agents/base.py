@@ -153,9 +153,10 @@ class BaseAgent:
 
             # optional parameters
             decay_rate = self.config.run.get("lr_decay_rate", None)
-            warmup_start_lr = self.config.run.get("warmup_lr", -1)
+            warmup_start_lr = self.config.run.get("warmup_start_lr", -1)
             warmup_steps = self.config.run.get("warmup_steps", 0)
-            iters_per_epoch = self.config.run.get("iters_per_epoch", None)
+            warmup_max_lr = self.config.run.get("warmup_max_lr", 0)
+            iters_per_epoch = self.config.run.get("iters_per_epoch", None)                                    
 
             if iters_per_epoch is None:
                 try:
@@ -172,6 +173,7 @@ class BaseAgent:
                 decay_rate=decay_rate,
                 warmup_start_lr=warmup_start_lr,
                 warmup_steps=warmup_steps,
+                warmup_max_lr=warmup_max_lr
             )
 
         return self.lr_sched
