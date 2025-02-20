@@ -78,22 +78,24 @@ class LinearWarmupCosineLRScheduler:
 
     def step(self, cur_epoch, cur_step):
         total_cur_step = cur_epoch * self.iters_per_epoch + cur_step
+        lr = 0.0
         if total_cur_step < self.warmup_steps:
-            warmup_lr_schedule(
-                step=cur_step,
-                optimizer=self.optimizer,
-                max_step=self.warmup_steps,
-                init_lr=self.warmup_start_lr,
-                max_lr=self.init_lr,
-            )
+            lr = warmup_lr_schedule(
+                    step=cur_step,
+                    optimizer=self.optimizer,
+                    max_step=self.warmup_steps,
+                    init_lr=self.warmup_start_lr,
+                    max_lr=self.init_lr,
+                 )
         else:
-            cosine_lr_schedule(
-                epoch=total_cur_step,
-                optimizer=self.optimizer,
-                max_epoch=self.max_epoch * self.iters_per_epoch,
-                init_lr=self.init_lr,
-                min_lr=self.min_lr,
-            )
+            lr = cosine_lr_schedule(
+                    epoch=total_cur_step,
+                    optimizer=self.optimizer,
+                    max_epoch=self.max_epoch * self.iters_per_epoch,
+                    init_lr=self.init_lr,
+                    min_lr=self.min_lr,
+                )
+        return lr
 
 
 def cosine_lr_schedule(optimizer, epoch, max_epoch, init_lr, min_lr):
@@ -103,6 +105,7 @@ def cosine_lr_schedule(optimizer, epoch, max_epoch, init_lr, min_lr):
     ) + min_lr
     for param_group in optimizer.param_groups:
         param_group["lr"] = lr
+    return lr
 
 
 def warmup_lr_schedule(optimizer, step, max_step, init_lr, max_lr):
@@ -110,6 +113,7 @@ def warmup_lr_schedule(optimizer, step, max_step, init_lr, max_lr):
     lr = min(max_lr, init_lr + (max_lr - init_lr) * step / max(max_step, 1))
     for param_group in optimizer.param_groups:
         param_group["lr"] = lr
+    return lr
 
 
 def step_lr_schedule(optimizer, epoch, init_lr, min_lr, decay_rate):

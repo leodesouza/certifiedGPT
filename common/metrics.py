@@ -10,7 +10,7 @@ class TPUMetrics:
     def __init__(self):
          self.config = registry.get_configuration_class("configuration")
     
-    def log_tpu_metrics(self, epoch, step, loss):  
+    def log_tpu_metrics(self, epoch, step, loss, lr):  
    
        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -19,36 +19,15 @@ class TPUMetrics:
            log_compile_time = f'Number of Compilations: {compile_time[:1]}'
        else:
            log_compile_time = "Compile metric is not available"
-        
-       device_status = met.metric_data("DeviceStatus")
-       if device_status is not None:
-           log_device_status = f'Device Status: {device_status}'
-       else:
-           log_device_status = "DeviceStatus metric is not available"
-
-        
-       memory_usage = met.metric_data('MemoryUsage')
-       if memory_usage is not None:
-            log_memory_usage = f"Memory Usage: {memory_usage} MB"
-       else:
-            log_memory_usage = "MemoryUsage metric is not available."
-
-        
-       tpu_utilization = met.metric_data('TPUUtilization')
-       if tpu_utilization is not None:
-            log_tpu_utilization = f"TPU Utilization: {tpu_utilization}%"
-       else:
-            log_tpu_utilization = "TPUUtilization metric is not available."
+              
 
        log_message = "\n".join([
             f"Epoch: {epoch}",
             f"Step: {step}",
             f"Loss: {loss}",
+            f"Lr: {lr}",
             f"TimeStamp: {timestamp}",
-            f"{log_compile_time}",
-            f"{log_device_status}",
-            f"{log_memory_usage}",
-            f"{log_tpu_utilization}"
+            f"{log_compile_time}"           
         ])
        
        path = self.config.run.output_dir

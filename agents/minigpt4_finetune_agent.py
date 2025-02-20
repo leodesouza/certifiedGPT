@@ -39,7 +39,7 @@ dist.init_process_group(backend='xla', init_method='xla://')
 class MiniGPT4FineTuneAgent(BaseAgent):
     def __init__(self):
         super().__init__()
-        self.start_epoch = 0
+        self.start_epoch = 1
         self.max_epoch = self.config.run.max_epoch
         self._device = xm.xla_device()    
         self._model = self.build_model()
@@ -147,6 +147,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         total_batches = torch.tensor(0, device=self.device)
         
         accumulated_gradients = self.config.run.accumulated_gradients or 1
+        lr = 0.0
                
         self.model.train()
                     
@@ -166,13 +167,13 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             if step % accumulated_gradients == 0:                
                 xm.reduce_gradients(self.optimizer)                                
                 xm.optimizer_step(self.optimizer, barrier=False)                      
-                self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                
+                lr = self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                
 
             xm.mark_step()       
 
             step_loss = loss.detach()
             if xm.is_master_ordinal() and step % 5 == 0:
-                self._tpu_metrics.log_tpu_metrics(epoch, step, step_loss)   
+                self._tpu_metrics.log_tpu_metrics(epoch, step, step_loss, lr)   
 
             running_loss += step_loss
             total_batches += 1                         
