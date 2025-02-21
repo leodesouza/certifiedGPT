@@ -72,8 +72,7 @@ class VQAv2Dataset(BaseDataset):
             self.logger.info("Loading annotations. Done!")
             xm.master_print(f"Loading {split} annotations. Done!")
 
-            self.questions_dict = {q["question_id"]: q for q in self.questions}
-            self.images_dict = {i["image_id"]: i for i in self.images}
+            self.questions_dict = {q["question_id"]: q for q in self.questions}            
 
         except Exception as e:            
             xm.master_print(f"error on loading the dataset. Details: {e}")
