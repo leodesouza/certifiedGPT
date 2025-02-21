@@ -10,7 +10,7 @@ class TPUMetrics:
     def __init__(self):
          self.config = registry.get_configuration_class("configuration")
     
-    def log_tpu_metrics(self, epoch, step, loss, lr):  
+    def log_tpu_metrics(self, split, epoch, step, loss, lr):  
    
        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -22,6 +22,7 @@ class TPUMetrics:
               
 
        log_message = "\n".join([
+            f"Split: {split}",
             f"Epoch: {epoch}",
             f"Step: {step}",
             f"Loss: {loss}",
