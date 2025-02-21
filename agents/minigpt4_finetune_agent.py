@@ -207,7 +207,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             loss = outputs["loss"]
             step_loss = loss.detach()
             
-            if xm.is_master_ordinal() and step % 1 == 0:
+            if xm.is_master_ordinal() and step % 10 == 0:
                 self._tpu_metrics.log_tpu_metrics("Eval", epoch, step, step_loss)                                     
 
             running_eval_loss += step_loss
