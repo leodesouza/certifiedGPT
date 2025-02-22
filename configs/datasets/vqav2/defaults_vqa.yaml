@@ -21,13 +21,13 @@ datasets:
       images:
         train:
           path:
-               # - ${env:DATA_DIR}/images/sample_10k/train
+               - ${env:DATA_DIR}/images/sample_10k/train
                #- /home/leonardosouza/sample_10/train               
-               - /home/swf_developer/sample/train
+               #- /home/swf_developer/sample/train
                # - ${env:DATA_DIR}/images/sample/train
         val:
           path:
-               # - ${env:DATA_DIR}/images/sample_10k/val                             
-               - /home/swf_developer/sample/val
+               - ${env:DATA_DIR}/images/sample_10k/val                             
+               #- /home/swf_developer/sample/val
                #- ${env:DATA_DIR}/images/sample/val
                
