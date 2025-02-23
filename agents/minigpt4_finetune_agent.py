@@ -196,6 +196,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         for step, batch_sample in enumerate(val_loader): 
 
             self.maybe_add_noise(batch_sample, self.config.run.noise_level)  
+            
+            xm.master_print(f"Processing epoch: {epoch}. step: {step} - {(test_utils.now())}")
                          
             outputs = self.model(batch_sample)               
             loss = outputs["loss"]
