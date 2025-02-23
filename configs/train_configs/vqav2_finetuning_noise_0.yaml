@@ -86,7 +86,7 @@ run:
   device: "tpu"
   wandb: True
   wandb_api_key: ${env:WANDB_API_KEY}
-  wandb_name: "vqav2_finetuning_v2_noise_0" 
+  wandb_name: "vqav2_finetuning_v_noise_0" 
 
   #profile
   enable_profile: False
