@@ -175,8 +175,8 @@ class MiniGPTBase(BaseModel):
         cat_atts = []
         
         # input_atts = input_atts.to(self.device)                        
-        # input_lens = input_atts.sum(dim=1).detach().cpu()                            
-        input_lens = input_atts.sum(dim=1)
+        input_lens = input_atts.sum(dim=1).detach().cpu()                            
+        # input_lens = input_atts.sum(dim=1)
         batch_size = input_embs.size(0) # extract the  batch size         
         
         for i in range(batch_size):
@@ -344,7 +344,7 @@ class MiniGPTBase(BaseModel):
                                 dtype=torch.long).to(self.device).fill_(-100)
 
             targets = targets.to(self.device)
-            input_lens = input_lens.to(self.device)                        
+            # input_lens = input_lens.to(self.device)                        
 
             for i, target in enumerate(part_targets):
                 targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos
