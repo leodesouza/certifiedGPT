@@ -80,14 +80,14 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 if not self.config.evaluate_only:                    
                     xm.master_print(f"Training epoch: {epoch} started: {test_utils.now()}")
                     epoch_train_loss = self.train(epoch)
-                    xm.mark_step()
+                    # xm.mark_step()
                     xm.master_print(f"Training epoch: {epoch} ended: {test_utils.now()}")                                        
 
                 if self.config.run.has_val_split:
                                             
                     xm.master_print(f"Evaluation epoch: {epoch} started: {test_utils.now()}")
                     epoch_val_loss = self.eval(epoch)
-                    xm.mark_step()                    
+                    # xm.mark_step()                    
                     xm.master_print(f"Evaluation epoch: {epoch} ended: {test_utils.now()}")
                                                                             
                     if epoch_val_loss < best_val_loss:                        
@@ -207,8 +207,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             
             xm.mark_step()
             
-            if xm.is_master_ordinal() and step % 10 == 0:
-                self._tpu_metrics.log_tpu_metrics("Eval", epoch, step, step_loss, 0)                                     
+            # if xm.is_master_ordinal() and step % 10 == 0:
+            #     self._tpu_metrics.log_tpu_metrics("Eval", epoch, step, step_loss, 0)                                     
 
             running_eval_loss += step_loss
             total_batches += 1
