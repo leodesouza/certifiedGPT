@@ -196,12 +196,14 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         for step, batch_sample in enumerate(val_loader): 
 
             self.maybe_add_noise(batch_sample, self.config.run.noise_level)  
-            
-            xm.master_print(f"Processing epoch: {epoch}. step: {step} - {(test_utils.now())}")
+
+            xm.master_print(f"Eval epoch: {epoch}. step: {step} - {(test_utils.now())}")
                          
             outputs = self.model(batch_sample)               
             loss = outputs["loss"]
             step_loss = loss.detach()
+            
+            xm.mark_step()
             
             # if xm.is_master_ordinal() and step % 10 == 0:
             #     self._tpu_metrics.log_tpu_metrics("Eval", epoch, step, step_loss, 0)                                     
