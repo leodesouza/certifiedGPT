@@ -80,14 +80,14 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 if not self.config.evaluate_only:                    
                     xm.master_print(f"Training epoch: {epoch} started: {test_utils.now()}")
                     epoch_train_loss = self.train(epoch)
-                    # xm.mark_step()
+                    xm.mark_step()
                     xm.master_print(f"Training epoch: {epoch} ended: {test_utils.now()}")                                        
 
                 if self.config.run.has_val_split:
                                             
                     xm.master_print(f"Evaluation epoch: {epoch} started: {test_utils.now()}")
                     epoch_val_loss = self.eval(epoch)
-                    # xm.mark_step()                    
+                    xm.mark_step()                    
                     xm.master_print(f"Evaluation epoch: {epoch} ended: {test_utils.now()}")
                                                                             
                     if epoch_val_loss < best_val_loss:                        
@@ -200,9 +200,10 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             self.maybe_add_noise(batch_sample, self.config.run.noise_level)  
 
             xm.master_print(f"Eval epoch: {epoch}. step: {step} - {(test_utils.now())}")
-                         
-            outputs = self.model(batch_sample)               
-            loss = outputs["loss"]
+
+            with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                         
+                outputs = self.model(batch_sample)               
+                loss = outputs["loss"]
             step_loss = loss.detach()
             
             xm.mark_step()
