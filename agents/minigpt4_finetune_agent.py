@@ -74,7 +74,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     xm.master_print(f"Noise level: {self.config.run.noise_level} will be applied to the image inputs")                           
                 else:                    
                     xm.master_print("No noise will be applied to the image inputs")
-                    
+
+            xm.master_print(f"Train/Eval started started: {(test_utils.now())}")       
             for epoch in range(self.start_epoch, self.max_epoch):                                                
                 # training step
                 if not self.config.evaluate_only:                    
@@ -146,7 +147,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         lr = 0.0
                
         self.model.train()
-                    
+
+        xm.master_print(f"Train Epoch {epoch} started: {(test_utils.now())}")            
         for step, batch_sample in enumerate(train_loader):             
             step += 1  
 
@@ -179,7 +181,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         avg_loss = global_train_loss / global_total_batches
         
-        xm.master_print(f"current_time: {(test_utils.now())}. Step: {step} executed.")
+        xm.master_print(f"Train Epoch {epoch} ended: {(test_utils.now())}")
                                                  
         return avg_loss
 
@@ -195,6 +197,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         self.model.eval()
 
+        xm.master_print(f"Eval Epoch {epoch} started: {(test_utils.now())}")
         for step, batch_sample in enumerate(val_loader): 
 
             self.maybe_add_noise(batch_sample, self.config.run.noise_level)  
@@ -203,13 +206,14 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
             with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                         
                 outputs = self.model(batch_sample)               
-                loss = outputs["loss"]
+            loss = outputs["loss"]                        
+
+            xm.mark_step()
+
             step_loss = loss.detach()
             
-            xm.mark_step()
-            
-            # if xm.is_master_ordinal() and step % 10 == 0:
-            #     self._tpu_metrics.log_tpu_metrics("Eval", epoch, step, step_loss, 0)                                     
+            if xm.is_master_ordinal() and step % 10 == 0:
+                self._tpu_metrics.log_tpu_metrics("Eval", epoch, step, step_loss, 0)                                     
 
             running_eval_loss += step_loss
             total_batches += 1
@@ -217,6 +221,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         global_eval_loss = xm.mesh_reduce("running_eval_loss", running_eval_loss.item(), sum)                    
         global_total_batches = xm.mesh_reduce("total_batches", total_batches.item(), sum)
         eval_avg_loss = global_eval_loss / global_total_batches
+
+        xm.master_print(f"Eval Epoch {epoch} ended: {(test_utils.now())}")
                                 
         return eval_avg_loss
     
