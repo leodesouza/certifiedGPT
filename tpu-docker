@@ -1,0 +1,52 @@
+# Use an official Python 3.10 base image
+FROM python:3.10
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8
+
+# Install dependencies for OpenCV, Decord, and other system-level packages
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    libsm6 \
+    libxext6 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip and install required Python packages
+RUN pip install --upgrade pip
+
+# Install required Python dependencies
+RUN pip install \
+    torch==2.5.0 \
+    torch_xla[tpu]==2.5.0 -f https://storage.googleapis.com/libtpu-releases/index.html \
+    huggingface-hub==0.18.0 \
+    matplotlib==3.7.0 \
+    psutil==5.9.4 \
+    iopath \
+    pyyaml==6.0 \
+    regex==2022.10.31 \
+    tokenizers==0.13.2 \
+    tqdm==4.64.1 \
+    transformers==4.30.0 \
+    timm==0.6.13 \
+    webdataset==0.2.48 \
+    omegaconf==2.3.0 \
+    opencv-python==4.7.0.72 \
+    decord==0.6.0 \
+    peft==0.2.0 \
+    sentence-transformers \
+    gradio==3.47.1 \
+    accelerate==0.20.3 \
+    scikit-image \
+    wandb
+
+# Set working directory
+WORKDIR /app
+
+# Copy local files into the container (optional)
+COPY . /app
+
+# Set the default command to run when the container starts (replace with your script if needed)
+CMD ["/bin/bash"]
