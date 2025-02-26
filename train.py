@@ -32,15 +32,13 @@ from graphs.models.minigpt4.common.optims import *
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Training")
-    parser.add_argument("--config-path", required=True, help="path to configuration file.")              
-    
-    
+    parser.add_argument("--config-path", required=True, help="path to configuration file.")                      
     args = parser.parse_args()
 
     return args
 
 
-def setup_logger():
+def setup_logger(config):
     logger = logging.getLogger("logger")
     logger.setLevel(logging.INFO)
 
@@ -49,7 +47,8 @@ def setup_logger():
     console_formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
     console_handler.setFormatter(console_formatter)
 
-    file_handler = logging.FileHandler('certifiedgpt.log')
+    log_file_path = os.path.join(config.run.output_dir,'certifiedgpt.log')
+    file_handler = logging.FileHandler(log_file_path)
     file_handler.setLevel(logging.ERROR)
     file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     file_handler.setFormatter(file_formatter)
@@ -92,7 +91,7 @@ def main(rank):
 
     import agents
     
-    setup_logger()    
+    setup_logger(config)    
     setup_seeds(config)    
     register_variables()        
     
