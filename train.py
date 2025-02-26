@@ -30,8 +30,6 @@ from graphs.models import *
 from graphs.models.minigpt4.common.optims import *
 
 
-OmegaConf.register_new_resolver("env", lambda key: os.environ.get(key, None))
-
 def parse_args():
     parser = argparse.ArgumentParser(description="Training")
     parser.add_argument("--config-path", required=True, help="path to configuration file.")                      
@@ -49,7 +47,7 @@ def setup_logger(config):
     console_formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
     console_handler.setFormatter(console_formatter)
 
-    log_file_path = os.path.join(config.run.output_dir,'certifiedgpt.log')
+    log_file_path = os.path.join(os.environ.get("OUTPUT_DIR"),'certifiedgpt.log')
     file_handler = logging.FileHandler(log_file_path)
     file_handler.setLevel(logging.ERROR)
     file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
