@@ -7,10 +7,6 @@ import sys
 
 import numpy as np
 import torch
-import torch_xla.distributed.xla_multiprocessing as xmp
-import torch_xla.runtime as xr
-from omegaconf import OmegaConf
-
 
 # local imports 
 
@@ -38,7 +34,7 @@ def parse_args():
     return args
 
 
-def setup_logger(config):
+def setup_logger():
     logger = logging.getLogger("logger")
     logger.setLevel(logging.INFO)
 
@@ -80,18 +76,13 @@ def enable_print():
     sys.stdout = sys.__stdout__
 
 def main(rank):
-    args = parse_args()
-    config = Config(args)    
-        
-    # cache_file = os.path.expanduser(f'~/tmp/xla_cache{rank}')
-    
-    # xr.initialize_cache(cache_file, readonly=False)
-    
+    import agents
     disable_print()
 
-    import agents
-    
-    setup_logger(config)    
+    args = parse_args()
+    config = Config(args)    
+                    
+    setup_logger()    
     setup_seeds(config)    
     register_variables()        
     
