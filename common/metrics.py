@@ -5,6 +5,8 @@ from datetime import datetime
 from common.registry import registry
 import os
 
+from utils.gcsfuse import mount_gcsfuse
+
 class TPUMetrics:
 
     def __init__(self):
@@ -32,9 +34,11 @@ class TPUMetrics:
         ])
        
        path = self.config.run.output_dir
+       if not os.path.exists(path):
+                mount_gcsfuse()            
+
        file_and_path = os.path.join(path, f'{self.config.run.checkpoint_name}.txt')        
-       os.makedirs(path, exist_ok=True)  
-    
+           
        if not os.path.exists(file_and_path):
           with open(file_and_path, 'w') as f:
             pass  

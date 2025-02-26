@@ -22,6 +22,7 @@ import torch_xla.distributed.parallel_loader as pl
 import torch_xla.amp as xla_amp
 
 
+from utils.gcsfuse import mount_gcsfuse
 import wandb
 from tqdm import tqdm
 
@@ -344,11 +345,13 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             }
 
             path = self.config.run.output_dir
-
             file_and_path = os.path.join(path, file_name)
+
+            if not os.path.exists(path):
+                mount_gcsfuse()            
+
             xm.master_print(f"Saving Checkpoint in the path: {file_and_path}")   
-            os.makedirs(path, exist_ok=True)    
-            
+                            
             torch.save(checkpoint, file_and_path)
             xm.master_print(f"Checkpoint saved at path: {file_and_path}")
 
