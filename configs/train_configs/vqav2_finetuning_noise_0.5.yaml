@@ -52,7 +52,7 @@ datasets:
 
 run:
   agent: image_text_finetune
-  max_epoch: 10  
+  max_epoch: 5  
   accumulated_gradients: 1
   patience: 1
   noise_level: 0.5
@@ -66,10 +66,10 @@ run:
   lr_sched: "linear_warmup_cosine_lr"  
   
   #linear_warmup_cosine_lr -> warmup_lr_schedule
-  warmup_steps: 143
+  warmup_steps: 78
   warmup_start_lr: 1e-6   
   warmup_max_lr: 1e-5        
-  iters_per_epoch: 143
+  iters_per_epoch: 78
 
   #linear_warmup_cosine_lr -> cosine_lr_schedule
   init_lr: 1e-5 

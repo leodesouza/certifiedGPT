@@ -52,7 +52,7 @@ datasets:
 
 run:
   agent: image_text_finetune
-  max_epoch: 10  
+  max_epoch: 5  
   accumulated_gradients: 1
   patience: 1
   noise_level: 0
