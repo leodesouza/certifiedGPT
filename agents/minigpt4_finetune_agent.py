@@ -123,7 +123,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             xm.master_print(f"Finished the training loop {test_utils.now()}")                                                
 
         except Exception as e:
-              xm.master_print(f"Error on agent run: {test_utils.now()}. Details: {e}")
+              xm.master_print(f"Error on agent run: {test_utils.now()}. Details: {e}")              
+              self.logger.error("Error loading Vit", exc_info=True)
 
     def maybe_add_noise(self, batch_sample, noise_level):
         
