@@ -354,7 +354,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         #synchronize all the processes
         #prevent race conditions
-        xm.rendezvous("checkpoint_saved")
+        xm.rendezvous("checkpoint_saved")        
 
     def return_state_dict_without_grad(self, model):
         """
