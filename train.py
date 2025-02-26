@@ -75,13 +75,13 @@ def disable_print():
 def enable_print():
     sys.stdout = sys.__stdout__
 
-def main(rank):
-    import agents
-    disable_print()
-
+def main(rank):    
     args = parse_args()
     config = Config(args)    
-                    
+
+    disable_print()
+    import agents  
+              
     setup_logger()    
     setup_seeds(config)    
     register_variables()        
