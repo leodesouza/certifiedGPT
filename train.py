@@ -30,6 +30,8 @@ from graphs.models import *
 from graphs.models.minigpt4.common.optims import *
 
 
+OmegaConf.register_new_resolver("env", lambda key: os.environ.get(key, None))
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Training")
     parser.add_argument("--config-path", required=True, help="path to configuration file.")                      
