@@ -167,7 +167,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             if step % accumulated_gradients == 0:                
                 xm.reduce_gradients(self.optimizer)                                
                 xm.optimizer_step(self.optimizer, barrier=False)                      
-                lr = self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                
+                # lr = self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)
+                lr = 0                
 
             xm.mark_step()       
 
@@ -225,6 +226,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         eval_avg_loss = global_eval_loss / global_total_batches
 
         xm.master_print(f"Eval Epoch {epoch} ended: {(test_utils.now())}")
+        
+        self.lr_scheduler_plateau.step(eval_avg_loss)
                                 
         return eval_avg_loss
     

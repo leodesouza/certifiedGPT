@@ -17,6 +17,7 @@ import torch_xla.test.test_utils as test_utils
 class BaseAgent:
     def __init__(self):
         self.lr_sched = None
+        self.lr_sched_plateau = None
         self._optimizer = None
         self._scaler = None
         self._model = None
@@ -138,6 +139,22 @@ class BaseAgent:
             )
 
         return self._optimizer
+
+    @property
+    def lr_scheduler_plateau(self):
+
+        if self.lr_sched_plateau is None:
+            self.lr_sched_plateau = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                self.optimizer,
+                mode='min',
+                factor=0.1, # reduce LR by 10x
+                patience=1,  # wait before
+                threshold=0.0001, # minimum change to qualify as "improvement"
+                cooldown=0, # wait 1 epoch after reducing ?
+                min_lr=self.config.run.min_lr
+            )
+
+        return self.lr_sched_plateau
 
     @property
     def lr_scheduler(self):
