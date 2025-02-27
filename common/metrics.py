@@ -4,7 +4,6 @@ from common.registry import registry
 from datetime import datetime
 from common.registry import registry
 import os
-import wandb
 
 from utils.gcsfuse import mount_gcsfuse
 
@@ -24,37 +23,28 @@ class TPUMetrics:
            log_compile_time = "Compile metric is not available"
               
 
-    #    log_message = "\n".join([
-    #         f"Split: {split}",
-    #         f"Epoch: {epoch}",
-    #         f"Step: {step}",
-    #         f"Loss: {loss}",
-    #         f"Lr: {lr}",
-    #         f"TimeStamp: {timestamp}",
-    #         f"{log_compile_time}"           
-    #     ])
-       
-       wandb.log({
-            "split": split,
-            "epoch": epoch,
-            "step": step,
-            "loss": loss,
-            "learning_rate": lr,
-            "timestamp": timestamp,
-            "compile_time": compile_time[:1] if compile_time is not None else "N/A"
-        })
+       log_message = "\n".join([
+            f"Split: {split}",
+            f"Epoch: {epoch}",
+            f"Step: {step}",
+            f"Loss: {loss}",
+            f"Lr: {lr}",
+            f"TimeStamp: {timestamp}",
+            f"{log_compile_time}"           
+        ])
+             
 
-    #    path = self.config.run.output_dir
-    #    if not os.path.exists(path):
-    #             mount_gcsfuse()            
+       path = self.config.run.output_dir
+       if not os.path.exists(path):
+                mount_gcsfuse()            
 
-    #    file_and_path = os.path.join(path, f'{self.config.run.checkpoint_name}.txt')        
+       file_and_path = os.path.join(path, f'{self.config.run.checkpoint_name}.txt')        
            
-    #    if not os.path.exists(file_and_path):
-    #       with open(file_and_path, 'w') as f:
-    #         pass  
+       if not os.path.exists(file_and_path):
+          with open(file_and_path, 'w') as f:
+            pass  
               
-    #    with open(file_and_path, 'a') as file:
-    #        file.write(log_message + "\n\n")
+       with open(file_and_path, 'a') as file:
+           file.write(log_message + "\n\n")
            
            
