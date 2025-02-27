@@ -59,6 +59,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         try:
                         
             self.logger.info("Creating the dataloaders")
+            self._dataloader_one_example = self.create_dataloaders(batch_size=1)
             self._dataloaders = self.create_dataloaders()            
 
             if not self._dataloaders.get("train") and not self.config.run.evaluate:
@@ -76,6 +77,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 else:                    
                     xm.master_print("No noise will be applied to the image inputs")
 
+            self.initialize_graph()
             xm.master_print(f"Train/Eval started started: {(test_utils.now())}")       
             for epoch in range(self.start_epoch, self.max_epoch):                                                
                 # training step
@@ -187,6 +189,61 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         xm.master_print(f"Train Epoch {epoch} ended: {(test_utils.now())}")
                                                  
         return avg_loss
+    
+    def train(self, epoch):                
+        
+        train_loader = self._dataloaders["train"]                
+        train_loader = pl.MpDeviceLoader(train_loader, self.device)                
+
+        if len(train_loader) == 0:
+            return float("inf")                                
+        
+        running_loss = torch.tensor(0.0, device=self.device)
+        total_batches = torch.tensor(0, device=self.device)
+        
+        accumulated_gradients = self.config.run.accumulated_gradients or 1
+        lr = 0.0
+               
+        self.model.train()
+
+        xm.master_print(f"Train Epoch {epoch} started: {(test_utils.now())}")            
+        for step, batch_sample in enumerate(train_loader):             
+            step += 1  
+
+            self.maybe_add_noise(batch_sample, self.config.run.noise_level)    
+
+            xm.master_print(f"Processing epoch: {epoch}. step: {step} - {(test_utils.now())}")                       
+            
+            self.optimizer.zero_grad()                                    
+            with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
+                outputs = self.model(batch_sample)                                                            
+            loss = outputs["loss"]                        
+            loss.backward()                                 
+
+            if step % accumulated_gradients == 0:                
+                xm.reduce_gradients(self.optimizer)                                
+                xm.optimizer_step(self.optimizer, barrier=False)                      
+                # lr = self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                
+                lr = self.optimizer.param_groups[0]['lr']
+
+            xm.mark_step()       
+
+            step_loss = loss.detach()
+            if xm.is_master_ordinal() and step % 10 == 0:
+                self._tpu_metrics.log_tpu_metrics("Train", epoch, step, step_loss, lr)   
+
+            running_loss += step_loss
+            total_batches += 1                         
+                                        
+        global_train_loss = xm.mesh_reduce("running_loss", running_loss.item(), sum)            
+        global_total_batches = xm.mesh_reduce("total_batches", total_batches.item(), sum)
+
+        avg_loss = global_train_loss / global_total_batches
+        
+        xm.master_print(f"Train Epoch {epoch} ended: {(test_utils.now())}")
+                                                 
+        return avg_loss
+        
 
     @torch.no_grad()
     def eval(self, epoch):
@@ -231,6 +288,23 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                                 
         return eval_avg_loss
     
+    def initialize_graph(self):                
+                
+        train_loader = self._dataloader_one_example["train"]                
+        train_loader = pl.MpDeviceLoader(train_loader, self.device)                
+                               
+        self.model.train()
+
+        batch_sample = next(iter(train_loader))
+        xm.master_print("Start: Initilize graph")                       
+                                                            
+        with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
+            self.model(batch_sample)                                                                        
+        xm.mark_step()                          
+                                   
+        self.optimizer.zero_grad()
+        xm.master_print("End: Initilize graph")
+                                                             
 
     def validate(self):
         """
@@ -260,7 +334,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         
         return datasets
 
-    def create_dataloaders(self):
+    def create_dataloaders(self, batch_size=-1):
         self.logger.info("building datasets")
         datasets = self._build_datasets()
         dataset_names = sorted(datasets.keys())
@@ -294,7 +368,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 
                 loader = DataLoader(
                     split,
-                    batch_size=self.config.datasets[dataset_name].batch_size,
+                    batch_size= batch_size if batch_size > 0 else self.config.datasets[dataset_name].batch_size,
                     num_workers=self.config.run.num_workers,
                     pin_memory=True,
                     shuffle=(True if is_train and not self.config.run.distributed else False), 
