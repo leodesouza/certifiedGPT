@@ -167,7 +167,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             if step % accumulated_gradients == 0:                
                 xm.reduce_gradients(self.optimizer)                                
                 xm.optimizer_step(self.optimizer, barrier=False)                      
-                lr = self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                
+                # lr = self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                
+                lr = self.optimizer.param_groups[0]['lr']
 
             xm.mark_step()       
 

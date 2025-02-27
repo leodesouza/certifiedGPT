@@ -148,9 +148,9 @@ class BaseAgent:
                 self.optimizer,
                 mode='min',
                 factor=0.1, # reduce LR by 10x
-                patience=1,  # wait before
+                patience=3,  # epochs that scheduler will wait to check and aplly lr reducing
                 threshold=0.0001, # minimum change to qualify as "improvement"
-                cooldown=0, # wait 1 epoch after reducing ?
+                cooldown=1, # epochs that scheduler will pause lr checkings
                 min_lr=self.config.run.min_lr
             )
 
