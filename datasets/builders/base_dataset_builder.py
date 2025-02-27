@@ -15,7 +15,7 @@ from common.registry import registry
 import os
 
 # Register a resolver for the `env` type
-OmegaConf.register_new_resolver("env", lambda key: os.environ.get(key, None))
+# OmegaConf.register_new_resolver("env", lambda key: os.environ.get(key, None))
 # OmegaConf.register_resolver("env", lambda key: os.environ.get(key, None))
 
 
