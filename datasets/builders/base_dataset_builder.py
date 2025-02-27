@@ -15,14 +15,9 @@ from common.registry import registry
 import os
 
 # Register a resolver for the `env` type
-#OmegaConf.register_new_resolver("env", lambda key: os.environ.get(key, None))
+OmegaConf.register_new_resolver("env", lambda key: os.environ.get(key, None), replace=True)
 # OmegaConf.register_resolver("env", lambda key: os.environ.get(key, None))
 
-import warnings
-warnings.filterwarnings("ignore", category=UserWarning, message="OmegaConf.register_new_resolver*")
-
-if "env" not in OmegaConf.resolvers:
-    OmegaConf.register_new_resolver("env", lambda key: os.environ.get(key, None))
 
 
 
