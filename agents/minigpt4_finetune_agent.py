@@ -119,7 +119,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     xm.master_print(f"""epoch: {epoch}   
                                      train_loss: {epoch_train_loss}   
                                      val_loss: {epoch_val_loss}""")
-                    
+                                        
+                    # self.save_history(epoch_train_loss, best_val_loss)                                                            
+
                     if self.config.run.wandb:
                                             
                         xm.master_print("Logging the metrics to wandb")
@@ -132,6 +134,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                         
                         step += 1                
             xm.master_print(f"Finished the training loop {test_utils.now()}")                                                
+            
 
         except Exception as e:
               xm.master_print(f"Error on agent run: {test_utils.now()}. Details: {e}")              
@@ -199,6 +202,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         global_total_batches = xm.mesh_reduce("total_batches", total_batches.item(), sum)
 
         avg_loss = global_train_loss / global_total_batches
+        self.loss_history["train_loss"].append(avg_loss)        
         
         xm.master_print(f"Train Epoch {epoch} ended: {(test_utils.now())}")
                                                  
@@ -241,7 +245,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         global_total_batches = xm.mesh_reduce("total_batches", total_batches.item(), sum)
         eval_avg_loss = global_eval_loss / global_total_batches
 
-        xm.master_print(f"Eval Epoch {epoch} ended: {(test_utils.now())}")
+        xm.master_print(f"Eval Epoch {epoch} ended: {(test_utils.now())}")        
+        self.loss_history["val_loss"].append(eval_avg_loss)
 
         self.lr_scheduler_plateau.step(eval_avg_loss)
                                 
