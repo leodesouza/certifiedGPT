@@ -382,7 +382,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             checkpoint = {
                 'epoch': epoch,
                 'step': step,
-                'model_state_dict': model.state_dict(),
+                'model_state_dict': model.cpu().state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
             }
 
@@ -392,6 +392,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             xm.master_print(f"Saving Checkpoint in the path: {file_and_path}")   
                             
             torch.save(checkpoint, file_and_path)
+            
+            model.to(self.device)
             xm.master_print(f"Checkpoint saved at path: {file_and_path}")
 
         #synchronize all the processes
