@@ -7,7 +7,7 @@
 
 import os 
 import time
-import datetime
+from datetime import datetime
 
 #Torch 
 import torch
