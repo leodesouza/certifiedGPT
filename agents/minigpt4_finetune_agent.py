@@ -41,6 +41,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
     def __init__(self):
         super().__init__()
         self.start_epoch = 0
+        self.start_step = 0
         self.max_epoch = self.config.run.max_epoch
         self._device = xm.xla_device()    
         self._model = self.build_model()
@@ -58,8 +59,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         
         try:
                         
-            self.logger.info("Creating the dataloaders")
-            # self._dataloader_one_example = self.create_dataloaders(batch_size=1)
+            self.logger.info("Creating the dataloaders")            
             self._dataloaders = self.create_dataloaders()            
 
             if not self._dataloaders.get("train") and not self.config.run.evaluate:
@@ -79,13 +79,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
             #self.initialize_graph()
             xm.master_print(f"Train/Eval started started: {(test_utils.now())}")       
-
-            start_epoch, start_step = self.load_checkpoint(self.model, self.optimizer)
-            if start_epoch > 0:
-                self.start_epoch = start_epoch                
-            self.start_step = start_step
-
-            xm.master_print(f"Start_epoch: {start_epoch}")
+            
+            xm.master_print(f"Start_epoch: {self.start_epoch}")
 
             for epoch in range(self.start_epoch, self.max_epoch):                                                
                 # training step
@@ -365,7 +360,13 @@ class MiniGPT4FineTuneAgent(BaseAgent):
     def build_model(self):
         self.logger.info("Start building the model")
         model_type = registry.get_model_class(self.config.arch)
-        model = model_type.from_config(self.config.model)        
+        model = model_type.from_config(self.config.model)
+        
+        start_epoch, start_step = self.load_checkpoint(self.model, self.optimizer)
+        if self.start_epoch > 0:
+            self.start_epoch = start_epoch                
+        self.start_step = start_step
+        
         model.to(self.device)    
         return model
     
