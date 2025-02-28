@@ -41,6 +41,7 @@ class BaseAgent:
               raise ValueError("resume_ckpt_path None") 
           
           file_and_path = os.path.join(output_dir, resume_ckpt_path)
+          xm.master_print(f"Loading checkpoint from {file_and_path}")              
           
           if os.path.exists(file_and_path):
               xm.master_print("Loading checkpoint to resume Training")              
