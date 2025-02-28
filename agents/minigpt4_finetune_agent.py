@@ -132,8 +132,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             
 
         except Exception as e:
-              xm.master_print(f"Error on agent run: {test_utils.now()}. Details: {e}")              
-              self.logger.error("Error loading Vit", exc_info=True)
+              xm.master_print(f"Error on agent run: {test_utils.now()}. Details: {e}")                            
 
     def maybe_add_noise(self, batch_sample, noise_level):
         
@@ -363,10 +362,10 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         model = model_type.from_config(self.config.model)
         self._model = model
         
-        # start_epoch, start_step = self.load_checkpoint(self._model, self.optimizer)
-        # if self.start_epoch > 0:
-        #     self.start_epoch = start_epoch                
-        # self.start_step = start_step
+        start_epoch, start_step = self.load_checkpoint(self._model, self.optimizer)
+        if self.start_epoch > 0:
+            self.start_epoch = start_epoch                
+        self.start_step = start_step
         
         self._model.to(self.device)    
 

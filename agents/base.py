@@ -46,7 +46,7 @@ class BaseAgent:
           if os.path.exists(file_and_path):
               xm.master_print("Loading checkpoint to resume Training")              
               checkpoint = torch.load(file_and_path, map_location="cpu")
-              model.load_state_dict(checkpoint['model_state_dict'])
+              model.load_state_dict(checkpoint['model_state_dict'], strict=False)
               optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
               start_epoch = checkpoint['epoch']
               start_step = checkpoint['step']
