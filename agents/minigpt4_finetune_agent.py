@@ -186,17 +186,18 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             xm.mark_step()       
 
             step_loss = loss.detach()                                        
-            if xm.is_master_ordinal() and step % 10 == 0:                                
+            if xm.is_master_ordinal() and step % 7 == 0:                                
                 self._tpu_metrics.log_tpu_metrics("Train", epoch, step, step_loss, lr)
+
+                start = datetime.now().strftime("%Y-%m-%d %H:%M:%S")                
+                self.save_checkpoint_with_optim(self.model, self.optimizer, epoch, step)
+                end = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                self._tpu_metrics.log_checkpoint_saving("Saving checkpoint", epoch, step, start, end)                         
+
 
             running_loss += step_loss
             total_batches += 1
-
-        if xm.is_master_ordinal():
-            start = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self.save_checkpoint_with_optim(self.model, self.optimizer, epoch, step)
-            end = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            self._tpu_metrics.log_checkpoint_saving("Saving checkpoint", epoch, step, start, end)                         
+            
                                         
         global_train_loss = xm.mesh_reduce("running_loss", running_loss.item(), sum)            
         global_total_batches = xm.mesh_reduce("total_batches", total_batches.item(), sum)
