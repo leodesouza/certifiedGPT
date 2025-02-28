@@ -31,7 +31,8 @@ class BaseAgent:
           resume_ckpt_path = self.config.run.resume_ckpt_path
           file_and_path = os.path.join(output_dir, resume_ckpt_path)
           
-          if os.path.exists(file_and_path):              
+          if os.path.exists(file_and_path):
+              xm.master_print("Loading checkpoint to resume Training")              
               checkpoint = torch.load(file_and_path, map_location=self.device)
               model.load_state_dict(checkpoint['model_state_dict'])
               optimizer.load(checkpoint['optimizer_state_dict'])
