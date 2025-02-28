@@ -44,7 +44,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self.start_step = 0
         self.max_epoch = self.config.run.max_epoch
         self._device = xm.xla_device()    
-        self._model = self.build_model()
+        self.build_model()
         self._setup_wandb(self._model)
         self._start_epoch = 0        
         self._tpu_metrics = TPUMetrics()     
@@ -361,14 +361,16 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self.logger.info("Start building the model")
         model_type = registry.get_model_class(self.config.arch)
         model = model_type.from_config(self.config.model)
+        self._model = model
         
-        start_epoch, start_step = self.load_checkpoint(self.model, self.optimizer)
+        start_epoch, start_step = self.load_checkpoint(self._model, self.optimizer)
         if self.start_epoch > 0:
             self.start_epoch = start_epoch                
         self.start_step = start_step
         
-        model.to(self.device)    
-        return model
+        self._model.to(self.device)    
+        
+        return self._model
     
     def save_checkpoint_with_optim(self, model, optimizer, epoch, step):        
 
