@@ -169,9 +169,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             if step % accumulated_gradients == 0:                
                 xm.reduce_gradients(self.optimizer)                                
                 xm.optimizer_step(self.optimizer, barrier=False)                      
-                # lr = self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                
-                lr = self.optimizer.param_groups[0]['lr']
-
+                lr = self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                
             xm.mark_step()       
 
             step_loss = loss.detach()
@@ -188,62 +186,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         
         xm.master_print(f"Train Epoch {epoch} ended: {(test_utils.now())}")
                                                  
-        return avg_loss
-    
-    def train(self, epoch):                
-        
-        train_loader = self._dataloaders["train"]                
-        train_loader = pl.MpDeviceLoader(train_loader, self.device)                
-
-        if len(train_loader) == 0:
-            return float("inf")                                
-        
-        running_loss = torch.tensor(0.0, device=self.device)
-        total_batches = torch.tensor(0, device=self.device)
-        
-        accumulated_gradients = self.config.run.accumulated_gradients or 1
-        lr = 0.0
-               
-        self.model.train()
-
-        xm.master_print(f"Train Epoch {epoch} started: {(test_utils.now())}")            
-        for step, batch_sample in enumerate(train_loader):             
-            step += 1  
-
-            self.maybe_add_noise(batch_sample, self.config.run.noise_level)    
-
-            xm.master_print(f"Processing epoch: {epoch}. step: {step} - {(test_utils.now())}")                       
-            
-            self.optimizer.zero_grad()                                    
-            with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
-                outputs = self.model(batch_sample)                                                            
-            loss = outputs["loss"]                        
-            loss.backward()                                 
-
-            if step % accumulated_gradients == 0:                
-                xm.reduce_gradients(self.optimizer)                                
-                xm.optimizer_step(self.optimizer, barrier=False)                      
-                # lr = self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                
-                lr = self.optimizer.param_groups[0]['lr']
-
-            xm.mark_step()       
-
-            step_loss = loss.detach()
-            if xm.is_master_ordinal() and step % 10 == 0:
-                self._tpu_metrics.log_tpu_metrics("Train", epoch, step, step_loss, lr)   
-
-            running_loss += step_loss
-            total_batches += 1                         
-                                        
-        global_train_loss = xm.mesh_reduce("running_loss", running_loss.item(), sum)            
-        global_total_batches = xm.mesh_reduce("total_batches", total_batches.item(), sum)
-
-        avg_loss = global_train_loss / global_total_batches
-        
-        xm.master_print(f"Train Epoch {epoch} ended: {(test_utils.now())}")
-                                                 
-        return avg_loss
-        
+        return avg_loss                
 
     @torch.no_grad()
     def eval(self, epoch):
@@ -423,10 +366,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
             path = self.config.run.output_dir
             file_and_path = os.path.join(path, file_name)
-
-            if not os.path.exists(path):
-                mount_gcsfuse()            
-
+            
             xm.master_print(f"Saving Checkpoint in the path: {file_and_path}")   
                             
             torch.save(checkpoint, file_and_path)
