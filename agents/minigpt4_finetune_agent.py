@@ -77,13 +77,15 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 else:                    
                     xm.master_print("No noise will be applied to the image inputs")
 
-            self.initialize_graph()
+            #self.initialize_graph()
             xm.master_print(f"Train/Eval started started: {(test_utils.now())}")       
 
             start_epoch, start_step = self.load_checkpoint(self.model, self.optimizer)
             if start_epoch > 0:
                 self.start_epoch = start_epoch                
             self.start_step = start_step
+
+            xm.master_print(f"Start_epoch: {start_epoch}")
 
             for epoch in range(self.start_epoch, self.max_epoch):                                                
                 # training step
@@ -180,19 +182,17 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 lr = self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                
             xm.mark_step()       
 
-            step_loss = loss.detach()
-
-            if xm.is_master_ordinal() and step % 5 == 0: # save full checkpoint
-                start = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self.save_checkpoint_with_optim(self.model, self.optimizer, epoch, step)
-                end = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self._tpu_metrics.log_checkpoint_saving("Train", epoch, step, start, end)
-
+            step_loss = loss.detach()                                        
             if xm.is_master_ordinal() and step % 10 == 0:                                
                 self._tpu_metrics.log_tpu_metrics("Train", epoch, step, step_loss, lr)
 
             running_loss += step_loss
-            total_batches += 1                         
+            total_batches += 1
+
+        start = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.save_checkpoint_with_optim(self.model, self.optimizer, epoch, step)
+        end = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self._tpu_metrics.log_checkpoint_saving("Train", epoch, step, start, end)                         
                                         
         global_train_loss = xm.mesh_reduce("running_loss", running_loss.item(), sum)            
         global_total_batches = xm.mesh_reduce("total_batches", total_batches.item(), sum)

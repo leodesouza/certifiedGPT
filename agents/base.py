@@ -31,12 +31,13 @@ class BaseAgent:
           resume_ckpt_path = self.config.run.resume_ckpt_path
           file_and_path = os.path.join(output_dir, resume_ckpt_path)
           
-          if os.path.exists(file_and_path):
+          if os.path.exists(file_and_path):              
               checkpoint = torch.load(file_and_path, map_location=self.device)
               model.load_state_dict(checkpoint['model_state_dict'])
               optimizer.load(checkpoint['optimizer_state_dict'])
               start_epoch = checkpoint['epoch']
               start_step = checkpoint['step']
+              xm.master_print(f"Resume Training from Start_Epoch:{start_epoch} and Start Step: {start_step}")
               return start_epoch, start_step
           else:
               return 0, 0                                                                            

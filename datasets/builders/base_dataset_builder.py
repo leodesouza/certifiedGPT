@@ -18,13 +18,6 @@ import os
 # OmegaConf.register_new_resolver("env", lambda key: os.environ.get(key, None), replace=True)
 # OmegaConf.register_resolver("env", lambda key: os.environ.get(key, None))
 
-import warnings
-
-warnings.filterwarnings("ignore", category=UserWarning, message="OmegaConf.register_new_resolver*")
-
-
-
-
 
 def load_dataset_config(config_path):
     config = OmegaConf.load(config_path)
