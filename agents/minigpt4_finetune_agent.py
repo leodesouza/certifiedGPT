@@ -59,7 +59,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         try:
                         
             self.logger.info("Creating the dataloaders")
-            self._dataloader_one_example = self.create_dataloaders(batch_size=1)
+            # self._dataloader_one_example = self.create_dataloaders(batch_size=1)
             self._dataloaders = self.create_dataloaders()            
 
             if not self._dataloaders.get("train") and not self.config.run.evaluate:
