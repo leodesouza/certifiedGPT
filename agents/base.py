@@ -5,6 +5,7 @@
 # https://github.com/moemen95/Pytorch-Project-Template/
 #
 
+import shutil
 import logging
 import torch
 import torch_xla.core.xla_model as xm
@@ -14,6 +15,7 @@ import torch_xla.debug.profiler as xp
 import torch_xla.test.test_utils as test_utils
 import os
 import json
+
 
 
 class BaseAgent:
@@ -41,11 +43,19 @@ class BaseAgent:
               raise ValueError("resume_ckpt_path None") 
           
           file_and_path = os.path.join(output_dir, resume_ckpt_path)
-          xm.master_print(f"Loading checkpoint from {file_and_path}")              
+          xm.master_print(f"Loading checkpoint from {file_and_path}")
+          local_dir = "/tmp"              
+          local_path = os.path.join(local_dir, "finetuning_resume.pth")
+          os.makedirs(local_dir, exist_ok=True)
                               
           if os.path.exists(file_and_path):
-              xm.master_print("Loading checkpoint to resume Training")              
-              checkpoint = torch.load(file_and_path, map_location="cpu")
+              if not os.path.exists(local_path):
+                  xm.master_print(f"Copying checkpoint from {file_and_path} to {local_path}")
+                  shutil.copy(file_and_path, local_path)
+                  xm.master_print("Checkpoint copied")
+
+              xm.master_print(f"Loading checkpoint to resume Training from {local_path}")              
+              checkpoint = torch.load(local_path, map_location="cpu")
               model.load_state_dict(checkpoint['model_state_dict'], strict=False)
               optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
               start_epoch = checkpoint['epoch']
