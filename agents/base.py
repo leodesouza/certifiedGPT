@@ -33,11 +33,11 @@ class BaseAgent:
 
     def load_checkpoint(self, model, optimizer):          
           output_dir = self.config.run.output_dir
-          if output_dir is None: 
+          if not output_dir: 
               raise ValueError("output_dir None") 
           
-          resume_ckpt_path = self.config.run.resume_ckpt_path
-          if resume_ckpt_path is None: 
+          resume_ckpt_path = f"{self.config.run.resume_ckpt_path}.pth"
+          if not resume_ckpt_path: 
               raise ValueError("resume_ckpt_path None") 
           
           file_and_path = os.path.join(output_dir, resume_ckpt_path)
