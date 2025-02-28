@@ -79,6 +79,12 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
             self.initialize_graph()
             xm.master_print(f"Train/Eval started started: {(test_utils.now())}")       
+
+            start_epoch, start_step = self.load_checkpoint(self.model, self.optimizer)
+            if start_epoch > 0:
+                self.start_epoch = start_epoch                
+            self.start_step = start_step
+
             for epoch in range(self.start_epoch, self.max_epoch):                                                
                 # training step
                 if not self.config.evaluate_only:                    
@@ -153,8 +159,10 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self.model.train()
 
         xm.master_print(f"Train Epoch {epoch} started: {(test_utils.now())}")            
-        for step, batch_sample in enumerate(train_loader):             
-            step += 1  
+        for step, batch_sample in enumerate(train_loader):
+
+            if epoch == self.start_epoch and step < self.start_step:
+                continue # skip because the training is resuming
 
             self.maybe_add_noise(batch_sample, self.config.run.noise_level)    
 
@@ -173,8 +181,15 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             xm.mark_step()       
 
             step_loss = loss.detach()
-            if xm.is_master_ordinal() and step % 10 == 0:
-                self._tpu_metrics.log_tpu_metrics("Train", epoch, step, step_loss, lr)   
+
+            if xm.is_master_ordinal() and step % 5 == 0: # save full checkpoint
+                start = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                self.save_checkpoint_with_optim(self.model, self.optimizer, epoch, step)
+                end = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                self._tpu_metrics.log_checkpoint_saving("Train", epoch, step, start, end)
+
+            if xm.is_master_ordinal() and step % 10 == 0:                                
+                self._tpu_metrics.log_tpu_metrics("Train", epoch, step, step_loss, lr)
 
             running_loss += step_loss
             total_batches += 1                         
@@ -346,6 +361,35 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         model = model_type.from_config(self.config.model)        
         model.to(self.device)    
         return model
+    
+    def save_checkpoint_with_optim(self, model, optimizer, epoch, step):        
+
+        if xm.is_master_ordinal():
+
+            xm.master_print(f"Saving the checkpoint with optmizer for epoch: {epoch} and step: {step}")    
+                                    
+            file_name = self.config.run.checkpoint_name_with_optim
+            file_name = f"{file_name}.pth"  
+
+            xm.master_print(f"Checkpoint name: {file_name}")    
+            checkpoint = {
+                'epoch': epoch,
+                'step': step,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+            }
+
+            path = self.config.run.output_dir
+            file_and_path = os.path.join(path, file_name)
+            
+            xm.master_print(f"Saving Checkpoint in the path: {file_and_path}")   
+                            
+            torch.save(checkpoint, file_and_path)
+            xm.master_print(f"Checkpoint saved at path: {file_and_path}")
+
+        #synchronize all the processes
+        #prevent race conditions
+        xm.rendezvous("checkpoint_saved")
     
     def save_checkpoint(self, model, epoch):        
 

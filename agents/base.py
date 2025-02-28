@@ -12,6 +12,7 @@ import common
 from common.registry import registry
 import torch_xla.debug.profiler as xp
 import torch_xla.test.test_utils as test_utils
+import os
 
 
 class BaseAgent:
@@ -25,13 +26,20 @@ class BaseAgent:
         self.config = registry.get_configuration_class("configuration")
         self._dataloaders = None
 
-    def load_checkpoint(self, file_name):
-        """
-        Latest/saved checkpoint
-        :param file_name:
-        :return:
-        """        
-        raise NotImplementedError
+    def load_checkpoint(self, model, optimizer):          
+          output_dir = self.config.run.output_dir
+          resume_ckpt_path = self.config.run.resume_ckpt_path
+          file_and_path = os.path.join(output_dir, resume_ckpt_path)
+          
+          if os.path.exists(file_and_path):
+              checkpoint = torch.load(file_and_path, map_location=self.device)
+              model.load_state_dict(checkpoint['model_state_dict'])
+              optimizer.load(checkpoint['optimizer_state_dict'])
+              start_epoch = checkpoint['epoch']
+              start_step = checkpoint['step']
+              return start_epoch, start_step
+          else:
+              return 0, 0                                                                            
 
     def save_checkpoint(self, model, optimizer, epoch, loss, file_name="checkpoint.pth.bar", is_best=False):
         """
