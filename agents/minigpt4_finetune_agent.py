@@ -102,8 +102,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     xm.mark_step()                    
                     xm.master_print(f"Evaluation epoch: {epoch} ended: {test_utils.now()}")
 
-                    xm.master_print("Call LR Scheduler Plateau")
-                    self.lr_scheduler_plateau.step(epoch_val_loss)
+                    # xm.master_print("Call LR Scheduler Plateau")
+                    # self.lr_scheduler_plateau.step(epoch_val_loss)
                                                                             
                     if epoch_val_loss < best_val_loss:                        
                         best_val_loss = epoch_val_loss                    
@@ -182,8 +182,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             if step % accumulated_gradients == 0:                
                 xm.reduce_gradients(self.optimizer)                                
                 xm.optimizer_step(self.optimizer, barrier=False)                      
-                # lr = self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                
-                lr = 0
+                lr = self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                
+                # lr = 0
             xm.mark_step()       
 
             step_loss = loss.detach()                                        
