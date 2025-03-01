@@ -176,17 +176,17 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             if step % accumulated_gradients == 0:                
                 xm.reduce_gradients(self.optimizer)                                
                 xm.optimizer_step(self.optimizer, barrier=False)                      
-                lr = self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                
+                # lr = self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                
+                lr = 0
             xm.mark_step()       
 
             step_loss = loss.detach()                                        
             if xm.is_master_ordinal() and (step + 1) % 7 == 0:                                
                 self._tpu_metrics.log_tpu_metrics("Train", epoch, step, step_loss, lr)
-
-                start = datetime.now().strftime("%Y-%m-%d %H:%M:%S")                
-                self.save_checkpoint_with_optim(self.model, self.optimizer, epoch, step)
-                end = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self._tpu_metrics.log_checkpoint_saving("Saving checkpoint", epoch, step, start, end)                         
+                # start = datetime.now().strftime("%Y-%m-%d %H:%M:%S")                
+                # self.save_checkpoint_with_optim(self.model, self.optimizer, epoch, step)
+                # end = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                # self._tpu_metrics.log_checkpoint_saving("Saving checkpoint", epoch, step, start, end)                         
 
 
             running_loss += step_loss
