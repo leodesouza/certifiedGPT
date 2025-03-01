@@ -395,7 +395,6 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                             
             torch.save(checkpoint, file_and_path)
             # self.threaded_checkpoint_copy(checkpoint, file_and_path)
-
             model.to(self.device)
             
 
