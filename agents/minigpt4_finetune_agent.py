@@ -393,8 +393,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             
             xm.master_print(f"Saving Checkpoint in the path: {file_and_path}")   
                             
-            # torch.save(checkpoint, file_and_path)
-            self.threaded_checkpoint_copy(checkpoint, file_and_path)
+            torch.save(checkpoint, file_and_path)
+            # self.threaded_checkpoint_copy(checkpoint, file_and_path)
 
             model.to(self.device)
             
@@ -407,6 +407,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         if xm.is_master_ordinal():        
             import threading
             thread = threading.Thread(target=torch.save, args=(checkpoint, file_and_path)) 
+            thread.deamon = True
             thread.start()
                 
     def save_checkpoint(self, model, epoch):        
