@@ -67,14 +67,14 @@ run:
   lr_sched: "linear_warmup_cosine_lr"  
   
   #linear_warmup_cosine_lr -> warmup_lr_schedule
-  warmup_steps: 23
+  warmup_steps: 15
   warmup_start_lr: 1e-6   
-  warmup_max_lr: 1e-5        
-  iters_per_epoch: 23
+  warmup_max_lr: 3e-5        
+  iters_per_epoch: 15
 
   #linear_warmup_cosine_lr -> cosine_lr_schedule
-  init_lr: 1e-5 
-  min_lr: 1e-6
+  init_lr: 3e-5 
+  min_lr: 1e-7
   weight_decay: 0.05
   beta1: 0.9
   beta2: 0.999
