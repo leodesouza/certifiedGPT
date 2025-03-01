@@ -55,12 +55,14 @@ class BaseAgent:
                   xm.master_print("Checkpoint copied")
 
               xm.master_print(f"Loading checkpoint to resume Training from {local_resume_path}")              
-              checkpoint = torch.load(local_resume_path, map_location="cpu")
+              checkpoint = torch.load(local_resume_path, map_location=torch.device('cpu'))
               model.load_state_dict(checkpoint['model_state_dict'], strict=False)
               optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
               start_epoch = checkpoint['epoch']
               start_step = checkpoint['step']
               xm.master_print(f"Resume Training from Start_Epoch:{start_epoch} and Start Step: {start_step}")
+
+              model.to(self.device)
               return start_epoch, start_step
           else:
               return 0, 0                                                                            

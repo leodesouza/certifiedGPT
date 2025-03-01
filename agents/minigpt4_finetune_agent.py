@@ -76,8 +76,12 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     xm.master_print(f"Noise level: {self.config.run.noise_level} will be applied to the image inputs")                           
                 else:                    
                     xm.master_print("No noise will be applied to the image inputs")
-
-            #self.initialize_graph()
+            
+            start_epoch, start_step = self.load_checkpoint(self._model, self.optimizer)
+            if self.start_epoch > 0:
+                 self.start_epoch = start_epoch                
+            self.start_step = start_step
+        
             xm.master_print(f"Train/Eval started started: {(test_utils.now())}")       
             
             xm.master_print(f"Start_epoch: {self.start_epoch}")
@@ -181,12 +185,12 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             xm.mark_step()       
 
             step_loss = loss.detach()                                        
-            if xm.is_master_ordinal() and (step + 1) % 7 == 0:                                
+            if xm.is_master_ordinal() and (step + 1) % 4 == 0:                                
                 self._tpu_metrics.log_tpu_metrics("Train", epoch, step, step_loss, lr)
-                # start = datetime.now().strftime("%Y-%m-%d %H:%M:%S")                
-                # self.save_checkpoint_with_optim(self.model, self.optimizer, epoch, step)
-                # end = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                # self._tpu_metrics.log_checkpoint_saving("Saving checkpoint", epoch, step, start, end)                         
+                start = datetime.now().strftime("%Y-%m-%d %H:%M:%S")                
+                self.save_checkpoint_with_optim(self.model, self.optimizer, epoch, step)
+                end = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                self._tpu_metrics.log_checkpoint_saving("Saving checkpoint", epoch, step, start, end)                         
 
 
             running_loss += step_loss
@@ -356,28 +360,14 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             betas=(beta1, beta2),
         )
 
-    def build_model(self):
-        # self.logger.info("Start building the model")
-        # model_type = registry.get_model_class(self.config.arch)
-        # model = model_type.from_config(self.config.model)
-        # self._model = model
-        
-        # start_epoch, start_step = self.load_checkpoint(self._model, self.optimizer)
-        # if self.start_epoch > 0:
-        #      self.start_epoch = start_epoch                
-        # self.start_step = start_step
-        
-        # self._model.to(self.device)    
-
-        # return self._model
-    
+    def build_model(self):                        
         self.logger.info("Start building the model")
         model_type = registry.get_model_class(self.config.arch)
         model = model_type.from_config(self.config.model)        
         model.to(self.device)    
         return model
     
-    def save_checkpoint_with_optim(self, model, optimizer, epoch, step):        
+    def save_checkpoint_with_optim(self, model, optimizer, epoch, step, loss):        
 
         if xm.is_master_ordinal():
 
@@ -386,12 +376,16 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             file_name = self.config.run.checkpoint_name_with_optim
             file_name = f"{file_name}.pth"  
 
+            model_cpu = model.cpu()
+            optimizer_cpu = optimizer.state_dict()
+
             xm.master_print(f"Checkpoint name: {file_name}")    
             checkpoint = {
                 'epoch': epoch,
                 'step': step,
-                'model_state_dict': model.cpu().state_dict(),
-                'optimizer_state_dict': optimizer.state_dict(),
+                'model_state_dict': model_cpu.state_dict(),
+                'optimizer_state_dict': optimizer_cpu,
+                "loss": loss,
             }
 
             path = self.config.run.output_dir
