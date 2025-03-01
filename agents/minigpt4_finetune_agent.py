@@ -183,7 +183,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             xm.mark_step()       
 
             step_loss = loss.detach()                                        
-            if xm.is_master_ordinal() and (step + 1) % 4 == 0:                                
+            if xm.is_master_ordinal() and (step + 1) % 5 == 0:                                
                 self._tpu_metrics.log_tpu_metrics("Train", epoch, step, step_loss, lr)                
             running_loss += step_loss
             total_batches += 1
