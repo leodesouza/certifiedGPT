@@ -82,9 +82,10 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                  self.start_epoch = start_epoch                
             self.start_step = start_step
         
-            xm.master_print(f"Train/Eval started started: {(test_utils.now())}")       
-            
+            xm.master_print(f"Train/Eval started started: {(test_utils.now())}")                   
             xm.master_print(f"Start_epoch: {self.start_epoch}")
+
+            _ = self.lr_scheduler_plateau
 
             for epoch in range(self.start_epoch, self.max_epoch):                                                
                 # training step
@@ -97,9 +98,12 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 if self.config.run.has_val_split:
                                             
                     xm.master_print(f"Evaluation epoch: {epoch} started: {test_utils.now()}")
-                    epoch_val_loss = self.eval(epoch)
+                    epoch_val_loss = self.eval(epoch)                    
                     xm.mark_step()                    
                     xm.master_print(f"Evaluation epoch: {epoch} ended: {test_utils.now()}")
+
+                    xm.master_print("Call LR Scheduler Plateau")
+                    self.lr_scheduler_plateau.step(epoch_val_loss)
                                                                             
                     if epoch_val_loss < best_val_loss:                        
                         best_val_loss = epoch_val_loss                    
@@ -132,7 +136,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                             "learning_rate":self.optimizer.param_groups[0]["lr"]
                         })                                                
 
-            self.save_checkpoint(self.model, epoch)
+            self.save_checkpoint(self.model, epoch)                                    
             xm.master_print(f"Finished the training loop {test_utils.now()}")                                                
             
 
@@ -219,12 +223,12 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
             with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                         
                 outputs = self.model(batch_sample)               
-            loss = outputs["loss"]                        
+            loss = outputs["loss"]            
 
             xm.mark_step()
 
             step_loss = loss.detach()
-                
+
             if xm.is_master_ordinal() and (step + 1) % 5 == 0:
                 self._tpu_metrics.log_tpu_metrics("Eval", epoch, step, step_loss, 0)                                     
 
@@ -236,9 +240,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         eval_avg_loss = global_eval_loss / global_total_batches
 
         xm.master_print(f"Eval Epoch {epoch} ended: {(test_utils.now())}")        
-        self.loss_history["val_loss"].append(eval_avg_loss)
-
-        self.lr_scheduler_plateau.step(eval_avg_loss)
+        self.loss_history["val_loss"].append(eval_avg_loss)        
                                 
         return eval_avg_loss
     
