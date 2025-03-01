@@ -423,12 +423,13 @@ class MiniGPT4FineTuneAgent(BaseAgent):
     def return_state_dict_without_grad(self, model):
         """
         Return the state_dict without the parameters that do not require gradients
-        """
+        """        
+        model_cpu = model.cpu()
         param_grads = {
                 k: v.requires_grad for (k, v) in model.named_parameters()
             }
 
-        state_dict = self.model.state_dict()
+        state_dict = model_cpu.state_dict()
         for k in list(state_dict.keys()):
             if k in param_grads.keys() and not param_grads[k]:
                 del state_dict[k] 
