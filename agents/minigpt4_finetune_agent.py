@@ -188,7 +188,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             if xm.is_master_ordinal() and (step + 1) % 4 == 0:                                
                 self._tpu_metrics.log_tpu_metrics("Train", epoch, step, step_loss, lr)
                 start = datetime.now().strftime("%Y-%m-%d %H:%M:%S")                
-                self.save_checkpoint_with_optim(self.model, self.optimizer, epoch, step)
+                self.save_checkpoint_with_optim(self.model, self.optimizer, epoch, step, step_loss)                
                 end = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 self._tpu_metrics.log_checkpoint_saving("Saving checkpoint", epoch, step, start, end)                         
 
@@ -369,8 +369,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
     
     def save_checkpoint_with_optim(self, model, optimizer, epoch, step, loss):        
 
-        if xm.is_master_ordinal():
-
+        if xm.is_master_ordinal():            
+            
             xm.master_print(f"Saving the checkpoint with optmizer for epoch: {epoch} and step: {step}")    
                                     
             file_name = self.config.run.checkpoint_name_with_optim
@@ -393,15 +393,22 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             
             xm.master_print(f"Saving Checkpoint in the path: {file_and_path}")   
                             
-            torch.save(checkpoint, file_and_path)
-            
+            # torch.save(checkpoint, file_and_path)
+            self.threaded_checkpoint_copy(checkpoint, file_and_path)
+
             model.to(self.device)
-            xm.master_print(f"Checkpoint saved at path: {file_and_path}")
+            
 
         #synchronize all the processes
         #prevent race conditions
-        xm.rendezvous("checkpoint_saved")
-    
+        xm.rendezvous("checkpoint_saved")   
+
+    def threaded_checkpoint_copy(self, checkpoint, file_and_path): 
+        if xm.is_master_ordinal():        
+            import threading
+            thread = threading.Thread(target=torch.save, args=(checkpoint, file_and_path)) 
+            thread.start()
+                
     def save_checkpoint(self, model, epoch):        
 
         if xm.is_master_ordinal():
