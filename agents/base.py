@@ -42,13 +42,12 @@ class BaseAgent:
           if not resume_ckpt_path: 
               raise ValueError("resume_ckpt_path None") 
           
-          file_and_path = os.path.join(output_dir, resume_ckpt_path)
-          xm.master_print(f"Loading checkpoint from {file_and_path}")
+          file_and_path = os.path.join(output_dir, resume_ckpt_path)          
           local_dir = "/tmp"              
           local_resume_path = os.path.join(local_dir, "finetuning_resume.pth")
-          os.makedirs(local_dir, exist_ok=True)
-                              
+          os.makedirs(local_dir, exist_ok=True)                              
           if os.path.exists(file_and_path):
+              xm.master_print(f"Loading checkpoint from {file_and_path}")
               if not os.path.exists(local_resume_path):
                   xm.master_print(f"Copying checkpoint from {file_and_path} to {local_resume_path}")
                   shutil.copy(file_and_path, local_resume_path)
