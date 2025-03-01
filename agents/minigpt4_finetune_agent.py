@@ -104,7 +104,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     if epoch_val_loss < best_val_loss:                        
                         best_val_loss = epoch_val_loss                    
                         wait = 0
-                        self.save_checkpoint(self.model, epoch)
+                        # self.save_checkpoint(self.model, epoch)                        
+                        self.save_checkpoint_with_optim(self.model, self.optimizer, epoch)                                        
                     else:
                         wait += 1
                     
@@ -129,9 +130,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                             "train_loss": epoch_train_loss,
                             "val_loss": epoch_val_loss,
                             "learning_rate":self.optimizer.param_groups[0]["lr"]
-                        })
-                        
-                        step += 1                
+                        })                                                
+
+            self.save_checkpoint(self.model, epoch)
             xm.master_print(f"Finished the training loop {test_utils.now()}")                                                
             
 
@@ -163,10 +164,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         xm.master_print(f"Train Epoch {epoch} started: {(test_utils.now())}")            
         for step, batch_sample in enumerate(train_loader):
-
-            if epoch == self.start_epoch and step < self.start_step:
-                continue # skip because the training is resuming
-
+            
             self.maybe_add_noise(batch_sample, self.config.run.noise_level)    
 
             xm.master_print(f"Processing epoch: {epoch}. step: {step} - {(test_utils.now())}")                       
@@ -186,17 +184,10 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
             step_loss = loss.detach()                                        
             if xm.is_master_ordinal() and (step + 1) % 4 == 0:                                
-                self._tpu_metrics.log_tpu_metrics("Train", epoch, step, step_loss, lr)
-                start = datetime.now().strftime("%Y-%m-%d %H:%M:%S")                
-                self.save_checkpoint_with_optim(self.model, self.optimizer, epoch, step, step_loss)                
-                end = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self._tpu_metrics.log_checkpoint_saving("Saving checkpoint", epoch, step, start, end)                         
-
-
+                self._tpu_metrics.log_tpu_metrics("Train", epoch, step, step_loss, lr)                
             running_loss += step_loss
             total_batches += 1
-            
-                                        
+                                                    
         global_train_loss = xm.mesh_reduce("running_loss", running_loss.item(), sum)            
         global_total_batches = xm.mesh_reduce("total_batches", total_batches.item(), sum)
 
@@ -367,7 +358,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         model.to(self.device)    
         return model
     
-    def save_checkpoint_with_optim(self, model, optimizer, epoch, step, loss):        
+    def save_checkpoint_with_optim(self, model, optimizer, epoch):        
 
         if xm.is_master_ordinal():            
             
@@ -381,11 +372,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
             xm.master_print(f"Checkpoint name: {file_name}")    
             checkpoint = {
-                'epoch': epoch,
-                'step': step,
+                'epoch': epoch,                
                 'model_state_dict': model_cpu.state_dict(),
-                'optimizer_state_dict': optimizer_cpu,
-                "loss": loss,
+                'optimizer_state_dict': optimizer_cpu,                
             }
 
             path = self.config.run.output_dir
@@ -393,21 +382,14 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             
             xm.master_print(f"Saving Checkpoint in the path: {file_and_path}")   
                             
-            torch.save(checkpoint, file_and_path)
-            # self.threaded_checkpoint_copy(checkpoint, file_and_path)
+            torch.save(checkpoint, file_and_path)            
             model.to(self.device)
             
 
         #synchronize all the processes
         #prevent race conditions
         xm.rendezvous("checkpoint_saved")   
-
-    def threaded_checkpoint_copy(self, checkpoint, file_and_path): 
-        if xm.is_master_ordinal():        
-            import threading
-            thread = threading.Thread(target=torch.save, args=(checkpoint, file_and_path)) 
-            thread.deamon = True
-            thread.start()
+    
                 
     def save_checkpoint(self, model, epoch):        
 
