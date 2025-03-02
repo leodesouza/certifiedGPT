@@ -28,7 +28,7 @@ model:
 
 datasets:
   vqav2:
-    batch_size: 48    
+    batch_size: 32    
     vis_processor:
       train:
         name: "blip2_image_train"
@@ -67,10 +67,10 @@ run:
   lr_sched: "linear_warmup_cosine_lr"  
   
   #linear_warmup_cosine_lr -> warmup_lr_schedule
-  warmup_steps: 15
+  warmup_steps: 23
   warmup_start_lr: 1e-6   
   warmup_max_lr: 1e-5        
-  iters_per_epoch: 15
+  iters_per_epoch: 23
 
   #linear_warmup_cosine_lr -> cosine_lr_schedule
   init_lr: 1e-5 
