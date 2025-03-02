@@ -57,8 +57,7 @@ class BaseAgent:
               checkpoint = torch.load(local_resume_path, map_location=torch.device('cpu'))
               model.load_state_dict(checkpoint['model_state_dict'], strict=False)
               optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-              start_epoch = checkpoint['epoch']
-              start_step = checkpoint['step']
+              start_epoch = checkpoint['epoch']              
               xm.master_print(f"Resume Training from Start_Epoch:{start_epoch} and Start Step: {start_step}")
 
               model.to(self.device)
