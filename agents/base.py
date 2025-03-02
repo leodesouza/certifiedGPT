@@ -58,12 +58,13 @@ class BaseAgent:
               model.load_state_dict(checkpoint['model_state_dict'], strict=False)
               optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
               start_epoch = checkpoint['epoch']              
-              xm.master_print(f"Resume Training from Start_Epoch:{start_epoch} and Start Step: {start_step}")
+              xm.master_print(f"Resume Training from Start_Epoch:{start_epoch}")
 
               model.to(self.device)
-              return start_epoch, start_step
+
+              return start_epoch
           else:
-              return 0, 0                                                                            
+              return 0                                                                           
 
     def save_checkpoint(self, model, optimizer, epoch, loss, file_name="checkpoint.pth.bar", is_best=False):
         """

@@ -77,10 +77,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 else:                    
                     xm.master_print("No noise will be applied to the image inputs")
             
-            start_epoch, start_step = self.load_checkpoint(self._model, self.optimizer)
-            if self.start_epoch > 0:
-                 self.start_epoch = start_epoch                
-            self.start_step = start_step
+            start_epoch = self.load_checkpoint(self._model, self.optimizer)
+            if start_epoch > 0:
+                 self.start_epoch = start_epoch                            
         
             xm.master_print(f"Train/Eval started started: {(test_utils.now())}")                   
             xm.master_print(f"Start_epoch: {self.start_epoch}")
