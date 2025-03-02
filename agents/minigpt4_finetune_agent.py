@@ -79,7 +79,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             
             start_epoch = self.load_checkpoint(self._model, self.optimizer)
             if start_epoch > 0:
-                 self.start_epoch = start_epoch                            
+                 self.start_epoch = start_epoch + 1                            
         
             xm.master_print(f"Train/Eval started started: {(test_utils.now())}")                   
             xm.master_print(f"Start_epoch: {self.start_epoch}")
