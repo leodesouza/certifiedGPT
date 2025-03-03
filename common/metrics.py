@@ -47,15 +47,12 @@ class TPUMetrics:
        with open(file_and_path, 'a') as file:
            file.write(log_message + "\n\n")
 
-    def log_checkpoint_saving(self, checkpoint_log, epoch, step, start, end):  
+    def log_checkpoint_saving(self, checkpoint_log, epoch):  
           
 
        log_message = "\n".join([
             f"checkpint_log: {checkpoint_log}",
-            f"Epoch: {epoch}",
-            f"Step: {step}",            
-            f"Started: {start}",                       
-            f"Ended: {end}",
+            f"Epoch: {epoch}"        
         ])
              
 

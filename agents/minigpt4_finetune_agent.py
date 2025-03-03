@@ -383,9 +383,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             
             xm.master_print(f"Saving Checkpoint in the path: {file_and_path}")   
 
-            self._tpu_metrics.log_checkpoint_saving("Saving checkpoint")                
+            self._tpu_metrics.log_checkpoint_saving("Saving checkpoint",epoch=epoch)                
             torch.save(checkpoint, file_and_path)            
-            self._tpu_metrics.log_checkpoint_saving("Checkpoint Saved")
+            self._tpu_metrics.log_checkpoint_saving("Checkpoint Saved", epoch=epoch)
                                     
         #synchronize all the processes
         #prevent race conditions
