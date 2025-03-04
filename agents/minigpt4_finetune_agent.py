@@ -110,8 +110,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                                                                             
                     if epoch_val_loss < best_val_loss:                        
                         best_val_loss = epoch_val_loss                    
-                        wait = 0
-                        # self.save_checkpoint(self.model, epoch)                        
+                        wait = 0                                                
                         self.save_checkpoint_with_optim(self.model, self.optimizer, epoch)                                        
                     else:
                         wait += 1
@@ -119,7 +118,6 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     if wait >= patience:
                         self.logger.info(f"Early Stopping at epoch: {epoch}")
                         break
-
             
                 if xm.is_master_ordinal():                                                                           
                     xm.master_print(f"""epoch: {epoch}   
@@ -350,12 +348,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         return dataloaders
 
     def create_optimizer(self):
-        self.logger.info("Creating the optimizer")
-        # optim_params = [
-        #     {
-        #         "params"
-        #     }
-        # ]
+        self.logger.info("Creating the optimizer")        
         beta1 = self.config.run.beta1
         beta2 = self.config.run.beta2
 
@@ -380,32 +373,10 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             xm.master_print(f"Saving the checkpoint with optmizer for epoch: {epoch}")    
                                     
             file_name = self.config.run.checkpoint_name_with_optim
-            file_name = f"{file_name}.pth"  
-
-            # xm.master_print("Moving model to CPU")    
-            # model_cpu = model.cpu()            
-
-            # xm.master_print("Getting model state_dict")    
-            # model_state_dict = model.state_dict()            
+            file_name = f"{file_name}.pth"
             
-            # xm.master_print("Assigning the optimizer state to a local variabel")
-            #optimizer_state = optimizer.state_dict()
-
-            xm.master_print("Assigning the optimizer state to a local variabel")
-            xm.master_print(f"Checkpoint name: {file_name}")    
-            # checkpoint = {
-            #     'epoch': epoch,                
-            #     'model_state_dict': {k: v.to('cpu') if isinstance(v, torch.Tensor) else v for k,v in model.state_dict().items()},
-            #     'optimizer_state_dict': {k: v.cpu('cpu') if isinstance(v, torch.Tensor) else v for k,v in optimizer.state_dict().items()},                
-            # }
-
-            xm.master_print("Calling return_state_dict_without_grad")
-            model_state_dict = self.return_state_dict_without_grad(model)            
-            xm.master_print("End...Calling return_state_dict_without_grad")
-            
-            xm.master_print("Calling optimizer_state_without_frozen_params")
-            optimizer_state = self.optimizer_state_without_frozen_params(model, optimizer)
-            xm.master_print("Calling optimizer_state_without_frozen_params")
+            model_state_dict = self.return_state_dict_without_grad(model)                                                
+            optimizer_state = self.optimizer_state_without_frozen_params(model, optimizer)            
 
             checkpoint = {
                 'epoch': epoch,                
@@ -418,8 +389,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             
             xm.master_print(f"Saving Checkpoint in the path: {file_and_path}")               
             try:                                
-                self._tpu_metrics.log_checkpoint_saving("Saving checkpoint",epoch=epoch)
-                # torch.save(checkpoint, file_and_path, _use_new_zipfile_serialization=False)
+                self._tpu_metrics.log_checkpoint_saving("Saving checkpoint",epoch=epoch)                
                 torch.save(checkpoint, file_and_path) 
                 self._tpu_metrics.log_checkpoint_saving("Checkpoint Saved", epoch=epoch)
                 xm.master_print("Checkpoint saved")
