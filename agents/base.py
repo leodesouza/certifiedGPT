@@ -38,15 +38,13 @@ class BaseAgent:
           if not output_dir: 
               raise ValueError("output_dir None") 
           
-          resume_ckpt_path = f"{self.config.run.resume_ckpt_path}.pth"
-          if not resume_ckpt_path: 
-              raise ValueError("resume_ckpt_path None") 
-          
-          file_and_path = os.path.join(output_dir, resume_ckpt_path)                              
+          resume_ckpt_path = f"{self.config.run.resume_ckpt_path}.pth"          
+          file_and_path = os.path.join(output_dir, resume_ckpt_path)  
+
           local_dir = "/tmp"              
           local_resume_path = os.path.join(local_dir, "finetuning_resume.pth")
           os.makedirs(local_dir, exist_ok=True)                              
-          if os.path.exists(file_and_path):
+          if xm.is_master_ordinal() and os.path.exists(file_and_path):
               if copy:                                    
                 if not os.path.exists(local_resume_path):
                     xm.master_print(f"Copying checkpoint from {file_and_path} to {local_resume_path}")
@@ -55,15 +53,25 @@ class BaseAgent:
               else:
                 local_resume_path = file_and_path
 
-              xm.master_print(f"Loading checkpoint from {local_resume_path}")              
-              checkpoint = torch.load(local_resume_path, map_location=torch.device('cpu'))
+          xm.rendezvous("Loading Checkpoint") # sync all process
+          
+          if os.path.exists(local_resume_path):
+              xm.master_print(f"Loading checkpoint from {local_resume_path}")                            
+              
+              checkpoint = torch.load(local_resume_path, map_location=torch.device('cpu'))              
+              xm.rendezvous("Checkpoint loaded") # sync all process
+
+              xm.master_print("Loading model state")         
               model.load_state_dict(checkpoint['model_state_dict'], strict=False)
-              optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-              start_epoch = checkpoint['epoch']              
+              
+              xm.master_print("Loading optimizer state")         
+              load_state_dict = checkpoint['optimizer_state_dict']
+              optimizer.load_state_dict({k: v.cpu() if isinstance(v, torch.Tensor) else v for k,v in load_state_dict.items()})
+
+              start_epoch = checkpoint['epoch'] + 1 
+
               xm.master_print(f"Resume Training from Start_Epoch:{start_epoch}")
-
-              model.to(self.device)
-
+              
               return start_epoch
           else:
               return 0                                                                           

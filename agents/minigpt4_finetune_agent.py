@@ -85,7 +85,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             
             start_epoch = self.load_checkpoint(self._model, self.optimizer)
             if start_epoch > 0:
-                 self.start_epoch = start_epoch + 1                            
+                 self.start_epoch = start_epoch                            
         
             xm.master_print(f"Train/Eval started started: {(test_utils.now())}")                   
             xm.master_print(f"Start_epoch: {self.start_epoch}")            
@@ -258,7 +258,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         start_epoch = self.load_checkpoint(self._model, self.optimizer)
         if start_epoch > 0:
-                self.start_epoch = start_epoch + 1
+                self.start_epoch = start_epoch
 
         with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
             self.optimizer.zero_grad()
@@ -368,7 +368,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         return model
     
     def save_checkpoint_with_optim(self, model, optimizer, epoch):        
-
+        
         if xm.is_master_ordinal():            
             
             xm.master_print(f"Saving the checkpoint with optmizer for epoch: {epoch}")    
@@ -376,27 +376,34 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             file_name = self.config.run.checkpoint_name_with_optim
             file_name = f"{file_name}.pth"  
 
-            xm.master_print("moving model to CPU")    
-            model_cpu = model.cpu()
+            # xm.master_print("Moving model to CPU")    
+            # model_cpu = model.cpu()            
+
+            xm.master_print("Getting model state_dict")    
+            model_state_dict = model.state_dict()            
             
             xm.master_print("Assigning the optimizer state to a local variabel")
-            optimizer_cpu = optimizer.state_dict()
+            optimizer_state = optimizer.state_dict()
 
             xm.master_print(f"Checkpoint name: {file_name}")    
             checkpoint = {
                 'epoch': epoch,                
-                'model_state_dict': model_cpu.state_dict(),
-                'optimizer_state_dict': optimizer_cpu,                
+                'model_state_dict': {k: v.cpu() for k,v in model_state_dict.items()},
+                'optimizer_state_dict': {k: v.cpu() if isinstance(v, torch.Tensor) else v for k,v in optimizer_state.items()},                
             }
 
             path = self.config.run.output_dir
             file_and_path = os.path.join(path, file_name)
             
-            xm.master_print(f"Saving Checkpoint in the path: {file_and_path}")   
-
-            self._tpu_metrics.log_checkpoint_saving("Saving checkpoint",epoch=epoch)                
-            torch.save(checkpoint, file_and_path, _use_new_zipfile_serialization=False)            
-            self._tpu_metrics.log_checkpoint_saving("Checkpoint Saved", epoch=epoch)
+            xm.master_print(f"Saving Checkpoint in the path: {file_and_path}")               
+            try:                                
+                self._tpu_metrics.log_checkpoint_saving("Saving checkpoint",epoch=epoch)
+                # torch.save(checkpoint, file_and_path, _use_new_zipfile_serialization=False)
+                xm.save(checkpoint, file_and_path) 
+                self._tpu_metrics.log_checkpoint_saving("Checkpoint Saved", epoch=epoch)
+                xm.master_print("Checkpoint saved")
+            except Exception as e:
+                xm.master_print(f"Error saving the checkpoint {e}")            
 
             del checkpoint
             gc.collect()
