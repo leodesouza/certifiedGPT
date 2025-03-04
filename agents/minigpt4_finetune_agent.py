@@ -252,8 +252,12 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         self.model.train()
 
         batch_sample = next(iter(train_loader))
-        xm.master_print("Start: debug_graph_computation graph")                       
-                                                            
+        xm.master_print("Start: debug_graph_computation graph")
+
+        start_epoch = self.load_checkpoint(self._model, self.optimizer)
+        if start_epoch > 0:
+                self.start_epoch = start_epoch + 1
+                
         with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
             self.optimizer.zero_grad()
             self.model(batch_sample)            
