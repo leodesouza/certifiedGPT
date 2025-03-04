@@ -491,7 +491,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         """
         Return the optim state_dict without the parameters that do not require gradients
         """    
-        trainable_param_ids = {id(p) for p in model.named_parameters() if p.requires_grad}
+        trainable_param_ids = {id(p) for p in model.parameters() if p.requires_grad}
                 
         state_dict ={
             k:v for k,v in optimizer.state_dict()['state'].items()
