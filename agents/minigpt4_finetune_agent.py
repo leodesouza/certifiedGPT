@@ -394,12 +394,17 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             # }
 
             xm.master_print("Calling return_state_dict_without_grad")
-            model_state_dict = self.return_state_dict_without_grad(model)
+            model_state_dict = self.return_state_dict_without_grad(model)            
             xm.master_print("End...Calling return_state_dict_without_grad")
+            
+            xm.master_print("Calling optimizer_state_without_frozen_params")
+            optimizer_state = self.optimizer_state_without_frozen_params(model, optimizer)
+            xm.master_print("Calling optimizer_state_without_frozen_params")
+
             checkpoint = {
                 'epoch': epoch,                
                 'model_state_dict': model_state_dict,
-                'optimizer_state_dict': optimizer.state_dict(),                
+                'optimizer_state_dict': optimizer_state,                
             }
 
             path = self.config.run.output_dir
@@ -409,7 +414,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             try:                                
                 self._tpu_metrics.log_checkpoint_saving("Saving checkpoint",epoch=epoch)
                 # torch.save(checkpoint, file_and_path, _use_new_zipfile_serialization=False)
-                torch.save(checkpoint, file_and_path, pickle_protocol=4) 
+                torch.save(checkpoint, file_and_path) 
                 self._tpu_metrics.log_checkpoint_saving("Checkpoint Saved", epoch=epoch)
                 xm.master_print("Checkpoint saved")
             except Exception as e:
@@ -457,15 +462,35 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         """
         Return the state_dict without the parameters that do not require gradients
         """        
-        model_cpu = model.cpu()
-        param_grads = {
-                k: v.requires_grad for (k, v) in model.named_parameters()
-            }
+        # model_cpu = model.cpu()
+        # param_grads = {
+        #         k: v.requires_grad for (k, v) in model.named_parameters()
+        #     }
 
-        state_dict = model_cpu.state_dict()
-        for k in list(state_dict.keys()):
-            if k in param_grads.keys() and not param_grads[k]:
-                del state_dict[k] 
+        # state_dict = model_cpu.state_dict()
+        # for k in list(state_dict.keys()):
+        #     if k in param_grads.keys() and not param_grads[k]:
+        #         del state_dict[k] 
+
+        # return state_dict
+
+        state_dict = {
+            k:v.cpu() for k,v in model.state_dict().items()
+            if k in [name for name, p in model.named_parameters() if p.requires_grad]
+        }
+
+        return state_dict
+    
+    def optimizer_state_without_frozen_params(self, model, optimizer):
+        """
+        Return the optim state_dict without the parameters that do not require gradients
+        """    
+        trainable_param_ids = {id(p) for p in model.named_parameters() if p.requires_grad}
+                
+        state_dict ={
+            k:v for k,v in optimizer.state_dict()['state'].items()
+            if k in trainable_param_ids
+        }                            
 
         return state_dict
 
