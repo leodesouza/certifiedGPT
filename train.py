@@ -99,7 +99,7 @@ if __name__ == "__main__":
     _config = Config(_args)             
     # xla.launch(main, args=(), debug_single_process=True)   
     if _config.run.debug_graph_computation:
-        print('Runining training in debug mode')
+        print('Running training in debug mode')
         xla.launch(main, args=(), debug_single_process=True)   
     else:        
         logging.disable(logging.CRITICAL)

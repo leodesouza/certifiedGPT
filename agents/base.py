@@ -66,7 +66,8 @@ class BaseAgent:
               
               xm.master_print("Loading optimizer state")         
               load_state_dict = checkpoint['optimizer_state_dict']
-              optimizer.load_state_dict({k: v.cpu() if isinstance(v, torch.Tensor) else v for k,v in load_state_dict.items()})
+              # optimizer.load_state_dict({k: v.cpu() if isinstance(v, torch.Tensor) else v for k,v in load_state_dict.items()})
+              optimizer.load_state_dict({k: v for k,v in load_state_dict.items()})
 
               start_epoch = checkpoint['epoch'] + 1 
 

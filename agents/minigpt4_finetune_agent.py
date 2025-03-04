@@ -387,10 +387,16 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
             xm.master_print("Assigning the optimizer state to a local variabel")
             xm.master_print(f"Checkpoint name: {file_name}")    
+            # checkpoint = {
+            #     'epoch': epoch,                
+            #     'model_state_dict': {k: v.to('cpu') if isinstance(v, torch.Tensor) else v for k,v in model.state_dict().items()},
+            #     'optimizer_state_dict': {k: v.cpu('cpu') if isinstance(v, torch.Tensor) else v for k,v in optimizer.state_dict().items()},                
+            # }
+
             checkpoint = {
                 'epoch': epoch,                
-                'model_state_dict': {k: v.cpu() for k,v in model.state_dict().items()},
-                'optimizer_state_dict': {k: v.cpu() if isinstance(v, torch.Tensor) else v for k,v in optimizer.state_dict().items()},                
+                'model_state_dict': {k: v for k,v in model.state_dict().items()},
+                'optimizer_state_dict': {k: v for k,v in optimizer.state_dict().items()},                
             }
 
             path = self.config.run.output_dir
