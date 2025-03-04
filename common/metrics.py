@@ -49,10 +49,11 @@ class TPUMetrics:
 
     def log_checkpoint_saving(self, checkpoint_log, epoch):  
           
-
+       timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
        log_message = "\n".join([
             f"checkpint_log: {checkpoint_log}",
-            f"Epoch: {epoch}"        
+            f"Epoch: {epoch}",
+            f"Time: {timestamp}"        
         ])
              
 
