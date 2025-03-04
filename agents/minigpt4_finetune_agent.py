@@ -393,10 +393,13 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             #     'optimizer_state_dict': {k: v.cpu('cpu') if isinstance(v, torch.Tensor) else v for k,v in optimizer.state_dict().items()},                
             # }
 
+            xm.master_print("Calling return_state_dict_without_grad")
+            model_state_dict = self.return_state_dict_without_grad(model)
+            xm.master_print("End...Calling return_state_dict_without_grad")
             checkpoint = {
                 'epoch': epoch,                
-                'model_state_dict': {k: v for k,v in model.state_dict().items()},
-                'optimizer_state_dict': {k: v for k,v in optimizer.state_dict().items()},                
+                'model_state_dict': model_state_dict,
+                'optimizer_state_dict': optimizer.state_dict(),                
             }
 
             path = self.config.run.output_dir
