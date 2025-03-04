@@ -32,6 +32,8 @@ from common.registry import registry
 from graphs.losses.cross_entropy_loss import CrossEntropyLoss
 import torch_xla.test.test_utils as test_utils
 
+import gc
+
 # rank and world size are inferred from XLA Device
 # source: https://github.com/pytorch/xla/
 dist.init_process_group(backend='xla', init_method='xla://')
@@ -257,7 +259,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         start_epoch = self.load_checkpoint(self._model, self.optimizer)
         if start_epoch > 0:
                 self.start_epoch = start_epoch + 1
-                
+
         with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
             self.optimizer.zero_grad()
             self.model(batch_sample)            
@@ -390,6 +392,10 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             self._tpu_metrics.log_checkpoint_saving("Saving checkpoint",epoch=epoch)                
             torch.save(checkpoint, file_and_path, _use_new_zipfile_serialization=False)            
             self._tpu_metrics.log_checkpoint_saving("Checkpoint Saved", epoch=epoch)
+
+            del checkpoint
+            gc.collect()
+            xm.mark_step()
                                     
         #synchronize all the processes
         #prevent race conditions
