@@ -262,9 +262,11 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
             self.optimizer.zero_grad()
-            self.model(batch_sample)            
-        xm.mark_step()                                                             
-        self.save_checkpoint_with_optim(self.model, self.optimizer, epoch=0)                                                                                                          
+            output = self.model(batch_sample)
+            loss = output["loss"]
+            xm.master_print(f"Loss value: {loss}")            
+        xm.mark_step()                                                                     
+        self.save_checkpoint_with_optim(self.model, self.optimizer, epoch=2)                                                                                                          
         xm.master_print("End: debug_graph_computation graph")                                                             
 
     def validate(self):
