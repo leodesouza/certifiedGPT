@@ -406,7 +406,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             try:                                
                 self._tpu_metrics.log_checkpoint_saving("Saving checkpoint",epoch=epoch)
                 # torch.save(checkpoint, file_and_path, _use_new_zipfile_serialization=False)
-                xm.save(checkpoint, file_and_path) 
+                torch.save(checkpoint, file_and_path, pickle_protocol=4) 
                 self._tpu_metrics.log_checkpoint_saving("Checkpoint Saved", epoch=epoch)
                 xm.master_print("Checkpoint saved")
             except Exception as e:
