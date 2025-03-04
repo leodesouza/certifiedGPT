@@ -493,10 +493,15 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         """    
         trainable_param_ids = {id(p) for p in model.parameters() if p.requires_grad}
                 
-        state_dict ={
+        filtered_state ={
             k:v for k,v in optimizer.state_dict()['state'].items()
             if k in trainable_param_ids
         }                            
+
+        state_dict = {
+            'state': filtered_state,
+            'param_groups': optimizer.state_dict()['param_groups']
+        }
 
         return state_dict
 
