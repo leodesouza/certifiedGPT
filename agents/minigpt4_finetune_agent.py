@@ -271,7 +271,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         xm.mark_step()           
 
         xm.master_print(f"Loss value: {loss}")                                                          
-        self.save_checkpoint_with_optim(self.model, self.optimizer, epoch=2)                                                                                                          
+        self.save_checkpoint_with_optim(self.model, self.optimizer, epoch=self.start_epoch)                                                                                                          
         # self.save_checkpoint(self.model, self.optimizer)
         xm.master_print("End: debug_graph_computation graph")                                                             
 
