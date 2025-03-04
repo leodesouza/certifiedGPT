@@ -60,7 +60,11 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         try:
                         
             self.logger.info("Creating the dataloaders")            
-            self._dataloaders = self.create_dataloaders()            
+            self._dataloaders = self.create_dataloaders()
+
+            if self.config.run.debug_graph_computation:
+                self.debug_graph_computation()
+                return            
 
             if not self._dataloaders.get("train") and not self.config.run.evaluate:
                 raise ValueError("Training dataloader is empty")
@@ -82,10 +86,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                  self.start_epoch = start_epoch + 1                            
         
             xm.master_print(f"Train/Eval started started: {(test_utils.now())}")                   
-            xm.master_print(f"Start_epoch: {self.start_epoch}")
-
-            _ = self.lr_scheduler_plateau
-
+            xm.master_print(f"Start_epoch: {self.start_epoch}")            
+            
             for epoch in range(self.start_epoch, self.max_epoch):                                                
                 # training step
                 if not self.config.evaluate_only:                    
@@ -101,8 +103,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     xm.mark_step()                    
                     xm.master_print(f"Evaluation epoch: {epoch} ended: {test_utils.now()}")
 
-                    xm.master_print("Call LR Scheduler Plateau")
-                    self.lr_scheduler_plateau.step(epoch_val_loss)
+                    # xm.master_print("Call LR Scheduler Plateau")
+                    # self.lr_scheduler_plateau.step(epoch_val_loss)
                                                                             
                     if epoch_val_loss < best_val_loss:                        
                         best_val_loss = epoch_val_loss                    
@@ -117,13 +119,12 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                         break
 
             
-                if xm.is_master_ordinal():                                       
-                                    
+                if xm.is_master_ordinal():                                                                           
                     xm.master_print(f"""epoch: {epoch}   
                                      train_loss: {epoch_train_loss}   
                                      val_loss: {epoch_val_loss}""")
                                         
-                    # self.save_history(epoch_train_loss, best_val_loss)                                                            
+                    # self.save_history(epoch_train_loss, epoch_val_loss)                                                            
 
                     if self.config.run.wandb:
                                             
@@ -181,8 +182,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             if step % accumulated_gradients == 0:                
                 xm.reduce_gradients(self.optimizer)                                
                 xm.optimizer_step(self.optimizer, barrier=False)                      
-                # lr = self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                
-                lr = 0
+                lr = self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                
+                
             xm.mark_step()       
 
             step_loss = loss.detach()                                        
@@ -239,27 +240,26 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         eval_avg_loss = global_eval_loss / global_total_batches
 
         xm.master_print(f"Eval Epoch {epoch} ended: {(test_utils.now())}")        
-        self.loss_history["val_loss"].append(eval_avg_loss)        
+        #self.loss_history["val_loss"].append(eval_avg_loss)        
                                 
         return eval_avg_loss
     
-    def initialize_graph(self):                
+    def debug_graph_computation(self):                
                 
-        train_loader = self._dataloader_one_example["train"]                
+        train_loader = self.dataloader["train"]                
         train_loader = pl.MpDeviceLoader(train_loader, self.device)                
                                
         self.model.train()
 
         batch_sample = next(iter(train_loader))
-        xm.master_print("Start: Initilize graph")                       
+        xm.master_print("Start: debug_graph_computation graph")                       
                                                             
         with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
             self.model(batch_sample)                                                                        
         xm.mark_step()                          
                                    
         self.optimizer.zero_grad()
-        xm.master_print("End: Initilize graph")
-                                                             
+        xm.master_print("End: debug_graph_computation graph")                                                             
 
     def validate(self):
         """
@@ -384,7 +384,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             xm.master_print(f"Saving Checkpoint in the path: {file_and_path}")   
 
             self._tpu_metrics.log_checkpoint_saving("Saving checkpoint",epoch=epoch)                
-            torch.save(checkpoint, file_and_path)            
+            torch.save(checkpoint, file_and_path, _use_new_zipfile_serialization=False)            
             self._tpu_metrics.log_checkpoint_saving("Checkpoint Saved", epoch=epoch)
                                     
         #synchronize all the processes
