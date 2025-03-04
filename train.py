@@ -93,6 +93,14 @@ def main(rank):
             
 if __name__ == "__main__":    
 
-    import torch_xla as xla             
+    import torch_xla as xla
+
+    _args = parse_args()
+    _config = Config(_args)             
     # xla.launch(main, args=(), debug_single_process=True)   
-    xla.launch(main, args=())   
+    if _config.run.debug_graph_computation:
+        print('Runining training in debug mode')
+        xla.launch(main, args=(), debug_single_process=True)   
+    else:        
+        logging.disable(logging.CRITICAL)
+        xla.launch(main, args=())   
