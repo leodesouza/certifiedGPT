@@ -33,7 +33,7 @@ class BaseAgent:
             "val_loss": []
         }
 
-    def load_checkpoint(self, model, optimizer):          
+    def load_checkpoint(self, model, optimizer, copy=False):          
           output_dir = self.config.run.output_dir
           if not output_dir: 
               raise ValueError("output_dir None") 
@@ -42,18 +42,20 @@ class BaseAgent:
           if not resume_ckpt_path: 
               raise ValueError("resume_ckpt_path None") 
           
-          file_and_path = os.path.join(output_dir, resume_ckpt_path)          
+          file_and_path = os.path.join(output_dir, resume_ckpt_path)                              
           local_dir = "/tmp"              
           local_resume_path = os.path.join(local_dir, "finetuning_resume.pth")
           os.makedirs(local_dir, exist_ok=True)                              
           if os.path.exists(file_and_path):
-              xm.master_print(f"Loading checkpoint from {file_and_path}")
-              if not os.path.exists(local_resume_path):
-                  xm.master_print(f"Copying checkpoint from {file_and_path} to {local_resume_path}")
-                  shutil.copy(file_and_path, local_resume_path)
-                  xm.master_print("Checkpoint copied")
+              if copy:                                    
+                if not os.path.exists(local_resume_path):
+                    xm.master_print(f"Copying checkpoint from {file_and_path} to {local_resume_path}")
+                    shutil.copy(file_and_path, local_resume_path)
+                    xm.master_print("Checkpoint copied")
+              else:
+                local_resume_path = file_and_path
 
-              xm.master_print(f"Loading checkpoint to resume Training from {local_resume_path}")              
+              xm.master_print(f"Loading checkpoint from {local_resume_path}")              
               checkpoint = torch.load(local_resume_path, map_location=torch.device('cpu'))
               model.load_state_dict(checkpoint['model_state_dict'], strict=False)
               optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
