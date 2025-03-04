@@ -246,7 +246,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
     
     def debug_graph_computation(self):                
                 
-        train_loader = self.dataloader["train"]                
+        train_loader = self._dataloaders["train"]                
         train_loader = pl.MpDeviceLoader(train_loader, self.device)                
                                
         self.model.train()
