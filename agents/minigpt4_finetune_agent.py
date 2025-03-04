@@ -376,7 +376,10 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             file_name = self.config.run.checkpoint_name_with_optim
             file_name = f"{file_name}.pth"  
 
+            xm.master_print("moving model to CPU")    
             model_cpu = model.cpu()
+            
+            xm.master_print("Assigning the optimizer state to a local variabel")
             optimizer_cpu = optimizer.state_dict()
 
             xm.master_print(f"Checkpoint name: {file_name}")    
