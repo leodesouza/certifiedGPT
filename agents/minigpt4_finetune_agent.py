@@ -379,17 +379,18 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             # xm.master_print("Moving model to CPU")    
             # model_cpu = model.cpu()            
 
-            xm.master_print("Getting model state_dict")    
-            model_state_dict = model.state_dict()            
+            # xm.master_print("Getting model state_dict")    
+            # model_state_dict = model.state_dict()            
             
-            xm.master_print("Assigning the optimizer state to a local variabel")
-            optimizer_state = optimizer.state_dict()
+            # xm.master_print("Assigning the optimizer state to a local variabel")
+            #optimizer_state = optimizer.state_dict()
 
+            xm.master_print("Assigning the optimizer state to a local variabel")
             xm.master_print(f"Checkpoint name: {file_name}")    
             checkpoint = {
                 'epoch': epoch,                
-                'model_state_dict': {k: v.cpu() for k,v in model_state_dict.items()},
-                'optimizer_state_dict': {k: v.cpu() if isinstance(v, torch.Tensor) else v for k,v in optimizer_state.items()},                
+                'model_state_dict': {k: v.cpu() for k,v in model.state_dict().items()},
+                'optimizer_state_dict': {k: v.cpu() if isinstance(v, torch.Tensor) else v for k,v in optimizer.state_dict().items()},                
             }
 
             path = self.config.run.output_dir
