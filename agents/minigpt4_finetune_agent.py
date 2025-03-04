@@ -255,10 +255,10 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         xm.master_print("Start: debug_graph_computation graph")                       
                                                             
         with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
-            self.model(batch_sample)                                                                        
-        xm.mark_step()                          
-                                   
-        self.optimizer.zero_grad()
+            self.optimizer.zero_grad()
+            self.model(batch_sample)            
+        xm.mark_step()                                                             
+        self.save_checkpoint_with_optim(self.model, self.optimizer, epoch=0)                                                                                                          
         xm.master_print("End: debug_graph_computation graph")                                                             
 
     def validate(self):
