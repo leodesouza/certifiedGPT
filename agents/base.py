@@ -29,6 +29,7 @@ class BaseAgent:
         self.config = registry.get_configuration_class("configuration")
         self._dataloaders = None
         self.loss_history = {            
+            "epoch": [],
             "train_loss": [],
             "val_loss": []
         }
@@ -244,13 +245,24 @@ class BaseAgent:
         logger = registry.get_configuration_class("logger")
         return logger  
 
-    def save_history(self, train_loss, val_loss):        
-        self.loss_history["train_loss"].append(train_loss)
-        self.loss_history["val_loss"].append(val_loss)
-        path = self.config.run.output_dir
-        file_name_path = os.path.join(path, "loss_history.json")
-        with open(file_name_path, "w") as f:
-            json.dump(self.loss_history, f)
+    def save_history(self, epoch, train_loss, val_loss):        
+        try:
+            path = self.config.run.output_dir
+            file_name_path = os.path.join(path, "loss_history.json")
+
+            if os.path.exists(file_name_path):
+                with open(file_name_path,"r") as f:                    
+                    self.loss_history = json.load(f)             
+
+            self.loss_history["epoch"].append(epoch)
+            self.loss_history["train_loss"].append(train_loss)
+            self.loss_history["val_loss"].append(val_loss)
+            
+            with open(file_name_path, "w") as f:
+                json.dump(self.loss_history, f, indent=4)
+
+        except Exception as e: 
+            xm.master_print(f"Error on saving loss history {e}.")
     
     def load_history(self):
         path = self.config.run.output_dir
@@ -259,9 +271,9 @@ class BaseAgent:
             with open(file_name_path, "r") as f:
                 self.loss_history = json.load(f)                
     
-    def plot_result(self):                
-        train_loss = self.loss_history["train_loss"]
-        val_loss = self.loss_history["val_loss"]
+    # def plot_result(self):                
+    #     train_loss = self.loss_history["train_loss"]
+    #     val_loss = self.loss_history["val_loss"]
 
         
 

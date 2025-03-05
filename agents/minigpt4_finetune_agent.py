@@ -104,9 +104,6 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                     epoch_val_loss = self.eval(epoch)                    
                     xm.mark_step()                    
                     xm.master_print(f"Evaluation epoch: {epoch} ended: {test_utils.now()}")
-
-                    # xm.master_print("Call LR Scheduler Plateau")
-                    # self.lr_scheduler_plateau.step(epoch_val_loss)
                                                                             
                     if epoch_val_loss < best_val_loss:                        
                         best_val_loss = epoch_val_loss                    
@@ -124,7 +121,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                                      train_loss: {epoch_train_loss}   
                                      val_loss: {epoch_val_loss}""")
                                         
-                    # self.save_history(epoch_train_loss, epoch_val_loss)                                                            
+                    self.save_history(epoch, epoch_train_loss, epoch_val_loss)                                                            
 
                     if self.config.run.wandb:
                                             
