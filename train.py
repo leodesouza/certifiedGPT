@@ -1,5 +1,5 @@
 import logging
-logging.disable(logging.CRITICAL)
+# logging.disable(logging.CRITICAL)
 import argparse
 import os
 import random
@@ -96,11 +96,11 @@ if __name__ == "__main__":
     import torch_xla as xla
 
     _args = parse_args()
-    _config = Config(_args)             
-    # xla.launch(main, args=(), debug_single_process=True)   
+    _config = Config(_args)
+                     
     if _config.run.debug_graph_computation:
         print('Running training in debug mode')
         xla.launch(main, args=(), debug_single_process=True)   
     else:        
-        logging.disable(logging.CRITICAL)
+        #logging.disable(logging.CRITICAL)
         xla.launch(main, args=())   
