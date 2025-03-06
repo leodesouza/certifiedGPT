@@ -57,8 +57,10 @@ run:
   patience: 1
   noise_level: 0.5
   checkpoint_name: "vqav2_finetuning_noise_0.5"
-  checkpoint_name_with_optim: "vqav2_finetuning_with_optim_noise_0.5"
 
+  #resume training
+  checkpoint_name_with_optim: "vqav2_finetuning_with_optim_noise_0.5"
+  use_cache: True
 
   #Consider using other learning rate schedulers for small datasets
   # - Exponential Decay
@@ -102,5 +104,6 @@ run:
   distributed: True  
   num_workers: 2 # n of workers to load data
 
+# debug
   debug_graph_computation: False
   

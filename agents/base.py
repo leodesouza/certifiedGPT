@@ -34,7 +34,7 @@ class BaseAgent:
             "val_loss": []
         }
 
-    def load_checkpoint(self, model, optimizer, copy=False):          
+    def load_checkpoint(self, model, optimizer, use_cache=False):          
           output_dir = self.config.run.output_dir
           if not output_dir: 
               raise ValueError("output_dir None") 
@@ -46,7 +46,7 @@ class BaseAgent:
           local_resume_path = os.path.join(local_dir, "finetuning_resume.pth")
           os.makedirs(local_dir, exist_ok=True)                              
           if xm.is_master_ordinal() and os.path.exists(file_and_path):
-              if copy:                                    
+              if use_cache:                                    
                 if not os.path.exists(local_resume_path):
                     xm.master_print(f"Copying checkpoint from {file_and_path} to {local_resume_path}")
                     shutil.copy(file_and_path, local_resume_path)
