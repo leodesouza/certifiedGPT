@@ -66,8 +66,7 @@ class BaseAgent:
               model.load_state_dict(checkpoint['model_state_dict'], strict=False)
               
               xm.master_print("Loading optimizer state")         
-              load_state_dict = checkpoint['optimizer_state_dict']
-              # optimizer.load_state_dict({k: v.cpu() if isinstance(v, torch.Tensor) else v for k,v in load_state_dict.items()})
+              load_state_dict = checkpoint['optimizer_state_dict']              
               optimizer.load_state_dict({k: v for k,v in load_state_dict.items()})
 
               start_epoch = checkpoint['epoch'] + 1 
@@ -133,14 +132,7 @@ class BaseAgent:
     @property
     def model(self):                
         return self._model
-
-    # @property
-    # def scaler(self):
-    #     amp = self.config.run.amp
-    #     if amp:
-    #         self._scaler = torch.amp.GradScaler()
-    #     return self.scaler
-
+    
     @classmethod
     def setup_agent(cls, **kwargs):
         return cls()

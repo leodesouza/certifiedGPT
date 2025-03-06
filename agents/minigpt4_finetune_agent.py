@@ -29,7 +29,6 @@ from tqdm import tqdm
 from agents.base import BaseAgent
 from common.metrics import TPUMetrics
 from common.registry import registry
-from graphs.losses.cross_entropy_loss import CrossEntropyLoss
 import torch_xla.test.test_utils as test_utils
 
 import gc
@@ -269,9 +268,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
     def finalize(self):
         pass
-        # if self.writer:
-        #     self.writer.close()
-    
+        
 
     @classmethod
     def setup_agent(cls, **kwargs):
@@ -360,7 +357,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             
             xm.master_print(f"Saving the checkpoint with optmizer for epoch: {epoch}")    
                                     
-            file_name = self.config.run.checkpoint_name_with_optim
+            file_name = self.config.run.resume_ckpt_path
             file_name = f"{file_name}.pth"
             
             model_state_dict = self.return_state_dict_without_grad(model)                                                
@@ -425,19 +422,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
     def return_state_dict_without_grad(self, model):
         """
         Return the state_dict without the parameters that do not require gradients
-        """        
-        # model_cpu = model.cpu()
-        # param_grads = {
-        #         k: v.requires_grad for (k, v) in model.named_parameters()
-        #     }
-
-        # state_dict = model_cpu.state_dict()
-        # for k in list(state_dict.keys()):
-        #     if k in param_grads.keys() and not param_grads[k]:
-        #         del state_dict[k] 
-
-        # return state_dict
-
+        """                
         state_dict = {
             k:v.cpu() for k,v in model.state_dict().items()
             if k in [name for name, p in model.named_parameters() if p.requires_grad]
