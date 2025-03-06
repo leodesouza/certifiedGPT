@@ -54,11 +54,11 @@ class BaseAgent:
               else:
                 local_resume_path = file_and_path
 
+          xm.master_print("Synchronize checkpoint loading with all process")
           xm.rendezvous("Loading Checkpoint") # sync all process
           
           if os.path.exists(local_resume_path):
-              xm.master_print(f"Loading checkpoint from {local_resume_path}")                            
-              
+              xm.master_print(f"Loading checkpoint from {local_resume_path}")                                          
               checkpoint = torch.load(local_resume_path, map_location=torch.device('cpu'))              
               xm.rendezvous("Checkpoint loaded") # sync all process
 

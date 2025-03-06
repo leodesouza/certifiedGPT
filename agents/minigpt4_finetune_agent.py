@@ -70,13 +70,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
             if not self._dataloaders.get("train") and not self.config.run.evaluate:
                 raise ValueError("Training dataloader is empty")
-            
-
-            self.logger.info("Start running the training loop")
-            self.logger.info(
-                f"Start epoch: {self.start_epoch}. Max epoch: {self.max_epoch}"
-            )
-            
+                        
             if xm.is_master_ordinal():     
                 if self.config.run.noise_level > 0:
                     xm.master_print(f"Noise level: {self.config.run.noise_level} will be applied to the image inputs")                           
