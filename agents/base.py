@@ -15,6 +15,7 @@ import torch_xla.debug.profiler as xp
 import torch_xla.test.test_utils as test_utils
 import os
 import json
+import matplotlib.pyplot as plt
 
 
 
@@ -31,7 +32,8 @@ class BaseAgent:
         self.loss_history = {            
             "epoch": [],
             "train_loss": [],
-            "val_loss": []
+            "val_loss": [],
+            "lr": []
         }
 
     def load_checkpoint(self, model, optimizer, use_cache=False):          
@@ -237,7 +239,7 @@ class BaseAgent:
         logger = registry.get_configuration_class("logger")
         return logger  
 
-    def save_history(self, epoch, train_loss, val_loss):        
+    def save_history(self, epoch, train_loss, val_loss, lr):        
         try:
             path = self.config.run.output_dir
             file_name_path = os.path.join(path, "loss_history.json")
@@ -249,9 +251,12 @@ class BaseAgent:
             self.loss_history["epoch"].append(epoch)
             self.loss_history["train_loss"].append(train_loss)
             self.loss_history["val_loss"].append(val_loss)
+            self.loss_history["lr"].append(lr)
             
             with open(file_name_path, "w") as f:
                 json.dump(self.loss_history, f, indent=4)
+
+            #self.plot_result(self.loss_history)
 
         except Exception as e: 
             xm.master_print(f"Error on saving loss history {e}.")
@@ -263,25 +268,29 @@ class BaseAgent:
             with open(file_name_path, "r") as f:
                 self.loss_history = json.load(f)                
     
-    # def plot_result(self):                
-    #     train_loss = self.loss_history["train_loss"]
-    #     val_loss = self.loss_history["val_loss"]
-
+    def plot_result(self, loss_history):                
+        train_loss = loss_history["train_loss"]
+        val_loss = loss_history["val_loss"]
+        lr_schedule = loss_history["lr"] 
         
+        _ , ax1 = plt.subplots(figsize=(8, 6))
 
-#         train_loss = loss_history["train_loss"]
-# val_loss = loss_history["val_loss"]
+        # Plot loss
+        ax1.plot(range(1, len(train_loss) + 1), train_loss, label="Train Loss", marker="o", color="blue")
+        ax1.plot(range(1, len(val_loss) + 1), val_loss, label="Validation Loss", marker="s", color="red")
+        ax1.set_xlabel("Epochs")
+        ax1.set_ylabel("Loss")
+        ax1.set_title("Training & Validation Loss with Learning Rate")
+        ax1.legend(loc="upper left")
+        ax1.grid()
 
-# # Plot the loss curves
-# plt.figure(figsize=(8, 6))
-# plt.plot(range(1, len(train_loss) + 1), train_loss, label="Train Loss", marker="o")
-# plt.plot(range(1, len(val_loss) + 1), val_loss, label="Validation Loss", marker="s")
-# plt.xlabel("Epochs")
-# plt.ylabel("Loss")
-# plt.title("Training & Validation Loss")
-# plt.legend()
-# plt.grid()
-# plt.show()
+        # Add a secondary y-axis for learning rate
+        ax2 = ax1.twinx()
+        ax2.plot(range(1, len(lr_schedule) + 1), lr_schedule, label="Learning Rate", marker="^", color="green", linestyle="dashed")
+        ax2.set_ylabel("Learning Rate")
+        ax2.legend(loc="upper right")
+
+        plt.show()
 
 
 

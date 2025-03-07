@@ -114,7 +114,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                                      train_loss: {epoch_train_loss}   
                                      val_loss: {epoch_val_loss}""")
                                         
-                    self.save_history(epoch, epoch_train_loss, epoch_val_loss)                                                            
+                    self.save_history(epoch, epoch_train_loss, epoch_val_loss, self.optimizer.param_groups[0]["lr"])
 
                     if self.config.run.wandb:
                                             
