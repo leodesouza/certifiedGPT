@@ -32,8 +32,8 @@ class BaseAgent:
         self.loss_history = {            
             "epoch": [],
             "train_loss": [],
-            "val_loss": [],
-            "lr": []
+            "val_loss": []
+            # "lr": []
         }
 
     def load_checkpoint(self, model, optimizer, use_cache=False):          
@@ -251,7 +251,7 @@ class BaseAgent:
             self.loss_history["epoch"].append(epoch)
             self.loss_history["train_loss"].append(train_loss)
             self.loss_history["val_loss"].append(val_loss)
-            self.loss_history["lr"].append(lr)
+            # self.loss_history["lr"].append(lr)
             
             with open(file_name_path, "w") as f:
                 json.dump(self.loss_history, f, indent=4)
