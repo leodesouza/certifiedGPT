@@ -21,13 +21,14 @@ model:
   blip_flant5_pth: ${env:BLIP_FLANT5_PTH}
   eva_vit_g_pth: ${env:EVA_VIT_G_PTH}
 
+
 # Total batch_size should be multiple of 64
 # featue dimension should be a multiple of 128
 # https://cloud.google.com/tpu/docs/performance-guide
 
 datasets:
   vqav2:
-    batch_size: 64    
+    batch_size: 52    
     vis_processor:
       train:
         name: "blip2_image_train"
@@ -51,38 +52,42 @@ datasets:
 
 run:
   agent: image_text_finetune
-  max_epoch: 20  
+  max_epoch: 15  
   accumulated_gradients: 1
   patience: 1
   noise_level: 0.25
-  checkpoint_name: "vqav2_finetuning_noise_0.25"
-      
+  checkpoint_name: "vqav2_finetuning_noise_0.25"  
+  use_cache: True
+
   #Consider using other learning rate schedulers for small datasets
   # - Exponential Decay
   # - Plateau-Based Decay
 
   lr_sched: "linear_warmup_cosine_lr"  
-  init_lr: 1e-5 # is max_lr in warmup_lr_schedule 
-  min_lr: 1e-6 # used in cosine_lr_schedule
-  warmup_lr: 1e-6 # is init_lr in warmup_lr_schedule  
-  warmup_steps: 21
-  iters_per_epoch: 7
+  
+  #linear_warmup_cosine_lr -> warmup_lr_schedule
+  warmup_steps: 48
+  warmup_start_lr: 1e-6   
+  warmup_max_lr: 1e-5        
+  iters_per_epoch: 48
+
+  #linear_warmup_cosine_lr -> cosine_lr_schedule
+  init_lr: 1e-5 
+  min_lr: 1e-6
   weight_decay: 0.05
   beta1: 0.9
   beta2: 0.999
-
   seed: 42  
-  output_dir: ${env:OUTPUT_DIR}  
-        
+  output_dir: ${env:OUTPUT_DIR}          
   amp: True
-  resume_ckpt_path: null
+  resume_ckpt_path: "vqav2_finetuning_with_optim_noise_0.25"
   evaluate: False
   train_splits: ["train"]
   has_val_split: true
   device: "tpu"
   wandb: True
   wandb_api_key: ${env:WANDB_API_KEY}
-  wandb_name: "vqav2_finetuning_noise_0.25" 
+  wandb_name: "vqav2_finetuning_batch52_noise_0.25" 
 
   #profile
   enable_profile: False
@@ -95,4 +100,7 @@ run:
 # DataLoader
   distributed: True  
   num_workers: 2 # n of workers to load data
+
+# debug
+  debug_graph_computation: False
   
