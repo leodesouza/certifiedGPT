@@ -56,10 +56,7 @@ run:
   accumulated_gradients: 1
   patience: 1
   noise_level: 0.5
-  checkpoint_name: "vqav2_finetuning_noise_0.5"
-
-  #resume training
-  checkpoint_name_with_optim: "vqav2_finetuning_with_optim_noise_0.5"
+  checkpoint_name: "vqav2_finetuning_noise_0.5"  
   use_cache: True
 
   #Consider using other learning rate schedulers for small datasets
@@ -69,10 +66,10 @@ run:
   lr_sched: "linear_warmup_cosine_lr"  
   
   #linear_warmup_cosine_lr -> warmup_lr_schedule
-  warmup_steps: 23
+  warmup_steps: 48
   warmup_start_lr: 1e-6   
   warmup_max_lr: 1e-5        
-  iters_per_epoch: 23
+  iters_per_epoch: 48
 
   #linear_warmup_cosine_lr -> cosine_lr_schedule
   init_lr: 1e-5 
