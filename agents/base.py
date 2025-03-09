@@ -256,7 +256,7 @@ class BaseAgent:
             with open(file_name_path, "w") as f:
                 json.dump(self.loss_history, f, indent=4)
 
-            #self.plot_result(self.loss_history)
+            self.plot_result(self.loss_history)
 
         except Exception as e: 
             xm.master_print(f"Error on saving loss history {e}.")
@@ -268,29 +268,39 @@ class BaseAgent:
             with open(file_name_path, "r") as f:
                 self.loss_history = json.load(f)                
     
-    def plot_result(self, loss_history):                
-        train_loss = loss_history["train_loss"]
-        val_loss = loss_history["val_loss"]
-        lr_schedule = loss_history["lr"] 
-        
-        _ , ax1 = plt.subplots(figsize=(8, 6))
+    def plot_result(self, loss_history):    
+        try:     
+            path = self.config.run.output_dir
+            file_name_path = os.path.join(path, "loss_history.png")
 
-        # Plot loss
-        ax1.plot(range(1, len(train_loss) + 1), train_loss, label="Train Loss", marker="o", color="blue")
-        ax1.plot(range(1, len(val_loss) + 1), val_loss, label="Validation Loss", marker="s", color="red")
-        ax1.set_xlabel("Epochs")
-        ax1.set_ylabel("Loss")
-        ax1.set_title("Training & Validation Loss with Learning Rate")
-        ax1.legend(loc="upper left")
-        ax1.grid()
+            train_loss = loss_history["train_loss"]
+            val_loss = loss_history["val_loss"]
+            lr_schedule = loss_history["lr"] 
+            
+            fig , ax1 = plt.subplots(figsize=(8, 6))
 
-        # Add a secondary y-axis for learning rate
-        ax2 = ax1.twinx()
-        ax2.plot(range(1, len(lr_schedule) + 1), lr_schedule, label="Learning Rate", marker="^", color="green", linestyle="dashed")
-        ax2.set_ylabel("Learning Rate")
-        ax2.legend(loc="upper right")
+            # Plot loss
+            ax1.plot(range(1, len(train_loss) + 1), train_loss, label="Train Loss", marker="o", color="blue")
+            ax1.plot(range(1, len(val_loss) + 1), val_loss, label="Validation Loss", marker="s", color="red")
+            ax1.set_xlabel("Epochs")
+            ax1.set_ylabel("Loss")
+            ax1.set_title("Training & Validation Loss with Learning Rate")
+            ax1.legend(loc="upper left")
+            ax1.grid()
 
-        plt.show()
+            # Add a secondary y-axis for learning rate
+            ax2 = ax1.twinx()
+            ax2.plot(range(1, len(lr_schedule) + 1), lr_schedule, label="Learning Rate", marker="^", color="green", linestyle="dashed")
+            ax2.set_ylabel("Learning Rate")
+            ax2.legend(loc="upper right")
+
+            plt.tight_layout()
+            plt.savefig(file_name_path)
+            plt.close(fig)
+
+        except Exception as e:
+            xm.master_print(f"Error on ploting loss history {e}.")
+
 
 
 
