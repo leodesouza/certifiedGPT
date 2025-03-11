@@ -7,7 +7,7 @@
 
 
 from agents.base import BaseAgent
-from agents.minigpt4_finetune_agent import MiniGPT4FineTuneAgent
+#from agents.minigpt4_finetune_agent import MiniGPT4FineTuneAgent
 from common.registry import registry
 
 
@@ -22,6 +22,5 @@ def setup_agent(config):
 
 
 __all__ = [
-    "BaseAgent",
-    "MiniGPT4FineTuneAgent",
+    "BaseAgent"
 ]

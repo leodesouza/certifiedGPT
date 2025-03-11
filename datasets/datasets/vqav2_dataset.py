@@ -172,11 +172,11 @@ class VQAv2Dataset(BaseDataset):
 
 
 class VQAv2EvalDataset(Dataset):
-    def __init__(self, questions_path, vis_processor, vis_paths):        
-        self.questions_path = questions_path
-        self.vis_processor=vis_processor            
-        self.vis_paths=vis_paths
-
+    def __init__(self, questions_path, vis_processor, vis_paths, split):
+        self.questions_paths = questions_path
+        self.vis_processor = vis_processor
+        self.vis_paths = vis_paths
+        self.split = split
         self.questions = []
         
         self.logger.info("Loading eval dataset ...")
@@ -194,9 +194,18 @@ class VQAv2EvalDataset(Dataset):
         img_id = data['image_id']
         question = data['question']
         question_id = data['question_id']
-        img_file = '{:0>12}.jpg'.format(img_id)
+        img_file = f"COCO_{self.split}2015_{img_id:012d}.jpg"
         image_path = os.path.join(self.vis_paths, img_file)
         image = Image.open(image_path).convert('RGB')
         image = self.vis_processor(image)
         question = f"[vqa] Based on the image, respond to this question with a short answer: {question}"
         return image, question, question_id, img_id
+
+    @property
+    def logger(self):
+        logger = registry.get_configuration_class("logger")
+        return logger
+
+    @property
+    def split_name(self):
+        return self.split

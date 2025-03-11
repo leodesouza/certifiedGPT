@@ -5,7 +5,7 @@
 # https://github.com/Vision-CAIR/MiniGPT-4
 #
 
-import os 
+import os
 import time
 from datetime import datetime
 
@@ -20,7 +20,6 @@ from torch_xla import runtime as xr
 import torch_xla.core.xla_model as xm
 import torch_xla.distributed.parallel_loader as pl
 import torch_xla.amp as xla_amp
-
 
 from utils.gcsfuse import mount_gcsfuse
 import wandb
@@ -37,6 +36,7 @@ import gc
 # source: https://github.com/pytorch/xla/
 dist.init_process_group(backend='xla', init_method='xla://')
 
+
 @registry.register_agent("image_text_eval")
 class MiniGPT4EvalAgent(BaseAgent):
     def __init__(self):
@@ -44,198 +44,89 @@ class MiniGPT4EvalAgent(BaseAgent):
         self.start_epoch = 0
         self.start_step = 0
         self.max_epoch = self.config.run.max_epoch
-        self._device = xm.xla_device()    
-        self._model = self.build_model()
-        self._setup_wandb(self._model)
-        self._start_epoch = 0        
-        self._tpu_metrics = TPUMetrics()     
-                                                              
-    def run(self):                 
-        best_val_loss = float('inf')                
-        patience = self.config.run.patience or 3
-        wait = 0
-        step = 1
-        epoch_train_loss = 0
-        epoch_val_loss = 0         
-        
+        self._device = xm.xla_device()
+        self._model = None  # self.build_model()
+        # self._setup_wandb(self._model)
+        self._start_epoch = 0
+        self._tpu_metrics = TPUMetrics()
+
+    def run(self):
         try:
-                        
-            self.logger.info("Creating the dataloaders")            
+
+            self.logger.info("Creating the dataloaders")
             self._dataloaders = self.create_dataloaders()
 
             if self.config.run.debug_graph_computation:
                 self.debug_graph_computation()
-                return            
+                return
 
             if not self._dataloaders.get("train") and not self.config.run.evaluate:
                 raise ValueError("Training dataloader is empty")
-                        
-            if xm.is_master_ordinal():     
+
+            for images, questions, question_ids, img_ids in self._dataloaders:
+
+
+            if xm.is_master_ordinal():
                 if self.config.run.noise_level > 0:
-                    xm.master_print(f"Noise level: {self.config.run.noise_level} will be applied to the image inputs")                           
-                else:                    
+                    xm.master_print(f"Noise level: {self.config.run.noise_level} will be applied to the image inputs")
+                else:
                     xm.master_print("No noise will be applied to the image inputs")
-            
-            start_epoch = self.load_checkpoint(self._model, self.optimizer, use_cache=self.config.run.use_cache)
-            if start_epoch > 0:
-                 self.start_epoch = start_epoch                            
-        
-            xm.master_print(f"Train/Eval started started: {(test_utils.now())}")                   
-            xm.master_print(f"Start_epoch: {self.start_epoch}")            
-            
-            for epoch in range(self.start_epoch, self.max_epoch):                                                
-                # training step
-                if not self.config.evaluate_only:                    
-                    xm.master_print(f"Training epoch: {epoch} started: {test_utils.now()}")
-                    epoch_train_loss = self.train(epoch)
-                    xm.mark_step()
-                    xm.master_print(f"Training epoch: {epoch} ended: {test_utils.now()}")                                        
 
-                if self.config.run.has_val_split:
-                                            
-                    xm.master_print(f"Evaluation epoch: {epoch} started: {test_utils.now()}")
-                    epoch_val_loss = self.eval(epoch)                    
-                    xm.mark_step()                    
-                    xm.master_print(f"Evaluation epoch: {epoch} ended: {test_utils.now()}")
-                                                                            
-                    if epoch_val_loss < best_val_loss:                        
-                        best_val_loss = epoch_val_loss                    
-                        wait = 0                                                
-                        self.save_checkpoint_with_optim(self.model, self.optimizer, epoch)                                        
-                    else:
-                        wait += 1
-                    
-                    if wait >= patience:
-                        self.logger.info(f"Early Stopping at epoch: {epoch}")
-                        break
-            
-                if xm.is_master_ordinal():                                                                           
-                    xm.master_print(f"""epoch: {epoch}   
-                                     train_loss: {epoch_train_loss}   
-                                     val_loss: {epoch_val_loss}""")
-                                        
-                    self.save_history(epoch, epoch_train_loss, epoch_val_loss, self.optimizer.param_groups[0]["lr"])
-
-                    if self.config.run.wandb:
-                                            
-                        xm.master_print("Logging the metrics to wandb")
-                        wandb.log({
-                            "epoch": epoch,
-                            "train_loss": epoch_train_loss,
-                            "val_loss": epoch_val_loss,
-                            "learning_rate":self.optimizer.param_groups[0]["lr"]
-                        })                                                
-
-            self.save_checkpoint(self.model, epoch)                                    
-            xm.master_print(f"Finished the training loop {test_utils.now()}")                                                
-            
+            self.load_checkpoint(self._model, self.optimizer, use_cache=self.config.run.use_cache)
 
         except Exception as e:
-              xm.master_print(f"Error on agent run: {test_utils.now()}. Details: {e}")                            
+            xm.master_print(f"Error on agent run: {test_utils.now()}. Details: {e}")
 
     def maybe_add_noise(self, batch_sample, noise_level):
-        
-        if noise_level > 0:                  
-            image = batch_sample["image"]    
+
+        if noise_level > 0:
+            image = batch_sample["image"]
             noise = torch.rand_like(image) * noise_level
             batch_sample["image"] = image + noise
-                
-    def train(self, epoch):                
-        
-        train_loader = self._dataloaders["train"]                
-        train_loader = pl.MpDeviceLoader(train_loader, self.device)                
-
-        if len(train_loader) == 0:
-            return float("inf")                                
-        
-        running_loss = torch.tensor(0.0, device=self.device)
-        total_batches = torch.tensor(0, device=self.device)
-        
-        accumulated_gradients = self.config.run.accumulated_gradients or 1
-        lr = 0.0
-               
-        self.model.train()
-
-        xm.master_print(f"Train Epoch {epoch} started: {(test_utils.now())}")            
-        for step, batch_sample in enumerate(train_loader):
-            
-            self.maybe_add_noise(batch_sample, self.config.run.noise_level)    
-
-            xm.master_print(f"Processing epoch: {epoch}. step: {step} - {(test_utils.now())}")                       
-            
-            self.optimizer.zero_grad()                                    
-            with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
-                outputs = self.model(batch_sample)                                                            
-            loss = outputs["loss"]                        
-            loss.backward()                                 
-
-            if step % accumulated_gradients == 0:                
-                xm.reduce_gradients(self.optimizer)                                
-                xm.optimizer_step(self.optimizer, barrier=False)                      
-                lr = self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                
-                
-            xm.mark_step()       
-
-            step_loss = loss.detach()                                        
-            if xm.is_master_ordinal() and (step + 1) % 10 == 0:                                
-                self._tpu_metrics.log_tpu_metrics("Train", epoch, step, step_loss, lr)                
-            running_loss += step_loss
-            total_batches += 1
-                                                    
-        global_train_loss = xm.mesh_reduce("running_loss", running_loss.item(), sum)            
-        global_total_batches = xm.mesh_reduce("total_batches", total_batches.item(), sum)
-
-        avg_loss = global_train_loss / global_total_batches
-        self.loss_history["train_loss"].append(avg_loss)        
-        
-        xm.master_print(f"Train Epoch {epoch} ended: {(test_utils.now())}")
-                                                 
-        return avg_loss                
 
     @torch.no_grad()
     def eval(self, epoch):
         running_eval_loss = torch.tensor(0.0, device=self.device)
         total_batches = torch.tensor(0, device=self.device)
         val_loader = self._dataloaders["val"]
-        val_loader = pl.MpDeviceLoader(val_loader, self.device)        
-        
+        val_loader = pl.MpDeviceLoader(val_loader, self.device)
+
         if len(val_loader) == 0:
             return float("inf")
 
         self.model.eval()
 
         xm.master_print(f"Eval Epoch {epoch} started: {(test_utils.now())}")
-        for step, batch_sample in enumerate(val_loader): 
-
-            self.maybe_add_noise(batch_sample, self.config.run.noise_level)  
+        for step, batch_sample in enumerate(val_loader):
+            self.maybe_add_noise(batch_sample, self.config.run.noise_level)
 
             xm.master_print(f"Eval epoch: {epoch}. step: {step} - {(test_utils.now())}")
 
-            with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                         
-                outputs = self.model(batch_sample)               
-            loss = outputs["loss"]            
+            with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):
+                outputs = self.model(batch_sample)
+            loss = outputs["loss"]
 
             xm.mark_step()
 
-            step_loss = loss.detach()                                        
+            step_loss = loss.detach()
 
             running_eval_loss += step_loss
             total_batches += 1
 
-        global_eval_loss = xm.mesh_reduce("running_eval_loss", running_eval_loss.item(), sum)                    
+        global_eval_loss = xm.mesh_reduce("running_eval_loss", running_eval_loss.item(), sum)
         global_total_batches = xm.mesh_reduce("total_batches", total_batches.item(), sum)
         eval_avg_loss = global_eval_loss / global_total_batches
 
-        xm.master_print(f"Eval Epoch {epoch} ended: {(test_utils.now())}")        
+        xm.master_print(f"Eval Epoch {epoch} ended: {(test_utils.now())}")
         #self.loss_history["val_loss"].append(eval_avg_loss)        
-                                
+
         return eval_avg_loss
-    
-    def debug_graph_computation(self):                
-                
-        train_loader = self._dataloaders["train"]                
-        train_loader = pl.MpDeviceLoader(train_loader, self.device)                
-                               
+
+    def debug_graph_computation(self):
+
+        train_loader = self._dataloaders["train"]
+        train_loader = pl.MpDeviceLoader(train_loader, self.device)
+
         self.model.train()
 
         batch_sample = next(iter(train_loader))
@@ -243,22 +134,22 @@ class MiniGPT4EvalAgent(BaseAgent):
 
         start_epoch = self.load_checkpoint(self._model, self.optimizer)
         if start_epoch > 0:
-                self.start_epoch = start_epoch
+            self.start_epoch = start_epoch
 
-        with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
+        with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):
             self.optimizer.zero_grad()
-            output = self.model(batch_sample)            
+            output = self.model(batch_sample)
 
-        loss = output["loss"]                        
-        loss.backward()                                             
-        xm.reduce_gradients(self.optimizer)                                
-        xm.optimizer_step(self.optimizer, barrier=False)                       
-        xm.mark_step()           
+        loss = output["loss"]
+        loss.backward()
+        xm.reduce_gradients(self.optimizer)
+        xm.optimizer_step(self.optimizer, barrier=False)
+        xm.mark_step()
 
-        xm.master_print(f"Loss value: {loss}")                                                          
-        self.save_checkpoint_with_optim(self.model, self.optimizer, epoch=self.start_epoch)                                                                                                          
+        xm.master_print(f"Loss value: {loss}")
+        self.save_checkpoint_with_optim(self.model, self.optimizer, epoch=self.start_epoch)
         # self.save_checkpoint(self.model, self.optimizer)
-        xm.master_print("End: debug_graph_computation graph")                                                             
+        xm.master_print("End: debug_graph_computation graph")
 
     def validate(self):
         """
@@ -268,7 +159,6 @@ class MiniGPT4EvalAgent(BaseAgent):
 
     def finalize(self):
         pass
-        
 
     @classmethod
     def setup_agent(cls, **kwargs):
@@ -282,8 +172,7 @@ class MiniGPT4EvalAgent(BaseAgent):
             builder_instance = builder()
             dataset = builder_instance.build_datasets()
             datasets[name] = dataset
-        
-        
+
         return datasets
 
     def create_dataloaders(self, batch_size=-1):
@@ -294,7 +183,7 @@ class MiniGPT4EvalAgent(BaseAgent):
 
         for dataset_name in dataset_names:
 
-            dataset = datasets[dataset_name]            
+            dataset = datasets[dataset_name]
 
             for split in dataset.values():
                 num_records = len(split)
@@ -309,7 +198,6 @@ class MiniGPT4EvalAgent(BaseAgent):
 
                 collate_fn = getattr(split, "collater", None)
 
-
                 sampler = DistributedSampler(
                     split,
                     num_replicas=xr.world_size(),
@@ -317,13 +205,12 @@ class MiniGPT4EvalAgent(BaseAgent):
                     shuffle=True if is_train else False
                 ) if self.config.run.distributed and xr.world_size() > 1 else None
 
-                
                 loader = DataLoader(
                     split,
-                    batch_size= batch_size if batch_size > 0 else self.config.datasets[dataset_name].batch_size,
+                    batch_size=batch_size if batch_size > 0 else self.config.datasets[dataset_name].batch_size,
                     num_workers=self.config.run.num_workers,
                     pin_memory=True,
-                    shuffle=(True if is_train and not self.config.run.distributed else False), 
+                    shuffle=(True if is_train and not self.config.run.distributed else False),
                     sampler=sampler,
                     collate_fn=collate_fn,
                     drop_last=True
@@ -333,7 +220,7 @@ class MiniGPT4EvalAgent(BaseAgent):
         return dataloaders
 
     def create_optimizer(self):
-        self.logger.info("Creating the optimizer")        
+        self.logger.info("Creating the optimizer")
         beta1 = self.config.run.beta1
         beta2 = self.config.run.beta2
 
@@ -344,102 +231,100 @@ class MiniGPT4EvalAgent(BaseAgent):
             betas=(beta1, beta2),
         )
 
-    def build_model(self):                        
+    def build_model(self):
         self.logger.info("Start building the model")
         model_type = registry.get_model_class(self.config.arch)
-        model = model_type.from_config(self.config.model)        
-        model.to(self.device)    
+        model = model_type.from_config(self.config.model)
+        model.to(self.device)
         return model
-    
-    def save_checkpoint_with_optim(self, model, optimizer, epoch):        
-        
-        if xm.is_master_ordinal():            
-            
-            xm.master_print(f"Saving the checkpoint with optmizer for epoch: {epoch}")    
-                                    
+
+    def save_checkpoint_with_optim(self, model, optimizer, epoch):
+
+        if xm.is_master_ordinal():
+
+            xm.master_print(f"Saving the checkpoint with optmizer for epoch: {epoch}")
+
             file_name = self.config.run.resume_ckpt_path
             file_name = f"{file_name}.pth"
-            
-            model_state_dict = self.return_state_dict_without_grad(model)                                                
-            optimizer_state = self.optimizer_state_without_frozen_params(model, optimizer)            
+
+            model_state_dict = self.return_state_dict_without_grad(model)
+            optimizer_state = self.optimizer_state_without_frozen_params(model, optimizer)
 
             checkpoint = {
-                'epoch': epoch,                
+                'epoch': epoch,
                 'model_state_dict': model_state_dict,
-                'optimizer_state_dict': optimizer_state,                
+                'optimizer_state_dict': optimizer_state,
             }
 
             path = self.config.run.output_dir
             file_and_path = os.path.join(path, file_name)
-            
-            xm.master_print(f"Saving Checkpoint in the path: {file_and_path}")               
-            try:                                
-                self._tpu_metrics.log_checkpoint_saving("Saving checkpoint",epoch=epoch)                
-                torch.save(checkpoint, file_and_path) 
+
+            xm.master_print(f"Saving Checkpoint in the path: {file_and_path}")
+            try:
+                self._tpu_metrics.log_checkpoint_saving("Saving checkpoint", epoch=epoch)
+                torch.save(checkpoint, file_and_path)
                 self._tpu_metrics.log_checkpoint_saving("Checkpoint Saved", epoch=epoch)
                 xm.master_print("Checkpoint saved")
             except Exception as e:
-                xm.master_print(f"Error saving the checkpoint {e}")            
+                xm.master_print(f"Error saving the checkpoint {e}")
 
             del checkpoint
             gc.collect()
             xm.mark_step()
-                                    
+
         #synchronize all the processes
         #prevent race conditions
-        xm.rendezvous("checkpoint_saved")   
-    
-                
-    def save_checkpoint(self, model, epoch):        
+        xm.rendezvous("checkpoint_saved")
+
+    def save_checkpoint(self, model, epoch):
 
         if xm.is_master_ordinal():
-
-            xm.master_print("Saving the checkpoint in the main process")    
+            xm.master_print("Saving the checkpoint in the main process")
 
             model_state_dict = self.return_state_dict_without_grad(model)
-                        
-            file_name = self.config.run.checkpoint_name
-            file_name = f"{file_name}.pth"  
 
-            xm.master_print(f"Checkpoint name: {file_name}")    
+            file_name = self.config.run.checkpoint_name
+            file_name = f"{file_name}.pth"
+
+            xm.master_print(f"Checkpoint name: {file_name}")
             checkpoint = {
                 'epoch': epoch,
-                'model_state_dict': model_state_dict,                                                                                
+                'model_state_dict': model_state_dict,
             }
 
             path = self.config.run.output_dir
             file_and_path = os.path.join(path, file_name)
-            
-            xm.master_print(f"Saving Checkpoint in the path: {file_and_path}")   
-                            
+
+            xm.master_print(f"Saving Checkpoint in the path: {file_and_path}")
+
             torch.save(checkpoint, file_and_path)
             xm.master_print(f"Checkpoint saved at path: {file_and_path}")
 
         #synchronize all the processes
         #prevent race conditions
-        xm.rendezvous("checkpoint_saved")        
+        xm.rendezvous("checkpoint_saved")
 
     def return_state_dict_without_grad(self, model):
         """
         Return the state_dict without the parameters that do not require gradients
-        """                
+        """
         state_dict = {
-            k:v.cpu() for k,v in model.state_dict().items()
+            k: v.cpu() for k, v in model.state_dict().items()
             if k in [name for name, p in model.named_parameters() if p.requires_grad]
         }
 
         return state_dict
-    
+
     def optimizer_state_without_frozen_params(self, model, optimizer):
         """
         Return the optim state_dict without the parameters that do not require gradients
-        """    
+        """
         trainable_param_ids = {id(p) for p in model.parameters() if p.requires_grad}
-                
-        filtered_state ={
-            k:v for k,v in optimizer.state_dict()['state'].items()
+
+        filtered_state = {
+            k: v for k, v in optimizer.state_dict()['state'].items()
             if k in trainable_param_ids
-        }                            
+        }
 
         state_dict = {
             'state': filtered_state,
@@ -448,33 +333,10 @@ class MiniGPT4EvalAgent(BaseAgent):
 
         return state_dict
 
-  
-    def _setup_wandb(self, model):
-        if self.config.run.wandb and xm.is_master_ordinal():
-            self.logger.info("Start wandb")
-            wandb.login(key=self.config.run.wandb_api_key)
-            wandb.init(                
-                project="certifiedgpt",                
-                name=self.config.run.wandb_name,
-                job_type="train" if self.config.run.evaluate else "eval",
-                config=self.config
-            )
-            
-            
-            wandb.watch(model)  
-
-            if(not self.config.run.evaluate):
-                # Define metrics once during initialization    
-                wandb.define_metric("train_loss", step_metric="epoch")
-                wandb.define_metric("val_loss", step_metric="epoch")
-                wandb.define_metric("learning_rate", step_metric="epoch")
-
-            # validation metric
-            if(self.config.run.evaluate):
-                wandb.define_metric("accuracy", step_metric="epoch")
-                # wandb.define_metric("perplexity", step_metric="epoch")
-                #                   
-        
-             
-    
-        
+    def prepare_texts(texts, conv_temp):
+        convs = [conv_temp.copy() for _ in range(len(texts))]
+        [conv.append_message(
+            conv.roles[0], '<Img><ImageHere></Img> {}'.format(text)) for conv, text in zip(convs, texts)]
+        [conv.append_message(conv.roles[1], None) for conv in convs]
+        texts = [conv.get_prompt() for conv in convs]
+        return texts

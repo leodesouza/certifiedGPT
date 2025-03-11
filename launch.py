@@ -28,9 +28,9 @@ from graphs.models.minigpt4.common.optims import *
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Training")
-    parser.add_argument("--config-path", required=True, help="path to configuration file.")                      
+    parser.add_argument("mode", choices=["train", "eval", "smoothing_predict", "certify"])
+    parser.add_argument("--config-path", required=True, help="path to configuration file.")
     args = parser.parse_args()
-
     return args
 
 
@@ -43,7 +43,7 @@ def setup_logger():
     console_formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
     console_handler.setFormatter(console_formatter)
 
-    log_file_path = os.path.join(os.environ.get("OUTPUT_DIR"),'certifiedgpt.log')
+    log_file_path = os.path.join(os.environ.get("OUTPUT_DIR"))
     file_handler = logging.FileHandler(log_file_path)
     file_handler.setLevel(logging.ERROR)
     file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
@@ -59,7 +59,7 @@ def setup_seeds(config):
     seed = config.run.seed
     random.seed(seed)
     np.random.seed(seed)
-    torch.manual_seed(seed)    
+    torch.manual_seed(seed)
 
 
 def register_variables():
@@ -72,35 +72,46 @@ def register_variables():
 def disable_print():
     sys.stdout = open(os.devnull, 'w')
 
+
 def enable_print():
     sys.stdout = sys.__stdout__
 
-def main(rank):    
+
+def main(rank):
     args = parse_args()
-    config = Config(args)    
-
+    config = Config(args)
     disable_print()
-    import agents  
 
-    setup_logger()    
-    setup_seeds(config)    
-    register_variables()        
-    
-    agent = agents.setup_agent(config)
+    from agents import BaseAgent, setup_agent
+
+    if args.mode == "train":
+        from agents import minigpt4_finetune_agent
+    elif args.mode == "eval":
+        from agents import minigpt4_eval_agent
+    elif args.mode == "smoothing_predict":
+        from agents import minigpt4_eval_agent
+    elif args.mode == "predict":
+        from agents import minigpt4_eval_agent
+
+    setup_logger()
+    setup_seeds(config)
+    register_variables()
+
+    agent = setup_agent(config)
     agent.run()
     agent.finalize()
-    
-            
-if __name__ == "__main__":    
+
+
+if __name__ == "__main__":
 
     import torch_xla as xla
 
     _args = parse_args()
     _config = Config(_args)
-                     
+
     if _config.run.debug_graph_computation:
         print('Running training in debug mode')
-        xla.launch(main, args=(), debug_single_process=True)   
-    else:        
+        xla.launch(main, args=(), debug_single_process=True)
+    else:
         #logging.disable(logging.CRITICAL)
-        xla.launch(main, args=())   
+        xla.launch(main, args=())
