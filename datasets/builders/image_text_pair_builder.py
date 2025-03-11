@@ -8,7 +8,7 @@
 from common.registry import registry
 from configs.all_config_paths import get_database_config_path
 from datasets.builders.base_dataset_builder import BaseDatasetBuilder
-from datasets.datasets.vqav2_dataset import VQAv2Dataset
+from datasets.datasets.vqav2_dataset import VQAv2Dataset, VQAv2EvalDataset
 from datasets.datasets.cc_sbu_align_dataset import CCSbuDataset
 from pathlib import Path
 
@@ -76,6 +76,15 @@ class CCSbuBuilder(BaseDatasetBuilder):
 
         self.logger.info("Building textual processor")
         self.text_processor["train"] = text_processor_class.from_config(text_train_config)        
+
+
+@registry.register_builder("evqav2")
+class VQAv2EvalBuilder(BaseDatasetBuilder):
+    train_datasets_cls = VQAv2EvalDataset
+
+    DATASET_CONFIG_DICT = {
+        "default": "configs/datasets/vqav2/eval_vqa.yaml"
+    }        
 
     
 

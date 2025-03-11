@@ -4,9 +4,11 @@
 # See LICENSE.md for the full license text or visit the repo at:
 # https://github.com/Vision-CAIR/MiniGPT-4
 #
+import json
 import os
 import random
 from pathlib import Path
+from torch.utils.data import Dataset
 from datasets.datasets.base_dataset import BaseDataset
 from PIL import Image
 from common.registry import registry
@@ -169,14 +171,32 @@ class VQAv2Dataset(BaseDataset):
         return self.split    
 
 
-class VQAv2EvalDataset(BaseDataset):
-    def __init__(self, vis_processor, text_processor, vis_paths, annotation_paths):
-        super().__init__(
-            vis_processor=vis_processor,
-            text_processor=text_processor,
-            vis_paths=vis_paths,
-            annotation_paths=annotation_paths,
-        )
+class VQAv2EvalDataset(Dataset):
+    def __init__(self, questions_path, vis_processor, vis_paths):        
+        self.questions_path = questions_path
+        self.vis_processor=vis_processor            
+        self.vis_paths=vis_paths
 
-    def __getitem__(self, index):
-        return NotImplementedError
+        self.questions = []
+        
+        self.logger.info("Loading eval dataset ...")
+        self.logger.info("Loading questions json files")
+        for question_path in self.questions_paths:
+            question = json.load(open(question_path, "r"))
+            if isinstance(question, dict):
+                self.questions.extend(json.load(open(question_path, "r"))["questions"])
+
+    def __len__(self):
+        return len(self.questions)
+        
+    def __getitem__(self, idx):
+        data = self.questions[idx]
+        img_id = data['image_id']
+        question = data['question']
+        question_id = data['question_id']
+        img_file = '{:0>12}.jpg'.format(img_id)
+        image_path = os.path.join(self.vis_paths, img_file)
+        image = Image.open(image_path).convert('RGB')
+        image = self.vis_processor(image)
+        question = f"[vqa] Based on the image, respond to this question with a short answer: {question}"
+        return image, question, question_id, img_id
