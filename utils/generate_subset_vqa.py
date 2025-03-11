@@ -10,7 +10,7 @@ from configs.all_config_paths import get_database_config_path, DATASET_CONFIG_DI
 from sklearn.model_selection import train_test_split
 import shutil
 
-OmegaConf.register_resolver("env", lambda key: os.environ.get(key, None))
+OmegaConf.register_new_resolver("env", lambda key: os.environ.get(key, None), replace=True)
 
 
 def setup_logger():
@@ -93,6 +93,45 @@ def sample(build_info, split, new_file_name):
         json.dump(json_file, file, indent=4)
 
 
+def sample_test_dataset(build_info, split, new_file_name):
+    exist_questions = []
+    question_path = build_info.questions[split].path[0]
+    file_path = Path(question_path)
+    folder_path = file_path.parent
+    json_file = open_json_file(question_path)
+
+    images_path = build_info.images[split].path[0]
+    data_dir = os.environ["DATA_DIR"]
+    new_images_path = os.path.join(data_dir, "images/sample_test_10k/")
+
+    for question in json_file['questions']:
+        image_id = question["image_id"]
+        file_name = f"COCO_{split}2015_{image_id:012d}.jpg"
+        image_path = os.path.join(images_path, file_name)
+        if os.path.exists(image_path):
+            exist_questions.append(question)
+
+    questions = exist_questions
+
+    # test_size=0.977 for training split
+    train_or_val_split, _ = train_test_split(
+        questions,
+        test_size=0.977,
+        random_state=42,
+        shuffle=True)
+
+    for question in train_or_val_split:
+        image_id = question["image_id"]
+        file_name = f"COCO_{split}2015_{image_id:012d}.jpg"
+        image_path = os.path.join(images_path, file_name)
+        shutil.copy(image_path, new_images_path)
+
+    json_file['questions'] = train_or_val_split
+    file_and_path = os.path.join(folder_path, new_file_name)
+    with open(file_and_path, "w") as file:
+        json.dump(json_file, file, indent=4)
+
+
 def generate_random_samples():
     setup_logger()
     root_path = Path(__file__).resolve().parent.parent
@@ -105,7 +144,7 @@ def generate_random_samples():
     #sample(build_info, 'train', "sample_v2_mscoco_train2014_annotations.json")
 
     logging.info('generate validation sample')
-    sample(build_info, 'val', "sample_v2_mscoco_val2014_annotations.json")
+    sample_test_dataset(build_info, 'test', "sample_v2_OpenEnded_mscoco_test2015_questions.json")
 
     logging.info('process finished')
 

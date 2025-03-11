@@ -9,6 +9,10 @@ datasets:
         val:
           path:
               - ${env:DATA_DIR}/questions/val/v2_OpenEnded_mscoco_val2014_questions.json
+        test:
+          path:
+              - ${env:DATA_DIR}/questions/test/v2_OpenEnded_mscoco_test2015_questions.json
+
       annotations:
         train:
           path:
@@ -30,4 +34,7 @@ datasets:
                #- ${env:DATA_DIR}/images/sample_10k/val                             
                - /home/swf_developer/sample_10k/val
                #- ${env:DATA_DIR}/images/sample/val
+        test:
+          path:
+               - ${env:DATA_DIR}/images/test2015
                
