@@ -199,7 +199,12 @@ class VQAv2EvalDataset(Dataset):
         image = Image.open(image_path).convert('RGB')
         image = self.vis_processor(image)
         question = f"[vqa] Based on the image, respond to this question with a short answer: {question}"
-        return image, question, question_id, img_id
+        return {
+            "image": image,
+            "question": question,
+            "question_id": question_id,
+            "img_id": img_id,
+        }
 
     @property
     def logger(self):
