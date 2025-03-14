@@ -21,6 +21,8 @@ import torch_xla.core.xla_model as xm
 import torch_xla.distributed.parallel_loader as pl
 import torch_xla.amp as xla_amp
 
+from common.vqa_tools.vqa import VQA
+from common.vqa_tools.vqa_eval import VQAEval
 from utils.gcsfuse import mount_gcsfuse
 import wandb
 from tqdm import tqdm
@@ -42,14 +44,12 @@ dist.init_process_group(backend='xla', init_method='xla://')
 class MiniGPT4EvalAgent(BaseAgent):
     def __init__(self):
         super().__init__()
-        self.start_epoch = 0
         self.start_step = 0
-        self.max_epoch = self.config.run.max_epoch
         self._device = xm.xla_device()
-        self._model = None  # self.build_model()
-        # self._setup_wandb(self._model)
-        self._start_epoch = 0
+        self._model = None # self.build_model()
         self._tpu_metrics = TPUMetrics()
+        self.questions_paths = None
+        self.annotations_paths = None
 
     def run(self):
         try:
@@ -63,8 +63,7 @@ class MiniGPT4EvalAgent(BaseAgent):
                 else:
                     xm.master_print("No noise will be applied to the image inputs")
 
-            self.load_checkpoint(self._model, self.optimizer, use_cache=self.config.run.use_cache)
-
+            self.load_finetuning_checkpoint(self._model)
             self.eval(self._dataloaders)
 
         except Exception as e:
@@ -90,8 +89,9 @@ class MiniGPT4EvalAgent(BaseAgent):
             xm.master_print(f"Eval step: {step} - {(test_utils.now())}")
 
             self.maybe_add_noise(batch_sample, self.config.run.noise_level)
+
             image = batch_sample["image"]
-            questions = batch_sample["question"]
+            questions = batch_sample["instruction_input"]
             question_ids = batch_sample["question_id"]
             img_ids = batch_sample["img_id"]
 
@@ -106,15 +106,16 @@ class MiniGPT4EvalAgent(BaseAgent):
                 result['question_id'] = int(question_id)
                 predictions.append(result)
 
+        annotation_file = ""
+        question_file = ""
+        vqa = VQA(annotation_file, question_file)
+        vqaRes = vqa.loadRes(predictions, question_file)
+        vqaEval = VQAEval(vqa, vqaRes, n=2)
+        vqaEval.evaluate()
 
-
-        global_eval_loss = xm.mesh_reduce("running_eval_loss", running_eval_loss.item(), sum)
-        global_total_batches = xm.mesh_reduce("total_batches", total_batches.item(), sum)
-        eval_avg_loss = global_eval_loss / global_total_batches
+        xm.master_print("Overall VQAv2 Accuracy is: %.02f\n" % (vqaEval.accuracy['overall']), flush=True)
 
         xm.master_print(f"Eval ended: {(test_utils.now())}")
-
-        return eval_avg_loss
 
     def finalize(self):
         pass
@@ -158,6 +159,9 @@ class MiniGPT4EvalAgent(BaseAgent):
                     self.logger.info(
                         "Loaded {} records for split {}".format(num_records, dataset)
                     )
+
+                self.questions_paths = split.questions_paths
+                self.annotations_paths = split.annotations_paths
 
                 is_train = (
                     True if split.split_name in self.config.run.train_splits else False
@@ -208,7 +212,7 @@ class MiniGPT4EvalAgent(BaseAgent):
     def prepare_texts(texts, conv_temp):
         convs = [conv_temp.copy() for _ in range(len(texts))]
         [conv.append_message(
-            conv.roles[0], '<Img><ImageHere></Img> {}'.format(text)) for conv, text in zip(convs, texts)]
+            conv.roles[0], text) for conv, text in zip(convs, texts)]
         [conv.append_message(conv.roles[1], None) for conv in convs]
         texts = [conv.get_prompt() for conv in convs]
         return texts

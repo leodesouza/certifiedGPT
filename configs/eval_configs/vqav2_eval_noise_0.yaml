@@ -5,6 +5,7 @@ model:
   prompt_path: "prompts/alignment.txt"
   prompt_template: '###Human: {} ###Assistant: '  
   ckpt: ${env:MINIGPT_4}
+  vqa_finetuned: ${env:VQAV2_FINETUNED}
     
 
   drop_path_rate: 0
@@ -27,22 +28,22 @@ model:
 # https://cloud.google.com/tpu/docs/performance-guide
 
 datasets:
-  evqav2:
-    batch_size: 52    
+  evalvqav2:
+    batch_size: 1
     vis_processor:
-      test:
+      val:
         name: "blip2_image_val"
-        image_size: 448        
+        image_size: 448
         min_scale: 0.5
-        max_scale: 1.0      
+        max_scale: 1.0
     text_processor:
-      test:
-        name: "blip_caption"      
+      val:
+        name: "blip_caption"
 
 run:
   agent: image_text_eval
   max_new_tokens: 20
-  noise_level: 0.5
+  noise_level: 0
   checkpoint_name: "vqav2_eval_noise_0.5"
   seed: 42  
   output_dir: ${env:OUTPUT_DIR}          
@@ -59,3 +60,6 @@ run:
 # DataLoader
   distributed: True  
   num_workers: 2 # n of workers to load data
+
+# debug
+  debug_graph_computation: False

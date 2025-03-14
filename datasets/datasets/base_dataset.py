@@ -21,6 +21,8 @@ class BaseDataset(Dataset):
                  vis_paths=None, annotation_paths=[],
                  split="train"):
 
+        self.questions_paths = questions_paths
+        self.annotations_paths = annotation_paths
         self.vis_paths = vis_paths
         self.split = split
 

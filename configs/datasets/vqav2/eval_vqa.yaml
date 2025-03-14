@@ -2,12 +2,17 @@ datasets:
   coco_vqa:
     data_type: images
     build_info:
-      questions:        
-        test:
+      questions:
+        val:
           path:
-              - ${env:DATA_DIR}/questions/test/sample_v2_OpenEnded_mscoco_test2015_questions.json
-      images:        
-        test:
+              - ${env:DATA_DIR}/questions/val/v2_OpenEnded_mscoco_val2014_questions.json
+      annotations:
+        val:
           path:
-               - ${env:DATA_DIR}/images/test2015
-               
+               - ${env:DATA_DIR}/annotations/val/sample_v2_mscoco_val2014_annotations.json
+      images:
+        val:
+          path:
+               #- ${env:DATA_DIR}/images/sample_10k/val
+               - /home/leonardosouza/projects/datasets/vqav2/images/sample_10k/val
+               #- ${env:DATA_DIR}/images/sample/val

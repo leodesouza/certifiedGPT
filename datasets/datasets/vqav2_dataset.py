@@ -79,7 +79,6 @@ class VQAv2Dataset(BaseDataset):
         except Exception as e:            
             xm.master_print(f"error on loading the dataset. Details: {e}")
 
-
     def get_data(self, index):
 
         try:
@@ -106,8 +105,7 @@ class VQAv2Dataset(BaseDataset):
             image_path = os.path.join(self.vis_paths, file_name)                                            
             image = Image.open(image_path).convert("RGB")
             image = self.vis_processor(image)
-            
-            
+
             all_answers = annotation["answers"]
             num_answer = len(all_answers)
 
@@ -136,8 +134,7 @@ class VQAv2Dataset(BaseDataset):
             if total_weight > 0:
                 for answer in answer_weights:
                     answer_weights[answer] /= total_weight
-              
-                        
+
             answers = list(answer_weights.keys())
             weights = list(answer_weights.values())
             answer = random.choices(answers, weights=weights, k=1)
@@ -149,6 +146,7 @@ class VQAv2Dataset(BaseDataset):
                 "question": question,
                 "question_id": question_id,
                 "answer": answer,
+                "img_ids": image_id
             }
         except Exception as e:
             print(f"Error at index:{index}{e}")
@@ -164,14 +162,15 @@ class VQAv2Dataset(BaseDataset):
             "question_id": data["question_id"],
             "instruction_input": instruction,
             "answer": data["answer"],
+            "img_ids": data["img_ids"]
         }       
 
     @property
     def split_name(self):
-        return self.split    
+        return self.split
 
 
-class VQAv2EvalDataset(Dataset):
+class VQAv2TestDataset(Dataset):
     def __init__(self, questions_path, vis_processor, vis_paths, split):
         self.questions_paths = questions_path
         self.vis_processor = vis_processor

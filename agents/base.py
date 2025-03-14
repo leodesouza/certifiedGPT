@@ -77,7 +77,14 @@ class BaseAgent:
               
               return start_epoch
           else:
-              return 0                                                                           
+              return 0
+
+    def load_finetuning_checkpoint(self, model):
+        ckpt_path = self.config.model.vqa_finetuned
+        if ckpt_path:
+            print("Load VQAv2 Finetuning Checkpoint: {}".format(ckpt_path))
+            ckpt = torch.load(ckpt_path, map_location="cpu")
+            model.load_state_dict(ckpt['model'], strict=False)
 
     def save_checkpoint(self, model, optimizer, epoch, loss, file_name="checkpoint.pth.bar", is_best=False):
         """

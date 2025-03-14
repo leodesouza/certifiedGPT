@@ -8,7 +8,7 @@
 from common.registry import registry
 from configs.all_config_paths import get_database_config_path
 from datasets.builders.base_dataset_builder import BaseDatasetBuilder
-from datasets.datasets.vqav2_dataset import VQAv2Dataset, VQAv2EvalDataset
+from datasets.datasets.vqav2_dataset import VQAv2Dataset, VQAv2TestDataset
 from datasets.datasets.cc_sbu_align_dataset import CCSbuDataset
 from pathlib import Path
 
@@ -21,18 +21,87 @@ class VQAv2Builder(BaseDatasetBuilder):
         "default": "configs/datasets/vqav2/defaults_vqa.yaml"
     }
 
+
+@registry.register_builder("evalvqav2")
+class VQAv2EvalBuilder(BaseDatasetBuilder):
+    eval_datasets_cls = VQAv2Dataset
+
+    DATASET_CONFIG_DICT = {
+        "default": "configs/datasets/vqav2/defaults_vqa.yaml"
+    }
+
+    def build(self):
+
+        self.build_processors()
+
+        build_info = self.config.build_info
+        questions_info = build_info.questions
+        annotations_info = build_info.annotations
+
+        images_info = build_info.images
+        datasets = dict()
+        self.logger.info("Building the dataset based in build options")
+        self.logger.info(f"Build path: {self.default_config_path()}")
+
+        for dataset_info in annotations_info.keys():
+            if dataset_info not in ["val"]:
+                continue
+            self.logger.info(f"Building dataset: {dataset_info}")
+
+            vis_processor = (
+                self.vis_processor["eval"]
+            )
+
+            text_processor = (
+                self.text_processor["eval"]
+            )
+
+            questions_path = questions_info.get(dataset_info).path
+            annotation_paths = annotations_info.get(dataset_info).path
+            vis_paths = Path(images_info.get(dataset_info).path[0])
+
+            dataset_cls = self.eval_datasets_cls
+            datasets[dataset_info] = dataset_cls(
+                vis_processor=vis_processor,
+                text_processor=text_processor,
+                questions_paths=questions_path,
+                annotation_paths=annotation_paths,
+                vis_paths=vis_paths,
+                split=dataset_info
+            )
+        return datasets
+
+    def build_train_processors(self):
+        pass
+
+    def build_val_processors(self):
+        self.logger.info("Building val processors")
+        val_config = registry.get_configuration_class("configuration")
+
+        vis_val_config = val_config.datasets.evalvqav2.vis_processor.val
+        text_val_config = val_config.datasets.evalvqav2.text_processor.val
+
+        vis_processor_class = registry.get_processor_class(vis_val_config.name)
+        self.logger.info("Building visual processor")
+        self.vis_processor["val"] = vis_processor_class.from_config(vis_val_config)
+
+        text_processor_class = registry.get_processor_class(text_val_config.name)
+
+        self.logger.info("Building textual processor")
+        self.text_processor["val"] = text_processor_class.from_config(text_val_config)
+
+
 @registry.register_builder("cc_sbu")
 class CCSbuBuilder(BaseDatasetBuilder):
     train_datasets_cls = CCSbuDataset
 
     DATASET_CONFIG_DICT = {
         "default": "configs/datasets/cc_sbu/defaults.yaml"
-    }   
+    }
 
     def build(self):
-
         self.build_processors()
-        build_info = self.config.build_info        
+        build_info = self.config.build_info
         annotations_info = build_info.annotations
 
         images_info = build_info.images
@@ -43,7 +112,6 @@ class CCSbuBuilder(BaseDatasetBuilder):
         vis_processor = self.vis_processor["train"]
         text_processor = self.text_processor["train"]
 
-        
         annotation_paths = Path(annotations_info.get('train').path[0])
         vis_paths = Path(images_info.get('train').path[0])
 
@@ -55,12 +123,12 @@ class CCSbuBuilder(BaseDatasetBuilder):
             vis_paths=vis_paths,
             split='train'
         )
-                
+
         return datasets
-    
+
     def build_processors(self):
-       self.build_train_processors()
-       
+        self.build_train_processors()
+
     def build_train_processors(self):
         self.logger.info("Building val processors")
         train_config = registry.get_configuration_class("configuration")
@@ -75,15 +143,15 @@ class CCSbuBuilder(BaseDatasetBuilder):
         text_processor_class = registry.get_processor_class(text_train_config.name)
 
         self.logger.info("Building textual processor")
-        self.text_processor["train"] = text_processor_class.from_config(text_train_config)        
+        self.text_processor["train"] = text_processor_class.from_config(text_train_config)
 
 
-@registry.register_builder("evqav2")
-class VQAv2EvalBuilder(BaseDatasetBuilder):
-    eval_datasets_cls = VQAv2EvalDataset
+@registry.register_builder("testvqav2")
+class VQAv2TestBuilder(BaseDatasetBuilder):
+    eval_datasets_cls = VQAv2TestDataset
 
     DATASET_CONFIG_DICT = {
-        "default": "configs/datasets/vqav2/eval_vqa.yaml"
+        "default": "configs/datasets/vqav2/eval_vqa_test.yaml"
     }
 
     def build_train_processors(self):
@@ -143,6 +211,3 @@ class VQAv2EvalBuilder(BaseDatasetBuilder):
             )
 
         return datasets
-    
-
-

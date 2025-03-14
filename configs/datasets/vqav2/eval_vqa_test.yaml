@@ -1,0 +1,13 @@
+datasets:
+  coco_vqa:
+    data_type: images
+    build_info:
+      questions:        
+        test:
+          path:
+              - ${env:DATA_DIR}/questions/test/sample_v2_OpenEnded_mscoco_test2015_questions.json
+      images:        
+        test:
+          path:
+               - ${env:DATA_DIR}/images/test2015
+               
