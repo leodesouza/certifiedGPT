@@ -8,8 +8,10 @@
 import os
 import time
 from datetime import datetime
+from pathlib import Path
 
-#Torch 
+import numpy as np
+#Torch
 import torch
 import torch.distributed as dist
 from torch.utils.data import DataLoader, DistributedSampler
@@ -19,21 +21,15 @@ from torch.utils.data import DataLoader, DistributedSampler
 from torch_xla import runtime as xr
 import torch_xla.core.xla_model as xm
 import torch_xla.distributed.parallel_loader as pl
-import torch_xla.amp as xla_amp
 
 from common.vqa_tools.vqa import VQA
 from common.vqa_tools.vqa_eval import VQAEval
-from utils.gcsfuse import mount_gcsfuse
-import wandb
-from tqdm import tqdm
 
 from agents.base import BaseAgent
 from common.metrics import TPUMetrics
 from common.registry import registry
 import torch_xla.test.test_utils as test_utils
 from graphs.models.minigpt4.conversation.conversation import CONV_VISION_minigptv2
-
-import gc
 
 # rank and world size are inferred from XLA Device
 # source: https://github.com/pytorch/xla/
@@ -64,14 +60,14 @@ class MiniGPT4EvalAgent(BaseAgent):
                     xm.master_print("No noise will be applied to the image inputs")
 
             self.load_finetuning_checkpoint(self._model)
-            self.eval(self._dataloaders)
+            accuracy = self.eval(self._dataloaders)
+            xm.master_print("Overall VQAv2 Accuracy is: %.02f\n" % accuracy, flush=True)
 
         except Exception as e:
             xm.master_print(f"Error on agent run: {test_utils.now()}. Details: {e}")
 
     @torch.no_grad()
     def eval(self, dataloader):
-        running_eval_loss = torch.tensor(0.0, device=self.device)
         total_batches = torch.tensor(0, device=self.device)
         val_loader = dataloader["val"]
         val_loader = pl.MpDeviceLoader(val_loader, self.device)
@@ -86,8 +82,8 @@ class MiniGPT4EvalAgent(BaseAgent):
         predictions = []
         self.model.eval()
         for step, batch_sample in enumerate(val_loader):
-            xm.master_print(f"Eval step: {step} - {(test_utils.now())}")
 
+            xm.master_print(f"Eval step: {step} - {(test_utils.now())}")
             self.maybe_add_noise(batch_sample, self.config.run.noise_level)
 
             image = batch_sample["image"]
@@ -95,7 +91,7 @@ class MiniGPT4EvalAgent(BaseAgent):
             question_ids = batch_sample["question_id"]
             img_ids = batch_sample["img_id"]
 
-            texts = self.prepare_texts(question, conv_temp)
+            texts = self.prepare_texts(questions, conv_temp)
             answers = self.model.generate(image, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False)
             xm.mark_step()
 
@@ -105,17 +101,25 @@ class MiniGPT4EvalAgent(BaseAgent):
                 result['answer'] = answer
                 result['question_id'] = int(question_id)
                 predictions.append(result)
+            total_batches += 1
 
-        annotation_file = ""
-        question_file = ""
+        annotation_file = Path(self.annotations_paths)
+        question_file = Path(self.questions_paths)
+
         vqa = VQA(annotation_file, question_file)
         vqaRes = vqa.loadRes(predictions, question_file)
+
         vqaEval = VQAEval(vqa, vqaRes, n=2)
         vqaEval.evaluate()
+        accuracy = vqaEval.accuracy['overall']
 
-        xm.master_print("Overall VQAv2 Accuracy is: %.02f\n" % (vqaEval.accuracy['overall']), flush=True)
+        global_eval_accuracy = xm.mesh_reduce("eval_accuracy", accuracy, sum)
+        global_total_batches = xm.mesh_reduce("total_batches", total_batches.item(), sum)
 
+        eval_avg_accuracy = global_eval_accuracy / global_total_batches
         xm.master_print(f"Eval ended: {(test_utils.now())}")
+
+        return eval_avg_accuracy
 
     def finalize(self):
         pass

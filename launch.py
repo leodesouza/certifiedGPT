@@ -85,12 +85,16 @@ def main(rank):
     from agents import BaseAgent, setup_agent
 
     if args.mode == "train":
+        print('Running training with agent: minigpt4_finetune_agent')
         from agents import minigpt4_finetune_agent
     elif args.mode == "eval":
+        print('Running eval with agent: minigpt4_eval_agent')
         from agents import minigpt4_eval_agent
     elif args.mode == "smoothing_predict":
+        print('Running training with agent: ??')
         from agents import minigpt4_eval_agent
     elif args.mode == "predict":
+        print('Running training with agent: ??')
         from agents import minigpt4_eval_agent
 
     setup_logger()
