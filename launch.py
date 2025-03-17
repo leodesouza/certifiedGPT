@@ -79,8 +79,7 @@ def enable_print():
 
 def main(rank):
     args = parse_args()
-    config = Config(args)
-    disable_print()
+    config = Config(args)    
 
     from agents import BaseAgent, setup_agent
 
@@ -107,19 +106,15 @@ def main(rank):
 
 
 if __name__ == "__main__":
-
-    print('Starting main')
+    
     import torch_xla as xla
-
-
-    print('parse_args()')
+    
     _args = parse_args()
-    _config = Config(_args)
-
-    print('debug_graph_computation()')
+    _config = Config(_args)    
     if _config.run.debug_graph_computation:
         print('Running training in debug mode')
         xla.launch(main, args=(), debug_single_process=True)
     else:
-        #logging.disable(logging.CRITICAL)
+        # logging.disable(logging.CRITICAL)
+        # disable_print()
         xla.launch(main, args=())
