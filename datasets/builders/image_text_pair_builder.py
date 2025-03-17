@@ -33,7 +33,6 @@ class VQAv2EvalBuilder(BaseDatasetBuilder):
     def build(self):
 
         self.build_processors()
-
         build_info = self.config.build_info
         questions_info = build_info.questions
         annotations_info = build_info.annotations
