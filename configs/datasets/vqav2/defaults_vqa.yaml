@@ -16,24 +16,17 @@ datasets:
       annotations:
         train:
           path:
-               - ${env:DATA_DIR}/annotations/train/sample_v2_mscoco_train2014_annotations.json
-               #- ${env:DATA_DIR}/annotations/train/v2_mscoco_train2014_annotations.json
+               - ${env:DATA_DIR}/annotations/train/sample_v2_mscoco_train2014_annotations.json               
         val:
           path:
-               - ${env:DATA_DIR}/annotations/val/sample_v2_mscoco_val2014_annotations.json
-               #- ${env:DATA_DIR}/annotations/val/v2_mscoco_val2014_annotations.json
+               - ${env:DATA_DIR}/annotations/val/sample_v2_mscoco_val2014_annotations.json               
       images:
         train:
-          path:
-               #- ${env:DATA_DIR}/images/sample_10k/train
-               #- /home/leonardosouza/sample_10/train               
+          path:               
                - /home/swf_developer/sample_10k/train
-               #- ${env:DATA_DIR}/images/sample/train
         val:
-          path:
-               #- ${env:DATA_DIR}/images/sample_10k/val                             
-               - /home/swf_developer/sample_10k/val
-               #- ${env:DATA_DIR}/images/sample/val
+          path:               
+               - /home/swf_developer/sample_10k/val               
         test:
           path:
                - ${env:DATA_DIR}/images/test2015
