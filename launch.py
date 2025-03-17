@@ -43,7 +43,7 @@ def setup_logger():
     console_formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
     console_handler.setFormatter(console_formatter)
 
-    log_file_path = os.path.join(os.environ.get("OUTPUT_DIR"))
+    log_file_path = os.path.join(os.environ.get("OUTPUT_DIR"),"certified.log")
     file_handler = logging.FileHandler(log_file_path)
     file_handler.setLevel(logging.ERROR)
     file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
