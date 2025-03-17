@@ -57,8 +57,13 @@ class VQAv2EvalBuilder(BaseDatasetBuilder):
             )
 
             questions_path = questions_info.get(dataset_info).path
+            self.logger.info(f"questions_path: {questions_path}")
+
             annotation_paths = annotations_info.get(dataset_info).path
+            self.logger.info(f"annotation_paths: {annotation_paths}")
+
             vis_paths = Path(images_info.get(dataset_info).path[0])
+            self.logger.info(f"vis_paths: {vis_paths}")
 
             dataset_cls = self.eval_datasets_cls
             datasets[dataset_info] = dataset_cls(
