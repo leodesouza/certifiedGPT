@@ -79,7 +79,7 @@ class BaseAgent:
           else:
               return 0
 
-    def load_finetuning_checkpoint(self, model):
+    def load_finetuned_model(self, model):
         ckpt_path = self.config.model.vqa_finetuned
         if ckpt_path:
             print("Load VQAv2 Finetuning Checkpoint: {}".format(ckpt_path))
