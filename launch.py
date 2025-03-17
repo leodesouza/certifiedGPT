@@ -108,11 +108,15 @@ def main(rank):
 
 if __name__ == "__main__":
 
+    print('Starting main')
     import torch_xla as xla
 
+
+    print('parse_args()')
     _args = parse_args()
     _config = Config(_args)
 
+    print('debug_graph_computation()')
     if _config.run.debug_graph_computation:
         print('Running training in debug mode')
         xla.launch(main, args=(), debug_single_process=True)
