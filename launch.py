@@ -93,9 +93,9 @@ def main(rank):
     elif args.mode == "smoothing_predict":
         print('Running training with agent: ??')
         from agents import minigpt4_eval_agent
-    elif args.mode == "predict":
+    elif args.mode == "certify":
         print('Running training with agent: ??')
-        from agents import minigpt4_eval_agent
+        from agents import minigpt4_certify_agent
 
     setup_logger()
     setup_seeds(config)

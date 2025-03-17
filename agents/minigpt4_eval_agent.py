@@ -31,6 +31,8 @@ from common.registry import registry
 import torch_xla.test.test_utils as test_utils
 from graphs.models.minigpt4.conversation.conversation import CONV_VISION_minigptv2
 
+from bert_score import score 
+
 # rank and world size are inferred from XLA Device
 # source: https://github.com/pytorch/xla/
 dist.init_process_group(backend='xla', init_method='xla://')
@@ -59,7 +61,7 @@ class MiniGPT4EvalAgent(BaseAgent):
                 else:
                     xm.master_print("No noise will be applied to the image inputs")
 
-            self.load_finetuning_checkpoint(self._model)
+            self.load_finetuned_model(self._model)
             accuracy = self.eval(self._dataloaders)
             xm.master_print("Overall VQAv2 Accuracy is: %.02f\n" % accuracy, flush=True)
 
@@ -120,6 +122,53 @@ class MiniGPT4EvalAgent(BaseAgent):
         xm.master_print(f"Eval ended: {(test_utils.now())}")
 
         return eval_avg_accuracy
+    
+    def exact_match(pred, answers):
+        return 1 if pred in answers else 0
+    
+    def compute_f1score(pred, answers):        
+        pred_tokens =  nlkt.word_tokenize(pred.lower()) # or llama tokenizer
+        ans_tokens = [nltk.word_tokenize(ans.lower()) for ans in answers]
+
+        f1_scores = [] 
+        for token in ans_tokens:
+            common = Counter(pred_tokens) & Counter(token)
+            num_common = sum(common.values())
+            if num_common == 0:
+                continue
+            
+            # measure how many of the predicted answers are actually correct
+            precision = num_common / len(pred_tokens)
+
+            # measure how many of the correct answer were retrieved 
+            recall = num_common / len(token)
+
+            f1 = (2 * precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+            f1_scores.append(f1)
+        
+        return max(f1_scores)
+    
+    def compute_bias(predictions):
+        pred_counter = Counter(predictions)
+        top_preds = pred_counter.most_common(10)
+        
+        print("top most frequent answer:")
+        for aws, freq in top_preds:
+            print(f"{aws}: {freq}")
+    
+    def compute_bertscore(predictions, answers, lang='en'):
+        p, r, f1 = score(predictions, answers, lang=lang, rescale_with_baseline=True) 
+
+        return {
+            "precision": p.mean().item(),
+            "recall": r.mean().item(),
+            "f1": f1.mean().item()
+        }
+
+
+
+
+
 
     def finalize(self):
         pass
@@ -220,3 +269,5 @@ class MiniGPT4EvalAgent(BaseAgent):
         [conv.append_message(conv.roles[1], None) for conv in convs]
         texts = [conv.get_prompt() for conv in convs]
         return texts
+
+    
