@@ -44,7 +44,7 @@ class MiniGPT4EvalAgent(BaseAgent):
         super().__init__()
         self.start_step = 0
         self._device = xm.xla_device()
-        self._model = None # self.build_model()
+        self._model = self.build_model()
         self._tpu_metrics = TPUMetrics()
         self.questions_paths = None
         self.annotations_paths = None
