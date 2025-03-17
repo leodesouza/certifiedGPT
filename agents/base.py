@@ -80,11 +80,19 @@ class BaseAgent:
               return 0
 
     def load_finetuned_model(self, model):
-        ckpt_path = self.config.model.vqa_finetuned
-        if ckpt_path:
-            print("Load VQAv2 Finetuning Checkpoint: {}".format(ckpt_path))
-            ckpt = torch.load(ckpt_path, map_location="cpu")
-            model.load_state_dict(ckpt['model'], strict=False)
+        
+        checkpoint = self.config.model.vqa_finetuned
+
+        xm.master_print("Synchronize checkpoint loading with all process")
+        xm.rendezvous("Loading Checkpoint") # sync all process
+                
+        xm.master_print(f"Loading checkpoint from {checkpoint}")                                          
+        checkpoint = torch.load(checkpoint, map_location=torch.device('cpu'))              
+        xm.rendezvous("Checkpoint loaded") # sync all process
+
+        xm.master_print("Loading model state")         
+        model.load_state_dict(checkpoint['model_state_dict'], strict=False)                                                
+        xm.master_print("Loading model state. Done!")                                         
 
     def save_checkpoint(self, model, optimizer, epoch, loss, file_name="checkpoint.pth.bar", is_best=False):
         """
