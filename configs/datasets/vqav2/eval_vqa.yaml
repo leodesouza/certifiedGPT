@@ -12,7 +12,5 @@ datasets:
                - ${env:DATA_DIR}/annotations/val/sample_v2_mscoco_val2014_annotations.json
       images:
         val:
-          path:
-               #- ${env:DATA_DIR}/images/sample_10k/val
-               - /home/leonardosouza/projects/datasets/vqav2/images/sample_10k/val
-               #- ${env:DATA_DIR}/images/sample/val
+          path:               
+               - /home/swf_developer/sample_10k/val
