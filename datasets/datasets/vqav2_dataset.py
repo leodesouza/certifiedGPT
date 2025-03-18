@@ -101,6 +101,7 @@ class VQAv2Dataset(BaseDataset):
             print(f"***questions_dict -- {len(self.questions_dict)}") 
             print(f"***Question -- {question}") 
             question = self.text_processor(question["question"])
+            print(f"***text_processor Question -- {question} --- {self.text_processor}") 
 
             if question is None:
                 raise ValueError(
