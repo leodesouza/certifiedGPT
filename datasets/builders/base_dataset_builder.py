@@ -78,6 +78,10 @@ class BaseDatasetBuilder:
             annotation_paths = annotations_info.get(dataset_info).path
             vis_paths = Path(images_info.get(dataset_info).path[0])
 
+            print(f"questions_path": {questions_path}")
+            print(f"annotation_paths": {annotation_paths}")
+            print(f"vis_paths": {vis_paths}")
+
             dataset_cls = self.train_datasets_cls if is_train else self.eval_datasets_cls
 
             datasets[dataset_info] = dataset_cls(
