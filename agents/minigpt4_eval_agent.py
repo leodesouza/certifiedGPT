@@ -210,7 +210,7 @@ class MiniGPT4EvalAgent(BaseAgent):
                 num_records = len(split)
                 if num_records >= 0:
                     self.logger.info(
-                        "Loaded {} records for split {}".format(num_records, split)
+                        "Loaded {} records for split {}".format(num_records, split.split_name)
                     )
 
                 self.questions_paths = split.questions_paths
