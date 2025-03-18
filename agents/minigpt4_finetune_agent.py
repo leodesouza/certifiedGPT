@@ -300,7 +300,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 num_records = len(split)
                 if num_records >= 0:
                     self.logger.info(
-                        "Loaded {} records for split {}".format(num_records, dataset)
+                        "Loaded {} records for split {}".format(num_records, split.split_name)
                     )
 
                 is_train = (
