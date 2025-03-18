@@ -92,7 +92,7 @@ run:
 
 # DataLoader
   distributed: True  
-  num_workers: 2 # n of workers to load data
+  num_workers: 1 # n of workers to load data
 
 # debug
   debug_graph_computation: False
