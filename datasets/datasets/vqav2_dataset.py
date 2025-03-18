@@ -86,6 +86,7 @@ class VQAv2Dataset(BaseDataset):
 
             print("****annotations") 
             annotation = self.annotations[index]
+            print(f"{annotation}") 
            
             if (
                 "image_id" not in annotation
