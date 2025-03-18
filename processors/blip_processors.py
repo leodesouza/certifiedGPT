@@ -76,8 +76,13 @@ class BlipCaptionProcessor(BaseProcessor):
         self.max_words = max_words
 
     def __call__(self, caption):
-        caption = self.prompt + self.pre_caption(caption)
-        return caption
+        try:
+            caption = self.prompt + self.pre_caption(caption)
+            return caption
+        
+        except Exception as e:
+            print(f"Error in __call__ {e}")
+        
 
     @classmethod
     def from_config(cls, config=None):

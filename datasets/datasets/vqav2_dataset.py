@@ -97,8 +97,8 @@ class VQAv2Dataset(BaseDataset):
             question_id = annotation["question_id"]
             question = self.questions_dict.get(question_id)
             print(f"***questions_dict -- {len(self.questions_dict)}") 
-            print(f"***Question -- {question}") 
-            print(f"{self.text_processor}") 
+            print(f"***Question -- {question}")             
+            print(dir(self.text_processor))
             question = self.text_processor(question["question"])
             
 
