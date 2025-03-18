@@ -98,6 +98,8 @@ class VQAv2Dataset(BaseDataset):
             print("***Questions") 
             question_id = annotation["question_id"]
             question = self.questions_dict.get(question_id)
+            print(f"***questions_dict -- {len(self.questions_dict)}") 
+            print(f"***Question -- {question}") 
             question = self.text_processor(question["question"])
 
             if question is None:
