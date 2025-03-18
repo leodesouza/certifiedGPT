@@ -110,8 +110,7 @@ def main(rank):
 
 if __name__ == "__main__":
     
-    import torch_xla as xla
-    
+    import torch_xla as xla    
     _args = parse_args()
     _config = Config(_args)    
     if _config.run.debug_graph_computation:
