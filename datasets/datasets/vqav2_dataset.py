@@ -154,8 +154,14 @@ class VQAv2Dataset(BaseDataset):
             return None
 
     def __getitem__(self, index):
-        data = self.get_data(index)        
-        instruction = random.choice(self.instruction_template).format(data["question"])
+        data = self.get_data(index)
+        
+        instruction_template = [
+            "[vqa] {}",
+            "[vqa] Based on the image, respond to this question with a short answer: {}",
+        ]
+        
+        instruction = random.choice(instruction_template).format(data["question"])
         instruction = "<Img><ImageHere></Img> {} ".format(instruction)
 
         return {
