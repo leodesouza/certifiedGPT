@@ -46,6 +46,8 @@ class BaseDataset(Dataset):
             if isinstance(ann, dict):
                 self.annotations.extend(json.load(open(ann_path, "r"))["annotations"])
 
+        self.logger.info(f"Number of annotations: {len(self.annotations)}")
+
         self.vis_processor = vis_processor
         self.text_processor = text_processor
 

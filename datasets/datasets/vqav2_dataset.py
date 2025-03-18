@@ -45,7 +45,7 @@ class VQAv2Dataset(BaseDataset):
         questions_dict = {q["question_id"]: q for q in self.questions}
 
         self.logger.info(
-            f"Filter annotations that contains images int the path: {vis_paths}"
+            f"Filter annotations that contains images in the path: {vis_paths}"
         )                
                                     
         try:
@@ -101,8 +101,7 @@ class VQAv2Dataset(BaseDataset):
                     f"Invalid or missing question for question_id {question_id}"
                 )
                         
-            image_id = annotation.get("image_id") 
-            print(f"Image Id: {image_id}")                               
+            image_id = annotation.get("image_id")                                          
             file_name = f"COCO_{self.split}2014_{image_id:012d}.jpg"
             image_path = os.path.join(self.vis_paths, file_name)                                            
             image = Image.open(image_path).convert("RGB")
