@@ -146,7 +146,7 @@ class VQAv2Dataset(BaseDataset):
                 "question": question,
                 "question_id": question_id,
                 "answer": answer,
-                "img_ids": image_id
+                # "img_ids": image_id
             }
         except Exception as e:
             print(f"Error at index:{index}{e}")
@@ -162,7 +162,7 @@ class VQAv2Dataset(BaseDataset):
             "question_id": data["question_id"],
             "instruction_input": instruction,
             "answer": data["answer"],
-            "img_ids": data["img_ids"]
+            # "img_ids": data["img_ids"]
         }       
 
     @property
