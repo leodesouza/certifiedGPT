@@ -79,9 +79,7 @@ class VQAv2Dataset(BaseDataset):
         except Exception as e:            
             xm.master_print(f"error on loading the dataset. Details: {e}")
 
-    def get_data(self, index):
-        file_name = ""
-        image_path = ""
+    def get_data(self, index):                
         try:
 
             print("****annotations") 
@@ -156,11 +154,11 @@ class VQAv2Dataset(BaseDataset):
                 "image": image,
                 "question": question,
                 "question_id": question_id,
-                "answer": answer,
+                "answer": answer
                 # "img_ids": image_id
             }
         except Exception as e:
-            print(f"Error at index:{index} {e}. ImagePath: {image_path}")
+            print(f"Error at index:{index} {e}.")
             return None
 
     def __getitem__(self, index):
