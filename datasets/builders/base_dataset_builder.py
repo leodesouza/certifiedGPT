@@ -96,13 +96,19 @@ class BaseDatasetBuilder:
 
     def build_train_processors(self):
         self.logger.info("Building val processors")
-
         train_config = registry.get_configuration_class("configuration")
+
         vis_train_config = train_config.datasets.vqav2.vis_processor.train
+        text_train_config = train_config.datasets.vqav2.text_processor.train
 
         vis_processor_class = registry.get_processor_class(vis_train_config.name)
         self.logger.info("Building visual processor")
         self.vis_processor["train"] = vis_processor_class.from_config(vis_train_config)
+
+        text_processor_class = registry.get_processor_class(text_train_config.name)
+
+        self.logger.info("Building textual processor")
+        self.text_processor["train"] = text_processor_class.from_config(text_train_config)        
 
     def build_val_processors(self):
         self.logger.info("Building val processors")
