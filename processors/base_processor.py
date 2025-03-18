@@ -42,6 +42,9 @@ class BaseProcessor:
         return cls()
 
     def build(self, **kwargs):
-        config = OmegaConf.create(kwargs)
+        try:
+            config = OmegaConf.create(kwargs)
 
-        return self.from_config(config)
+            return self.from_config(config)
+        except Exception as e:
+            print(f"Error on BaseProcessor build {e}")
