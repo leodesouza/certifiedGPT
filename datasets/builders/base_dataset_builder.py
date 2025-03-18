@@ -74,8 +74,8 @@ class BaseDatasetBuilder:
                 else self.text_processor["eval"]
             )
 
-            questions_path = questions_info.get(dataset_info).path
-            annotation_paths = annotations_info.get(dataset_info).path
+            questions_path = Path(questions_info.get(dataset_info).path[0])
+            annotation_paths = Path(annotations_info.get(dataset_info).path[0])
             vis_paths = Path(images_info.get(dataset_info).path[0])
 
             print(f"split {dataset_info} -- questions_path: {questions_path}")
