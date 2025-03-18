@@ -83,11 +83,10 @@ class VQAv2Dataset(BaseDataset):
         file_name = ""
         image_path = ""
         try:
-            
-            annotation = self.annotations[index]
-            if annotation is None:
-                print(f"annotation {index} is NONE")
 
+            print("****annotations") 
+            annotation = self.annotations[index]
+           
             if (
                 "image_id" not in annotation
                 or "question_id" not in annotation
@@ -95,6 +94,7 @@ class VQAv2Dataset(BaseDataset):
             ):
                 raise ValueError(f" Invalid annotation at index {index}: {annotation}")
             
+            print("***Questions") 
             question_id = annotation["question_id"]
             question = self.questions_dict.get(question_id)
             question = self.text_processor(question["question"])
@@ -103,13 +103,15 @@ class VQAv2Dataset(BaseDataset):
                 raise ValueError(
                     f"Invalid or missing question for question_id {question_id}"
                 )
-                        
+
+            print("***Image")        
             image_id = annotation.get("image_id")                                          
             file_name = f"COCO_{self.split}2014_{image_id:012d}.jpg"
             image_path = os.path.join(self.vis_paths, file_name)                                            
             image = Image.open(image_path).convert("RGB")
             image = self.vis_processor(image)
 
+            print("***Ansewers")        
             all_answers = annotation["answers"]
             num_answer = len(all_answers)
 
