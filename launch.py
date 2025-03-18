@@ -1,5 +1,5 @@
 import logging
-# logging.disable(logging.CRITICAL)
+logging.disable(logging.CRITICAL)
 import argparse
 import os
 import random
@@ -78,6 +78,7 @@ def enable_print():
 
 
 def main(rank):
+        
     args = parse_args()
     config = Config(args)    
 
@@ -95,6 +96,8 @@ def main(rank):
     elif args.mode == "certify":
         print('Running training with agent: ??')
         from agents import minigpt4_certify_agent
+    
+    disable_print()
 
     setup_logger()
     setup_seeds(config)
@@ -114,7 +117,5 @@ if __name__ == "__main__":
     if _config.run.debug_graph_computation:
         print('Running training in debug mode')
         xla.launch(main, args=(), debug_single_process=True)
-    else:
-        # logging.disable(logging.CRITICAL)
-        # disable_print()
+    else:        
         xla.launch(main, args=())

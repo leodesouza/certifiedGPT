@@ -59,7 +59,9 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         epoch_val_loss = 0         
         
         try:
-                        
+
+            xm.master_print(f"Running agent: {self.__class__.__name__}")
+
             self.logger.info("Creating the dataloaders")            
             self._dataloaders = self.create_dataloaders()
 
@@ -300,7 +302,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 num_records = len(split)
                 if num_records >= 0:
                     self.logger.info(
-                        "Loaded {} records for split {}".format(num_records, dataset)
+                        "Loaded {} records for split {}".format(num_records, split.split_name)
                     )
 
                 is_train = (

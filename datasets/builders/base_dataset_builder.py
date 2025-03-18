@@ -78,6 +78,10 @@ class BaseDatasetBuilder:
             annotation_paths = annotations_info.get(dataset_info).path
             vis_paths = Path(images_info.get(dataset_info).path[0])
 
+            print(f"split {dataset_info} -- questions_path: {questions_path}")
+            print(f"split {dataset_info} -- annotation_paths: {annotation_paths}")
+            print(f"split {dataset_info} -- vis_paths: {vis_paths}")
+
             dataset_cls = self.train_datasets_cls if is_train else self.eval_datasets_cls
 
             datasets[dataset_info] = dataset_cls(
@@ -96,13 +100,19 @@ class BaseDatasetBuilder:
 
     def build_train_processors(self):
         self.logger.info("Building val processors")
-
         train_config = registry.get_configuration_class("configuration")
+
         vis_train_config = train_config.datasets.vqav2.vis_processor.train
+        text_train_config = train_config.datasets.vqav2.text_processor.train
 
         vis_processor_class = registry.get_processor_class(vis_train_config.name)
         self.logger.info("Building visual processor")
         self.vis_processor["train"] = vis_processor_class.from_config(vis_train_config)
+
+        text_processor_class = registry.get_processor_class(text_train_config.name)
+
+        self.logger.info("Building textual processor")
+        self.text_processor["train"] = text_processor_class.from_config(text_train_config)        
 
     def build_val_processors(self):
         self.logger.info("Building val processors")
@@ -118,7 +128,7 @@ class BaseDatasetBuilder:
         text_processor_class = registry.get_processor_class(text_val_config.name)
 
         self.logger.info("Building textual processor")
-        self.text_processor["val"] = text_processor_class.from_config(text_val_config)
+        self.text_processor["val"] = text_processor_class.from_config(text_val_config)        
 
     def default_config_path(self, key="default"):
         return utils.get_abs_path(self.DATASET_CONFIG_DICT[key])

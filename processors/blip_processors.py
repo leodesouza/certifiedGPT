@@ -76,39 +76,50 @@ class BlipCaptionProcessor(BaseProcessor):
         self.max_words = max_words
 
     def __call__(self, caption):
-        caption = self.prompt + self.pre_caption(caption)
-        return caption
+        try:
+            caption = self.prompt + self.pre_caption(caption)
+            return caption
+        
+        except Exception as e:
+            print(f"Error in __call__ {e}")
+        
 
     @classmethod
     def from_config(cls, config=None):
-        if config is None:
-            config = OmegaConf.create()
-        prompt = config.get("prompt", "")
-        max_words = config.get("max_words", 100)
-        return cls(prompt=prompt, max_words=max_words)
+        try:
+            if config is None:
+                config = OmegaConf.create()
+            prompt = config.get("prompt", "")
+            max_words = config.get("max_words", 100)
+            return cls(prompt=prompt, max_words=max_words)
+        except Exception as e:
+            print(f"Error in from_config {e}")
 
     def pre_caption(self, caption):
-        # replaces characters .!\"()*#:;~ by " "
-        caption = re.sub(
-            r"([.!\"()*#:;~])",
-            " ",
-            caption.lower(),
-        )
+        try:
+            # replaces characters .!\"()*#:;~ by " "
+            caption = re.sub(
+                r"([.!\"()*#:;~])",
+                " ",
+                caption.lower(),
+            )
 
-        # replace multiple spaces by " "
-        caption = re.sub(
-            r"\s{2,}",
-            " ",
-            caption,
-        )
+            # replace multiple spaces by " "
+            caption = re.sub(
+                r"\s{2,}",
+                " ",
+                caption,
+            )
 
-        # remove trailling spaces
-        caption = caption.rstrip("\n")
-        caption = caption.strip(" ")
+            # remove trailling spaces
+            caption = caption.rstrip("\n")
+            caption = caption.strip(" ")
 
-        # truncate caption
-        caption_words = caption.split(" ")
-        if len(caption_words) > self.max_words:
-            caption = " ".join(caption_words[: self.max_words])
+            # truncate caption
+            caption_words = caption.split(" ")
+            if len(caption_words) > self.max_words:
+                caption = " ".join(caption_words[: self.max_words])
 
-        return caption
+            return caption
+        except Exception as e:
+            print(f"Error on pre_caption {e}")

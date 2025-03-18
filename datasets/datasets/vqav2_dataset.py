@@ -45,7 +45,7 @@ class VQAv2Dataset(BaseDataset):
         questions_dict = {q["question_id"]: q for q in self.questions}
 
         self.logger.info(
-            f"Filter annotations that contains images int the path: {vis_paths}"
+            f"Filter annotations that contains images in the path: {vis_paths}"
         )                
                                     
         try:
@@ -79,33 +79,34 @@ class VQAv2Dataset(BaseDataset):
         except Exception as e:            
             xm.master_print(f"error on loading the dataset. Details: {e}")
 
-    def get_data(self, index):
-
+    def get_data(self, index):                
         try:
-            annotation = self.annotations[index]
 
+            annotation = self.annotations[index]            
+           
             if (
                 "image_id" not in annotation
                 or "question_id" not in annotation
                 or "answers" not in annotation
             ):
                 raise ValueError(f" Invalid annotation at index {index}: {annotation}")
-            
+                        
             question_id = annotation["question_id"]
-            question = self.questions_dict.get(question_id)
+            question = self.questions_dict.get(question_id)                        
             question = self.text_processor(question["question"])
+            
 
             if question is None:
                 raise ValueError(
                     f"Invalid or missing question for question_id {question_id}"
                 )
-                        
-            image_id = annotation.get("image_id")                                
+            
+            image_id = annotation.get("image_id")                                          
             file_name = f"COCO_{self.split}2014_{image_id:012d}.jpg"
             image_path = os.path.join(self.vis_paths, file_name)                                            
             image = Image.open(image_path).convert("RGB")
             image = self.vis_processor(image)
-
+            
             all_answers = annotation["answers"]
             num_answer = len(all_answers)
 
@@ -149,7 +150,7 @@ class VQAv2Dataset(BaseDataset):
                 # "img_ids": image_id
             }
         except Exception as e:
-            print(f"Error at index:{index}{e}")
+            print(f"Error at index:{index} {e}.")
             return None
 
     def __getitem__(self, index):
