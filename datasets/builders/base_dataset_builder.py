@@ -56,11 +56,11 @@ class BaseDatasetBuilder:
         self.logger.info(f"Build path: {self.default_config_path()}")
 
         for dataset_info in annotations_info.keys():
-            if dataset_info not in ["train", "val", "test"]:
+            if dataset_info not in ["train", "val"]:
                 continue
             self.logger.info(f"Building dataset: {dataset_info}")
 
-            is_train = True if dataset_info in ["train", "val", "test"] else False
+            is_train = True if dataset_info in ["train", "val"] else False
 
             vis_processor = (
                 self.vis_processor["train"]
