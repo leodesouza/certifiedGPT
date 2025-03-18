@@ -5,10 +5,10 @@ datasets:
       questions:
         train:
           path:
-              - ${env:DATA_DIR}/questions/train/v2_OpenEnded_mscoco_train2014_questions.json
+            - ${env:DATA_DIR}/questions/train/v2_OpenEnded_mscoco_train2014_questions.json
         val:
           path:
-              - ${env:DATA_DIR}/questions/val/v2_OpenEnded_mscoco_val2014_questions.json
+            - ${env:DATA_DIR}/questions/val/v2_OpenEnded_mscoco_val2014_questions.json
         # test:
         #   path:
         #       - ${env:DATA_DIR}/questions/test/v2_OpenEnded_mscoco_test2015_questions.json
@@ -16,17 +16,17 @@ datasets:
       annotations:
         train:
           path:
-               - ${env:DATA_DIR}/annotations/train/sample_v2_mscoco_train2014_annotations.json               
+            - ${env:DATA_DIR}/annotations/train/sample_v2_mscoco_train2014_annotations.json               
         val:
           path:
-               - ${env:DATA_DIR}/annotations/val/sample_v2_mscoco_val2014_annotations.json               
+             - ${env:DATA_DIR}/annotations/val/sample_v2_mscoco_val2014_annotations.json               
       images:
         train:
           path:               
-               - /home/swf_developer/sample_10k/train
+             - /home/swf_developer/sample_10k/train
         val:
           path:               
-               - /home/swf_developer/sample_10k/val               
+             - /home/swf_developer/sample_10k/val               
         # test:
         #   path:
         #        - ${env:DATA_DIR}/images/test2015
