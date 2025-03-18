@@ -60,6 +60,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         
         try:
                         
+            xm.master_print(f"Running agent: {self.__class__.__name__}")
             self.logger.info("Creating the dataloaders")            
             self._dataloaders = self.create_dataloaders()
 
