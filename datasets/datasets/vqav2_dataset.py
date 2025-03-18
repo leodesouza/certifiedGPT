@@ -82,7 +82,6 @@ class VQAv2Dataset(BaseDataset):
     def get_data(self, index):                
         try:
 
-            print("****annotations") 
             annotation = self.annotations[index]
             print(f"{annotation}") 
            
@@ -92,12 +91,9 @@ class VQAv2Dataset(BaseDataset):
                 or "answers" not in annotation
             ):
                 raise ValueError(f" Invalid annotation at index {index}: {annotation}")
-            
-            print("***Questions") 
+                        
             question_id = annotation["question_id"]
-            question = self.questions_dict.get(question_id)
-            print(f"***questions_dict -- {len(self.questions_dict)}") 
-            print(f"***Question -- {question}")                         
+            question = self.questions_dict.get(question_id)            
             print(self.text_processor.__dict__)  
             question = self.text_processor(question["question"])
             
@@ -106,15 +102,13 @@ class VQAv2Dataset(BaseDataset):
                 raise ValueError(
                     f"Invalid or missing question for question_id {question_id}"
                 )
-
-            print("***Image")        
+            
             image_id = annotation.get("image_id")                                          
             file_name = f"COCO_{self.split}2014_{image_id:012d}.jpg"
             image_path = os.path.join(self.vis_paths, file_name)                                            
             image = Image.open(image_path).convert("RGB")
             image = self.vis_processor(image)
-
-            print("***Ansewers")        
+            
             all_answers = annotation["answers"]
             num_answer = len(all_answers)
 
@@ -154,8 +148,8 @@ class VQAv2Dataset(BaseDataset):
                 "image": image,
                 "question": question,
                 "question_id": question_id,
-                "answer": answer
-                # "img_ids": image_id
+                "answer": answer,
+                "img_ids": image_id
             }
         except Exception as e:
             print(f"Error at index:{index} {e}.")
@@ -171,7 +165,7 @@ class VQAv2Dataset(BaseDataset):
             "question_id": data["question_id"],
             "instruction_input": instruction,
             "answer": data["answer"],
-            # "img_ids": data["img_ids"]
+            "img_ids": data["img_ids"]
         }       
 
     @property
