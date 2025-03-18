@@ -78,9 +78,7 @@ def enable_print():
 
 
 def main(rank):
-    
-    disable_print()
-
+        
     args = parse_args()
     config = Config(args)    
 
@@ -98,6 +96,8 @@ def main(rank):
     elif args.mode == "certify":
         print('Running training with agent: ??')
         from agents import minigpt4_certify_agent
+    
+    disable_print()
 
     setup_logger()
     setup_seeds(config)
