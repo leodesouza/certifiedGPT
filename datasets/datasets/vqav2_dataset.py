@@ -83,7 +83,10 @@ class VQAv2Dataset(BaseDataset):
         file_name = ""
         image_path = ""
         try:
+            
             annotation = self.annotations[index]
+            if annotation is None:
+                print(f"annotation {index} is NONE")
 
             if (
                 "image_id" not in annotation
@@ -154,8 +157,7 @@ class VQAv2Dataset(BaseDataset):
             return None
 
     def __getitem__(self, index):
-        data = self.get_data(index)
-        print(f"data returrned ----> {data}")        
+        data = self.get_data(index)        
         instruction = random.choice(self.instruction_template).format(data["question"])
         instruction = "<Img><ImageHere></Img> {} ".format(instruction)
 
