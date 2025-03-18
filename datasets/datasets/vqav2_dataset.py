@@ -82,8 +82,7 @@ class VQAv2Dataset(BaseDataset):
     def get_data(self, index):                
         try:
 
-            annotation = self.annotations[index]
-            print(f"{annotation}") 
+            annotation = self.annotations[index]            
            
             if (
                 "image_id" not in annotation
@@ -93,8 +92,7 @@ class VQAv2Dataset(BaseDataset):
                 raise ValueError(f" Invalid annotation at index {index}: {annotation}")
                         
             question_id = annotation["question_id"]
-            question = self.questions_dict.get(question_id)            
-            print(self.text_processor.__dict__)  
+            question = self.questions_dict.get(question_id)                        
             question = self.text_processor(question["question"])
             
 
