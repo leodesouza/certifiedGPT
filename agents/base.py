@@ -271,7 +271,7 @@ class BaseAgent:
             with open(file_name_path, "w") as f:
                 json.dump(self.loss_history, f, indent=4)
 
-            self.plot_result(self.loss_history)
+            # self.plot_result(self.loss_history)
 
         except Exception as e: 
             xm.master_print(f"Error on saving loss history {e}.")
