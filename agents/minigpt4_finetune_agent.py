@@ -80,17 +80,20 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             start_epoch = self.load_checkpoint(self._model, self.optimizer, use_cache=self.config.run.use_cache)
             if start_epoch > 0:
                  self.start_epoch = start_epoch                            
-        
-            xm.master_print(f"Train/Eval started started: {(test_utils.now())}")                   
-            xm.master_print(f"Start_epoch: {self.start_epoch}")            
+                                     
+            self.log_info_master_print(f"Train/Eval started started: {(test_utils.now())}")
+            self.log_info_master_print(f"Start_epoch: {self.start_epoch}")
             
             for epoch in range(self.start_epoch, self.max_epoch):                                                
                 # training step
-                if not self.config.evaluate_only:                    
-                    xm.master_print(f"Training epoch: {epoch} started: {test_utils.now()}")
-                    epoch_train_loss = self.train(epoch)
-                    xm.mark_step()
-                    xm.master_print(f"Training epoch: {epoch} ended: {test_utils.now()}")                                        
+                if not self.config.evaluate_only:                                        
+
+                    self.log_info_master_print(f"Training epoch: {epoch} started: {test_utils.now()}")
+
+                    epoch_train_loss = self.train(epoch)                    
+                    xm.mark_step()                                        
+
+                    self.log_info_master_print(f"Training epoch: {epoch} ended: {test_utils.now()}")                             
 
                 if self.config.run.has_val_split:
                                             
@@ -133,6 +136,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         except Exception as e:
               xm.master_print(f"Error on agent run: {test_utils.now()}. Details: {e}")                            
+              self.log_error_master_print(f"Error on agent run: {test_utils.now()}. Details: {e}")
+
 
     def maybe_add_noise(self, batch_sample, noise_level):
         
@@ -156,13 +161,12 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         lr = 0.0
                
         self.model.train()
-
-        xm.master_print(f"Train Epoch {epoch} started: {(test_utils.now())}")            
+           
         for step, batch_sample in enumerate(train_loader):
             
             self.maybe_add_noise(batch_sample, self.config.run.noise_level)    
-
-            xm.master_print(f"Processing epoch: {epoch}. step: {step} - {(test_utils.now())}")                       
+            
+            self.log_info_master_print(f"Processing epoch: {epoch}. step: {step} - {(test_utils.now())}")
             
             self.optimizer.zero_grad()                                    
             with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):                                                     
@@ -177,9 +181,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 
             xm.mark_step()       
 
-            step_loss = loss.detach()                                        
-            if xm.is_master_ordinal() and (step + 1) % 10 == 0:                                
-                self._tpu_metrics.log_tpu_metrics("Train", epoch, step, step_loss, lr)                
+            step_loss = loss.detach()                                                    
             running_loss += step_loss
             total_batches += 1
                                                     
@@ -188,8 +190,8 @@ class MiniGPT4FineTuneAgent(BaseAgent):
 
         avg_loss = global_train_loss / global_total_batches
         self.loss_history["train_loss"].append(avg_loss)        
-        
-        xm.master_print(f"Train Epoch {epoch} ended: {(test_utils.now())}")
+                
+        self.log_info_master_print(f"Train Epoch {epoch} ended: {(test_utils.now())}")
                                                  
         return avg_loss                
 

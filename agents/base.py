@@ -253,6 +253,15 @@ class BaseAgent:
     def logger(self):
         logger = registry.get_configuration_class("logger")
         return logger  
+    
+    
+    def log_info_master_print(self, message):
+        if xm.is_master_ordinal():          
+            self.logger.info(message)
+
+    def log_error_master_print(self, message):
+        if xm.is_master_ordinal():          
+            self.logger.error(message)
 
     def save_history(self, epoch, train_loss, val_loss, lr):        
         try:
