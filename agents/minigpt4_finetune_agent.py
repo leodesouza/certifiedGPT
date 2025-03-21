@@ -80,7 +80,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             start_epoch = self.load_checkpoint(self._model, self.optimizer, use_cache=self.config.run.use_cache)
             if start_epoch > 0:
                  self.start_epoch = start_epoch                            
-                                     
+
             self.log_info_master_print(f"Train/Eval started started: {(test_utils.now())}")
             self.log_info_master_print(f"Start_epoch: {self.start_epoch}")
             
@@ -303,7 +303,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
                 num_records = len(split)
                 if num_records >= 0:
                     self.logger.info(
-                        "Loaded {} records for split {}".format(num_records, dataset)
+                        "Loaded {} records for split {}".format(num_records, split.split_name)
                     )
 
                 is_train = (
