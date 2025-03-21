@@ -119,12 +119,12 @@ class BaseDatasetBuilder:
 
         vis_processor_class = registry.get_processor_class(vis_val_config.name)
         self.logger.info("Building visual processor")
-        self.vis_processor["val"] = vis_processor_class.from_config(vis_val_config)
+        self.vis_processor["eval"] = vis_processor_class.from_config(vis_val_config)
 
         text_processor_class = registry.get_processor_class(text_val_config.name)
 
         self.logger.info("Building textual processor")
-        self.text_processor["val"] = text_processor_class.from_config(text_val_config)
+        self.text_processor["eval"] = text_processor_class.from_config(text_val_config)
 
     def default_config_path(self, key="default"):
         return utils.get_abs_path(self.DATASET_CONFIG_DICT[key])

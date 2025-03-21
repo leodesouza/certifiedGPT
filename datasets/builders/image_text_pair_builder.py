@@ -170,11 +170,11 @@ class VQAv2TestBuilder(BaseDatasetBuilder):
 
         vis_processor_class = registry.get_processor_class(vis_eval_config.name)
         self.logger.info("Building visual processor")
-        self.vis_processor["val"] = vis_processor_class.from_config(vis_eval_config)
+        self.vis_processor["eval"] = vis_processor_class.from_config(vis_eval_config)
 
         text_processor_class = registry.get_processor_class(text_eval_config.name)
         self.logger.info("Building textual processor")
-        self.text_processor["val"] = text_processor_class.from_config(text_eval_config)
+        self.text_processor["eval"] = text_processor_class.from_config(text_eval_config)
 
     def build(self):
 
