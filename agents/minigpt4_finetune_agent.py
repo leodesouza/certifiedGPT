@@ -158,8 +158,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
         total_batches = torch.tensor(0, device=self.device)
         
         accumulated_gradients = self.config.run.accumulated_gradients or 1
-        lr = 0.0
-               
+                       
         self.model.train()
            
         for step, batch_sample in enumerate(train_loader):
@@ -177,7 +176,7 @@ class MiniGPT4FineTuneAgent(BaseAgent):
             if step % accumulated_gradients == 0:                
                 xm.reduce_gradients(self.optimizer)                                
                 xm.optimizer_step(self.optimizer, barrier=False)                      
-                lr = self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                
+                self.lr_scheduler.step(cur_epoch=epoch, cur_step=step)                
                 
             xm.mark_step()       
 
