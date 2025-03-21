@@ -1,5 +1,5 @@
 import logging
-logging.disable(logging.CRITICAL)
+# logging.disable(logging.CRITICAL)
 import argparse
 import os
 import random
@@ -45,7 +45,7 @@ def setup_logger():
 
     log_file_path = os.path.join(os.environ.get("OUTPUT_DIR"),"certified.log")
     file_handler = logging.FileHandler(log_file_path)
-    file_handler.setLevel(logging.ERROR)
+    file_handler.setLevel(logging.INFO)
     file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     file_handler.setFormatter(file_formatter)
 
