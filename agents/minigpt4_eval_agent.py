@@ -207,6 +207,7 @@ class MiniGPT4EvalAgent(BaseAgent):
             dataset = datasets[dataset_name]
 
             for split in dataset.values():
+                self.logger.info(f"LOAD SPLIT: {split.split_name}")
                 num_records = len(split)
                 if num_records >= 0:
                     self.logger.info(
