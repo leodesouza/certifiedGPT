@@ -10,7 +10,6 @@ from torchvision import transforms
 from torchvision.transforms.functional import InterpolationMode
 
 
-
 class BaseProcessor:
     def __init__(self, image_size=448, mean=None, std=None):
 

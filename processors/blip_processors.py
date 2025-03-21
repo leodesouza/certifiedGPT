@@ -55,9 +55,8 @@ class Blip2ImageEvalProcessor(BaseProcessor):
     ):
         super().__init__(image_size=image_size, mean=mean, std=std)
 
-
     def __call__(self, item):
-        return transforms(item)
+        return self.transform(item)
 
     @classmethod
     def from_config(cls, config=None):

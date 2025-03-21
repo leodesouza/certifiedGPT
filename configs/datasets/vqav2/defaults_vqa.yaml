@@ -26,7 +26,7 @@ datasets:
                - /home/swf_developer/sample_10k/train
         val:
           path:               
-               - /home/swf_developer/sample_10k/val               
+               - /home/leonardosouza/projects/datasets/vqav2/images/sample_10k/val/
         # test:
         #   path:
         #        - ${env:DATA_DIR}/images/test2015

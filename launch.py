@@ -43,9 +43,9 @@ def setup_logger():
     console_formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
     console_handler.setFormatter(console_formatter)
 
-    log_file_path = os.path.join(os.environ.get("OUTPUT_DIR"),"certified.log")
+    log_file_path = os.path.join(os.environ.get("OUTPUT_DIR"), "certified.log")
     file_handler = logging.FileHandler(log_file_path)
-    file_handler.setLevel(logging.ERROR)
+    file_handler.setLevel(logging.INFO)
     file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     file_handler.setFormatter(file_formatter)
 
@@ -95,7 +95,7 @@ def main(rank):
         print('Running training with agent: ??')
         from agents import minigpt4_eval_agent
     elif args.mode == "certify":
-        print('Running training with agent: ??')
+        print('Running certifying with agent: minigpt4_certify_agent')
         from agents import minigpt4_certify_agent
 
     setup_logger()

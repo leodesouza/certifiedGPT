@@ -4,10 +4,13 @@
 
 
 import torch
-from scipy.stats import norm, binom_test
+# from scipy.stats import norm, binom_test
+from scipy.stats import norm, binomtest
+
 import numpy as np
 from math import ceil
 from statsmodels.stats.proportion import proportion_confint
+import torch_xla.core.xla_model as xm
 
 
 class Smooth(object):
@@ -25,6 +28,7 @@ class Smooth(object):
         self.base_classifier = base_classifier
         self.num_classes = num_classes
         self.sigma = sigma
+        self._device = xm.xla_device()
 
     def certify(self, x: torch.tensor, n0: int, n: int, alpha: float, batch_size: int) -> (int, float):
         """ Monte Carlo algorithm for certifying that g's prediction around x is constant within some L2 radius.
@@ -78,22 +82,32 @@ class Smooth(object):
         else:
             return top2[0]
 
-    def _sample_noise(self, x: torch.tensor, num: int, batch_size) -> np.ndarray:
+    def _sample_noise(self, batch_sample: torch.tensor, num: int, batch_size) -> np.ndarray:
         """ Sample the base classifier's prediction under noisy corruptions of the input x.
 
-        :param x: the input [channel x width x height]
+        :param batch_sample: the input [channel x width x height]
         :param num: number of samples to collect
         :param batch_size:
         :return: an ndarray[int] of length num_classes containing the per-class counts
         """
+
+
+        # questions = batch_sample["instruction_input"]
+        # answers = batch_sample["instruction_input"]
+        # question_ids = batch_sample["question_id"]
+        # img_ids = batch_sample["img_id"]
+        #
+        # texts = self.prepare_texts(questions, conv_temp)
+        # answers = self.model.generate(images, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False)
+        # xm.mark_step()
+
         with torch.no_grad():
             counts = np.zeros(self.num_classes, dtype=int)
             for _ in range(ceil(num / batch_size)):
                 this_batch_size = min(batch_size, num)
                 num -= this_batch_size
-
-                batch = x.repeat((this_batch_size, 1, 1, 1))
-                noise = torch.randn_like(batch, device='cuda') * self.sigma
+                batch = batch_sample.repeat((this_batch_size, 1, 1, 1))
+                noise = torch.randn_like(batch["image"], device=self._device) * self.sigma
                 predictions = self.base_classifier(batch + noise).argmax(1)
                 counts += self._count_arr(predictions.cpu().numpy(), self.num_classes)
             return counts

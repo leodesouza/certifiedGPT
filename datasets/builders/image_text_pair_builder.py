@@ -22,77 +22,78 @@ class VQAv2Builder(BaseDatasetBuilder):
     }
 
 
-# @registry.register_builder("evalvqav2")
-# class VQAv2EvalBuilder(BaseDatasetBuilder):
-#     eval_datasets_cls = VQAv2Dataset
+@registry.register_builder("evalvqav2")
+class VQAv2EvalBuilder(BaseDatasetBuilder):
+    eval_datasets_cls = VQAv2Dataset
 
-#     DATASET_CONFIG_DICT = {
-#         "default": "configs/datasets/vqav2/defaults_vqa.yaml"
-#     }
+    DATASET_CONFIG_DICT = {
+        "default": "configs/datasets/vqav2/defaults_vqa.yaml"
+    }
 
-#     def build(self):
+    def build(self):
 
-#         self.build_processors()
-#         build_info = self.config.build_info
-#         questions_info = build_info.questions
-#         annotations_info = build_info.annotations
+        self.build_processors()
+        build_info = self.config.build_info
+        questions_info = build_info.questions
+        annotations_info = build_info.annotations
 
-#         images_info = build_info.images
-#         datasets = dict()
-#         self.logger.info("Building the dataset based in build options")
-#         self.logger.info(f"Build path: {self.default_config_path()}")
+        images_info = build_info.images
+        datasets = dict()
+        self.logger.info("Building the dataset based in build options")
+        self.logger.info(f"Build path: {self.default_config_path()}")
 
-#         for dataset_info in annotations_info.keys():
-#             if dataset_info not in ["val"]:
-#                 continue
-#             self.logger.info(f"Building dataset: {dataset_info}")
+        for dataset_info in annotations_info.keys():
+            if dataset_info not in ["val"]:
+                continue
+            self.logger.info(f"Building dataset: {dataset_info}")
 
-#             vis_processor = (
-#                 self.vis_processor["eval"]
-#             )
+            vis_processor = (
+                self.vis_processor["eval"]
+            )
 
-#             text_processor = (
-#                 self.text_processor["eval"]
-#             )
+            text_processor = (
+                self.text_processor["eval"]
+            )
 
-#             questions_path =Path(questions_info.get(dataset_info).path[0])
-#             self.logger.info(f"questions_path: {questions_path}")
+            questions_path = questions_info.get(dataset_info).path
+            self.logger.info(f"questions_path: {questions_path}")
 
-#             annotation_paths = Path(annotations_info.get(dataset_info).path[0])
-#             self.logger.info(f"annotation_paths: {annotation_paths}")
+            annotation_paths = annotations_info.get(dataset_info).path
+            self.logger.info(f"annotation_paths: {annotation_paths}")
 
-#             vis_paths = Path(images_info.get(dataset_info).path[0])
-#             self.logger.info(f"vis_paths: {vis_paths}")
+            vis_paths = Path(images_info.get(dataset_info).path[0])
+            self.logger.info(f"vis_paths: {vis_paths}")
 
-#             dataset_cls = self.eval_datasets_cls
-#             datasets[dataset_info] = dataset_cls(
-#                 vis_processor=vis_processor,
-#                 text_processor=text_processor,
-#                 questions_paths=questions_path,
-#                 annotation_paths=annotation_paths,
-#                 vis_paths=vis_paths,
-#                 split=dataset_info
-#             )
-#         return datasets
+            dataset_cls = self.eval_datasets_cls
+            datasets[dataset_info] = dataset_cls(
+                vis_processor=vis_processor,
+                text_processor=text_processor,
+                questions_paths=questions_path,
+                annotation_paths=annotation_paths,
+                vis_paths=vis_paths,
+                split=dataset_info
+            )
+        return datasets
 
-#     def build_train_processors(self):
-#         pass
+    def build_train_processors(self):
+        pass
 
-#     def build_val_processors(self):
-#         self.logger.info("Building val processors")
-#         val_config = registry.get_configuration_class("configuration")
+    def build_val_processors(self):
+        self.logger.info("Building val processors")
+        val_config = registry.get_configuration_class("configuration")
 
-#         vis_val_config = val_config.datasets.evalvqav2.vis_processor.val
-#         text_val_config = val_config.datasets.evalvqav2.text_processor.val
+        vis_val_config = val_config.datasets.evalvqav2.vis_processor.val
+        text_val_config = val_config.datasets.evalvqav2.text_processor.val
 
-#         vis_processor_class = registry.get_processor_class(vis_val_config.name)
-#         self.logger.info("Building visual processor")
-#         self.vis_processor["val"] = vis_processor_class.from_config(vis_val_config)
+        vis_processor_class = registry.get_processor_class(vis_val_config.name)
+        self.logger.info("Building visual processor")
+        self.vis_processor["eval"] = vis_processor_class.from_config(vis_val_config)
 
-#         text_processor_class = registry.get_processor_class(text_val_config.name)
+        text_processor_class = registry.get_processor_class(text_val_config.name)
 
-#         self.logger.info("Building textual processor")
-#         self.text_processor["val"] = text_processor_class.from_config(text_val_config)
+        self.logger.info("Building textual processor")
+        self.text_processor["eval"] = text_processor_class.from_config(text_val_config)
+
 
 
 @registry.register_builder("cc_sbu")
