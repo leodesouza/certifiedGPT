@@ -92,7 +92,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
             xm.master_print(f"Certify step: {step} - {(test_utils.now())}")
 
             # certify prediction of smoothed decoder around images
-            prediction, radius = self.smoothed_decoder.certify(batch_sample, n0, n, self.config.run.alpha, batch_size=self.config.datasets.evalvqav2.batch_size)
+            prediction, radius = self.smoothed_decoder.certify(batch_sample, n0, n, self.config.run.alpha, batch_size=self.config.run.batch_size)
             # # is_similar = prediction == answer
             total_batches += 1
 

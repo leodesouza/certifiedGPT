@@ -106,7 +106,7 @@ class Smooth(object):
         # texts = self.prepare_texts(questions, conv_temp)
         # answers = self.model.generate(images, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False)
         # xm.mark_step()
-
+        xm.master_print(f"certify batch_size: {batch_size}")
         with torch.no_grad():
             counts = np.zeros(self.num_classes, dtype=int)
             for _ in range(ceil(num / batch_size)):
@@ -136,7 +136,7 @@ class Smooth(object):
                     outputs = self.base_decoder(batch_sample)
                     logits = outputs.logits
                 xm.mark_step()
-
+                xm.master_print(f"output: {outputs}")
                 xm.master_print("softmax")
                 probs = torch.softmax(logits, dim=-1)
                 xm.master_print("calc probs and asign to counts")
