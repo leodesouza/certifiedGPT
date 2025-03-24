@@ -78,7 +78,7 @@ def enable_print():
 
 
 def main(rank):
-    disable_print()
+    # disable_print()
 
     args = parse_args()
     config = Config(args)    
