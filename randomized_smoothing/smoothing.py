@@ -44,6 +44,7 @@ class Smooth(object):
                  in the case of abstention, the class will be ABSTAIN and the radius 0.
         """
         self.base_decoder.eval()
+        xm.master_print("draw samples of f(x+ epsilon)")
         # draw samples of f(x+ epsilon)
         counts_selection = self._sample_noise(x, n0, batch_size)
         xm.master_print(f"Printing counts_selection:{counts_selection}")
@@ -127,7 +128,9 @@ class Smooth(object):
                 batch_answers = answers * this_batch_size
                 batch_sample["answer"] = batch_answers
 
+                xm.master_print("passing batch_sample to model (forward)")
                 logits = self.base_decoder(batch_sample)
+                xm.master_print("softmax logits")
                 probs = torch.softmax(logits, dim=-1)
                 # counts += self._count_arr(predictions.cpu().numpy(), self.num_classes)
                 counts += probs.cpu().numpy().sum(axis=0)
