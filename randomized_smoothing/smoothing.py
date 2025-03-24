@@ -19,13 +19,13 @@ class Smooth(object):
     # to abstain, Smooth returns this int
     ABSTAIN = -1
 
-    def __init__(self, base_classifier: torch.nn.Module, num_classes: int, sigma: float):
+    def __init__(self, base_decoder: torch.nn.Module, num_classes: int, sigma: float):
         """
-        :param base_classifier: maps from [batch x channel x height x width] to [batch x num_classes]
+        :param base_decoder: maps from [batch x channel x height x width] to [batch x num_classes]
         :param num_classes:
         :param sigma: the noise level hyperparameter
         """
-        self.base_classifier = base_classifier
+        self.base_decoder = base_decoder
         self.num_classes = num_classes
         self.sigma = sigma
         self._device = xm.xla_device()
@@ -43,9 +43,11 @@ class Smooth(object):
         :return: (predicted class, certified radius)
                  in the case of abstention, the class will be ABSTAIN and the radius 0.
         """
-        self.base_classifier.eval()
+        self.base_decoder.eval()
         # draw samples of f(x+ epsilon)
         counts_selection = self._sample_noise(x, n0, batch_size)
+        xm.master_print(f"Printing counts_selection:{counts_selection}")
+        return
         # use these samples to take a guess at the top class
         cAHat = counts_selection.argmax().item()
         # draw more samples of f(x + epsilon)
@@ -72,7 +74,7 @@ class Smooth(object):
         :param batch_size: batch size to use when evaluating the base classifier
         :return: the predicted class, or ABSTAIN
         """
-        self.base_classifier.eval()
+        self.base_decoder.eval()
         counts = self._sample_noise(x, n, batch_size)
         top2 = counts.argsort()[::-1][:2]
         count1 = counts[top2[0]]
@@ -106,10 +108,30 @@ class Smooth(object):
             for _ in range(ceil(num / batch_size)):
                 this_batch_size = min(batch_size, num)
                 num -= this_batch_size
-                batch = batch_sample.repeat((this_batch_size, 1, 1, 1))
-                noise = torch.randn_like(batch["image"], device=self._device) * self.sigma
-                predictions = self.base_classifier(batch + noise).argmax(1)
-                counts += self._count_arr(predictions.cpu().numpy(), self.num_classes)
+
+                image = batch_sample["image"]
+                batch_image = image.repeat((this_batch_size, 1, 1, 1))
+                noise = torch.randn_like(batch_image, device=self._device) * self.sigma
+                batch_image += noise
+                batch_sample["image"] = batch_image
+
+                question = batch_sample["instruction_input"]
+                batch_question = question * this_batch_size
+                batch_sample["instruction_input"] = batch_question
+
+                question_id = batch_sample["question_id"]
+                batch_question_id = question_id.repeat((this_batch_size, 1, 1, 1))
+                batch_sample["question_id"] = batch_question_id
+
+                answers = batch_sample["answer"]
+                batch_answers = answers * this_batch_size
+                batch_sample["answer"] = batch_answers
+
+                logits = self.base_decoder(batch_sample)
+                probs = torch.softmax(logits, dim=-1)
+                # counts += self._count_arr(predictions.cpu().numpy(), self.num_classes)
+                counts += probs.cpu().numpy().sum(axis=0)
+
             return counts
 
     def _count_arr(self, arr: np.ndarray, length: int) -> np.ndarray:

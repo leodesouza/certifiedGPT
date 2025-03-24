@@ -41,11 +41,11 @@ class MiniGPT4CertifyAgent(BaseAgent):
         super().__init__()
         self.start_step = 0
         self._device = xm.xla_device()
-        self._model = None # self.build_model()
+        self._model = self.build_model()
         self._tpu_metrics = TPUMetrics()
         self.questions_paths = None
         self.annotations_paths = None
-        self.smoothed_decoder = Smooth(self._model, 0, self.config.run.noise_level)
+        self.smoothed_decoder = Smooth(self._model, self.config.run.number_answers, self.config.run.noise_level)
 
     def run(self):
         try:
@@ -70,7 +70,6 @@ class MiniGPT4CertifyAgent(BaseAgent):
     def certify(self, dataloader):
         total_batches = torch.tensor(0, device=self.device)
         val_loader = dataloader["val"]
-        # val_loader = pl.MpDeviceLoader(val_loader, self.device)
         n0 = self.config.run.number_monte_carlo_samples_for_selection
         n = self.config.run.number_monte_carlo_samples_for_estimation
 
@@ -90,12 +89,9 @@ class MiniGPT4CertifyAgent(BaseAgent):
 
             xm.master_print(f"Certify step: {step} - {(test_utils.now())}")
 
-            image = batch_sample["image"]
-            answer = batch_sample["answer"]
-
             # certify prediction of smoothed decoder around images
-            prediction, radius = self.smoothed_decoder.certify(image, n0, n, self.config.run.alpha, batch_size=self.config.datasets.evalvqav2.batch_size)
-            is_similar = prediction == answer
+            prediction, radius = self.smoothed_decoder.certify(batch_sample, n0, n, self.config.run.alpha, batch_size=self.config.datasets.evalvqav2.batch_size)
+            # is_similar = prediction == answer
             total_batches += 1
 
         xm.master_print(f"Certify ended: {(test_utils.now())}")
@@ -187,13 +183,3 @@ class MiniGPT4CertifyAgent(BaseAgent):
         model = model_type.from_config(self.config.model)
         model.to(self.device)
         return model
-
-    def prepare_texts(texts, conv_temp):
-        convs = [conv_temp.copy() for _ in range(len(texts))]
-        [conv.append_message(
-            conv.roles[0], text) for conv, text in zip(convs, texts)]
-        [conv.append_message(conv.roles[1], None) for conv in convs]
-        texts = [conv.get_prompt() for conv in convs]
-        return texts
-
-

@@ -58,6 +58,7 @@ run:
   skip: 100 # certify every skip examples
   max: 1000 # and break when step == max
   alpha: 0.001 # the failure probability
+  number_answers: 10206
 
 # DataLoader
   distributed: False
