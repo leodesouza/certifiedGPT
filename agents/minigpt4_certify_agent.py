@@ -70,7 +70,9 @@ class MiniGPT4CertifyAgent(BaseAgent):
     @torch.no_grad()
     def certify(self, dataloader):
         total_batches = torch.tensor(0, device=self.device)
-        val_loader = dataloader["val"]
+        val_loader = self._dataloaders["val"]
+        val_loader = pl.MpDeviceLoader(val_loader, self.device)
+
         n0 = self.config.run.number_monte_carlo_samples_for_selection
         n = self.config.run.number_monte_carlo_samples_for_estimation
 
