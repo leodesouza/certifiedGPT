@@ -23,7 +23,7 @@ datasets:
       images:
         train:
           path:               
-               - /home/swf_developer/sample_10k/train
+               - /home/leonardosouza/sample_10k/train
         val:
           path:               
                - /home/leonardosouza/projects/datasets/vqav2/images/sample_10k/val/
