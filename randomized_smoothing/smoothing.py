@@ -129,9 +129,11 @@ class Smooth(object):
                 batch_sample["answer"] = batch_answers
 
                 xm.master_print("passing batch_sample to model (forward)")
-                logits = self.base_decoder(batch_sample)
+                outputs = self.base_decoder(batch_sample)
                 xm.master_print("softmax logits")
-                probs = torch.softmax(logits, dim=-1)
+                probs = torch.softmax(outputs.logits, dim=-1)
+                xm.master_print("counts probs")
+                xm.master_print(f"probs: {probs}")
                 # counts += self._count_arr(predictions.cpu().numpy(), self.num_classes)
                 counts += probs.cpu().numpy().sum(axis=0)
 

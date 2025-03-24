@@ -358,9 +358,9 @@ class MiniGPTBase(BaseModel):
                     labels=targets,
                     reduction=reduction
                 )
-            loss = outputs.loss
+            # loss = outputs.loss
             
-            return {"loss": loss}
+            return outputs
         except Exception as e:
             xm.master_print(f"Forward error: {e}")
 
