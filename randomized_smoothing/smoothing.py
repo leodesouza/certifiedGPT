@@ -130,6 +130,7 @@ class Smooth(object):
 
                 xm.master_print("passing batch_sample to model (forward)")
                 outputs = self.base_decoder(batch_sample)
+                xm.master_print(f"outputss{outputs}")
                 xm.master_print("softmax logits")
                 probs = torch.softmax(outputs.logits, dim=-1)
                 xm.master_print("counts probs")
