@@ -2,14 +2,13 @@ import logging
 import random
 
 import torch
+
 torch.serialization.add_safe_globals(['numpy.core.multiarray._reconstruct'])
 
 import torch_xla
 from torch_xla.amp import autocast as autocast
 import torch_xla.core.xla_model as xm
 import torch.nn as nn
-
-
 
 from common.registry import registry
 from graphs.models.minigpt4.models.base_model import BaseModel
@@ -170,41 +169,38 @@ class MiniGPTBase(BaseModel):
         # cat_embs = torch.stack(cat_embs)
         # cat_atts = torch.stack(cat_atts)
         # return cat_embs, cat_atts, input_lens
-       
+
         cat_embs = []
         cat_atts = []
-        
+
         # input_atts = input_atts.to(self.device)                        
-        input_lens = input_atts.sum(dim=1).detach().cpu()                            
+        input_lens = input_atts.sum(dim=1).detach().cpu()
         # input_lens = input_atts.sum(dim=1)
-        batch_size = input_embs.size(0) # extract the  batch size         
-        
+        batch_size = input_embs.size(0)  # extract the  batch size
+
         for i in range(batch_size):
-            input_len = input_lens[i].item()            
+            input_len = input_lens[i].item()
             # input_len = input_lens[i].detach().item()
             cat_emb = torch.cat([
-                    input_embs[i][:input_len], # tensor indexing
-                    output_embs[i],
-                    input_embs[i][input_len:]
-                ])
+                input_embs[i][:input_len],  # tensor indexing
+                output_embs[i],
+                input_embs[i][input_len:]
+            ])
             cat_embs.append(cat_emb)
-            
-            cat_att = torch.cat([
-                    input_atts[i][:input_len],
-                    output_atts[i],
-                    input_atts[i][input_len:]
-                ])
-            cat_atts.append(cat_att)   
 
-        # xm.mark_step()
-            
+            cat_att = torch.cat([
+                input_atts[i][:input_len],
+                output_atts[i],
+                input_atts[i][input_len:]
+            ])
+            cat_atts.append(cat_att)
+
+            # xm.mark_step()
+
         cat_embs = torch.stack(cat_embs)
         cat_atts = torch.stack(cat_atts)
         return cat_embs, cat_atts, input_lens
-   
 
-        
-    
     def tokenize_conversation(self, conv_q, conv_a):
         """concatenate conversation and make sure the model is only trained to regress the answer"""
 
@@ -310,7 +306,7 @@ class MiniGPTBase(BaseModel):
 
             #part_targets replaces padding token IDs (specified by pad_token_id) with -100
             part_targets = regress_token_ids.masked_fill(
-                regress_token_ids == self.llama_tokenizer.pad_token_id, -100 # -100 to be ignored by cross entropy loss
+                regress_token_ids == self.llama_tokenizer.pad_token_id, -100  # -100 to be ignored by cross entropy loss
             )
 
         regress_embeds = self.embed_tokens(regress_token_ids)
@@ -318,12 +314,12 @@ class MiniGPTBase(BaseModel):
         return cond_embeds, cond_atts, regress_embeds, regress_atts, part_targets
 
     def forward(self, samples, reduction='mean'):
-        try: 
-            
+        try:
+
             # prepare the embedding to condition and the embedding to regress
             cond_embeds, cond_atts, regress_embeds, regress_atts, part_targets = \
                 self.preparing_embedding(samples)
-                        
+
             # concat the embedding to condition and the embedding to regress
             inputs_embeds, attention_mask, input_lens = \
                 self.concat_emb_input_output(cond_embeds, cond_atts, regress_embeds, regress_atts)
@@ -333,7 +329,6 @@ class MiniGPTBase(BaseModel):
             bos_embeds = self.embed_tokens(bos)
             bos_atts = cond_atts[:, :1]
 
-            
             # add bos token at the begining
             inputs_embeds = torch.cat([bos_embeds, inputs_embeds], dim=1)
             attention_mask = torch.cat([bos_atts, attention_mask], dim=1)
@@ -341,14 +336,13 @@ class MiniGPTBase(BaseModel):
             #Preallocate targets tensor with -100
             #Ensemble the final targets
             targets = torch.ones([inputs_embeds.shape[0], inputs_embeds.shape[1]],
-                                dtype=torch.long).to(self.device).fill_(-100)
+                                 dtype=torch.long).to(self.device).fill_(-100)
 
             targets = targets.to(self.device)
             # input_lens = input_lens.to(self.device)                        
 
             for i, target in enumerate(part_targets):
                 targets[i, input_lens[i] + 1:input_lens[i] + len(target) + 1] = target  # plus 1 for bos
-            
 
             with self.maybe_autocast():
                 outputs = self.llama_model(
@@ -359,7 +353,7 @@ class MiniGPTBase(BaseModel):
                     reduction=reduction
                 )
             # loss = outputs.loss
-            
+
             return outputs
         except Exception as e:
             xm.master_print(f"Forward error: {e}")
@@ -465,5 +459,3 @@ class MiniGPTBase(BaseModel):
                 all_losses[i, num_cand[i]:] = 9999
         output_class_ranks = torch.argsort(all_losses, dim=-1)
         return output_class_ranks.tolist()
-
-
