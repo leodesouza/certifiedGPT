@@ -131,7 +131,7 @@ class Smooth(object):
                 batch_sample["answer"] = batch_answers
 
                 xm.master_print("passing batch_sample to model (forward)")
-                with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):
+                with xla_amp.autocast(enabled=self.config.run.amp, device=self._device):
                     outputs = self.base_decoder(batch_sample)
 
                 xm.master_print(f"outputss{outputs}")
