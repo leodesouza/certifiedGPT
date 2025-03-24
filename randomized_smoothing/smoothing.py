@@ -138,14 +138,15 @@ class Smooth(object):
                 xm.master_print("passing batch_sample to model (forward)")
                 with xla_amp.autocast(enabled=self.config.run.amp, device=self._device):
                     outputs = self.base_decoder(batch_sample)
+                xm.mark_step()
 
-                xm.master_print(f"outputss{outputs}")
                 xm.master_print("softmax logits")
                 probs = torch.softmax(outputs.logits, dim=-1)
                 xm.master_print("counts probs")
                 xm.master_print(f"probs: {probs}")
                 # counts += self._count_arr(predictions.cpu().numpy(), self.num_classes)
                 counts += probs.cpu().numpy().sum(axis=0)
+                xm.master_print(f"counts: {counts}")
 
             return counts
 

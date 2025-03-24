@@ -89,17 +89,10 @@ class MiniGPT4CertifyAgent(BaseAgent):
                 continue
             if step == self.config.run.max:
                 break
-
             xm.master_print(f"Certify step: {step} - {(test_utils.now())}")
-            with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):
-                outputs = self.model(batch_sample)
-            loss = outputs.loss
-            xm.mark_step()
 
-            xm.master_print(f"val loss: {loss.detach()}")
-
-            # # certify prediction of smoothed decoder around images
-            # prediction, radius = self.smoothed_decoder.certify(batch_sample, n0, n, self.config.run.alpha, batch_size=self.config.datasets.evalvqav2.batch_size)
+            # certify prediction of smoothed decoder around images
+            prediction, radius = self.smoothed_decoder.certify(batch_sample, n0, n, self.config.run.alpha, batch_size=self.config.datasets.evalvqav2.batch_size)
             # # is_similar = prediction == answer
             total_batches += 1
 
