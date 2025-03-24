@@ -12,7 +12,7 @@ from math import ceil
 from statsmodels.stats.proportion import proportion_confint
 import torch_xla.core.xla_model as xm
 import torch_xla.amp as xla_amp
-
+from common.registry import registry
 
 class Smooth(object):
     """A smoothed classifier g """
@@ -30,6 +30,7 @@ class Smooth(object):
         self.num_classes = num_classes
         self.sigma = sigma
         self._device = xm.xla_device()
+        self.config = registry.get_configuration_class("configuration")
 
     def certify(self, x: torch.tensor, n0: int, n: int, alpha: float, batch_size: int) -> (int, float):
         """ Monte Carlo algorithm for certifying that g's prediction around x is constant within some L2 radius.
