@@ -109,7 +109,8 @@ class Smooth(object):
         with torch.no_grad():
             with xla_amp.autocast(enabled=self.config.run.amp, device=self._device):
                 outputs = self.base_decoder(batch_sample)
-                xm.master_print(f"loss: {outputs.loss}")
+                xm.mark_step()
+                xm.master_print(f"loss: {outputs.loss.detach().item()}")
 
             counts = np.zeros(self.num_classes, dtype=int)
             for _ in range(ceil(num / batch_size)):
