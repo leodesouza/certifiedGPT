@@ -11,6 +11,7 @@ import numpy as np
 from math import ceil
 from statsmodels.stats.proportion import proportion_confint
 import torch_xla.core.xla_model as xm
+import torch_xla.amp as xla_amp
 
 
 class Smooth(object):
@@ -129,7 +130,9 @@ class Smooth(object):
                 batch_sample["answer"] = batch_answers
 
                 xm.master_print("passing batch_sample to model (forward)")
-                outputs = self.base_decoder(batch_sample)
+                with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):
+                    outputs = self.base_decoder(batch_sample)
+
                 xm.master_print(f"outputss{outputs}")
                 xm.master_print("softmax logits")
                 probs = torch.softmax(outputs.logits, dim=-1)
