@@ -14,6 +14,7 @@ import torch_xla.core.xla_model as xm
 import torch_xla.amp as xla_amp
 from common.registry import registry
 
+
 class Smooth(object):
     """A smoothed classifier g """
 
@@ -107,11 +108,6 @@ class Smooth(object):
         # xm.mark_step()
 
         with torch.no_grad():
-            with xla_amp.autocast(enabled=self.config.run.amp, device=self._device):
-                outputs = self.base_decoder(batch_sample)
-                xm.mark_step()
-                xm.master_print(f"loss: {outputs.loss.detach().item()}")
-
             counts = np.zeros(self.num_classes, dtype=int)
             for _ in range(ceil(num / batch_size)):
                 this_batch_size = min(batch_size, num)
@@ -138,15 +134,13 @@ class Smooth(object):
                 xm.master_print("passing batch_sample to model (forward)")
                 with xla_amp.autocast(enabled=self.config.run.amp, device=self._device):
                     outputs = self.base_decoder(batch_sample)
+                    logits = outputs.logits
                 xm.mark_step()
 
-                xm.master_print("softmax logits")
-                probs = torch.softmax(outputs.logits, dim=-1)
-                xm.master_print("counts probs")
-                xm.master_print(f"probs: {probs}")
-                # counts += self._count_arr(predictions.cpu().numpy(), self.num_classes)
+                xm.master_print("softmax")
+                probs = torch.softmax(logits, dim=-1)
+                xm.master_print("calc probs and asign to counts")
                 counts += probs.cpu().numpy().sum(axis=0)
-                xm.master_print(f"counts: {counts}")
 
             return counts
 
