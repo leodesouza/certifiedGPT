@@ -91,9 +91,9 @@ class MiniGPT4CertifyAgent(BaseAgent):
             xm.master_print(f"Certify step: {step} - {(test_utils.now())}")
             with xla_amp.autocast(enabled=self.config.run.amp, device=self.device):
                 outputs = self.model(batch_sample)
-            loss = outputs["loss"]
-
+            loss = outputs.loss
             xm.mark_step()
+
             xm.master_print(f"val loss: {loss.detach()}")
 
             # # certify prediction of smoothed decoder around images
