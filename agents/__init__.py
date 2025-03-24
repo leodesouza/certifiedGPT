@@ -22,5 +22,6 @@ def setup_agent(config):
 
 
 __all__ = [
-    "BaseAgent"
+    "BaseAgent",
+    "setup_agent"
 ]
