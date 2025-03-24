@@ -80,7 +80,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
         xm.master_print(f"Certify started: {(test_utils.now())}")
         predictions = []
 
-        # self.model.eval()
+        self.model.eval()
         for step, batch_sample in enumerate(val_loader):
             # certify every skip examples and break when step == max
             if step % self.config.run.skip != 0:
