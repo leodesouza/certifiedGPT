@@ -60,7 +60,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
                 else:
                     xm.master_print("No noise will be applied to the image inputs")
 
-            # self.load_finetuned_model(self._model)
+            self.load_finetuned_model(self._model)
             self.certify(self._dataloaders)
 
         except Exception as e:

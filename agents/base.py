@@ -18,7 +18,6 @@ import json
 import matplotlib.pyplot as plt
 
 
-
 class BaseAgent:
     def __init__(self):
         self.lr_sched = None
@@ -29,71 +28,71 @@ class BaseAgent:
         self._device = None
         self.config = registry.get_configuration_class("configuration")
         self._dataloaders = None
-        self.loss_history = {            
+        self.loss_history = {
             "epoch": [],
             "train_loss": [],
             "val_loss": []
             # "lr": []
         }
 
-    def load_checkpoint(self, model, optimizer, use_cache=False):          
-          output_dir = self.config.run.output_dir
-          if not output_dir: 
-              raise ValueError("output_dir None") 
-          
-          resume_ckpt_path = f"{self.config.run.resume_ckpt_path}.pth"          
-          file_and_path = os.path.join(output_dir, resume_ckpt_path)  
+    def load_checkpoint(self, model, optimizer, use_cache=False):
+        output_dir = self.config.run.output_dir
+        if not output_dir:
+            raise ValueError("output_dir None")
 
-          local_dir = "/tmp"              
-          local_resume_path = os.path.join(local_dir, "finetuning_resume.pth")
-          os.makedirs(local_dir, exist_ok=True)                              
-          if xm.is_master_ordinal() and os.path.exists(file_and_path):
-              if use_cache:                                    
+        resume_ckpt_path = f"{self.config.run.resume_ckpt_path}.pth"
+        file_and_path = os.path.join(output_dir, resume_ckpt_path)
+
+        local_dir = "/tmp"
+        local_resume_path = os.path.join(local_dir, "finetuning_resume.pth")
+        os.makedirs(local_dir, exist_ok=True)
+        if xm.is_master_ordinal() and os.path.exists(file_and_path):
+            if use_cache:
                 if not os.path.exists(local_resume_path):
                     xm.master_print(f"Copying checkpoint from {file_and_path} to {local_resume_path}")
                     shutil.copy(file_and_path, local_resume_path)
                     xm.master_print("Checkpoint copied")
-              else:
+            else:
                 local_resume_path = file_and_path
 
-          xm.master_print("Synchronize checkpoint loading with all process")
-          xm.rendezvous("Loading Checkpoint") # sync all process
-          
-          if os.path.exists(local_resume_path):
-              xm.master_print(f"Loading checkpoint from {local_resume_path}")                                          
-              checkpoint = torch.load(local_resume_path, map_location=torch.device('cpu'))              
-              xm.rendezvous("Checkpoint loaded") # sync all process
+        xm.master_print("Synchronize checkpoint loading with all process")
+        xm.rendezvous("Loading Checkpoint")  # sync all process
 
-              xm.master_print("Loading model state")         
-              model.load_state_dict(checkpoint['model_state_dict'], strict=False)
-              
-              xm.master_print("Loading optimizer state")         
-              load_state_dict = checkpoint['optimizer_state_dict']              
-              optimizer.load_state_dict({k: v for k,v in load_state_dict.items()})
+        if os.path.exists(local_resume_path):
+            xm.master_print(f"Loading checkpoint from {local_resume_path}")
+            checkpoint = torch.load(local_resume_path, map_location=torch.device('cpu'))
+            xm.rendezvous("Checkpoint loaded")  # sync all process
 
-              start_epoch = checkpoint['epoch'] + 1 
+            xm.master_print("Loading model state")
+            model.load_state_dict(checkpoint['model_state_dict'], strict=False)
 
-              xm.master_print(f"Resume Training from Start_Epoch:{start_epoch}")
-              
-              return start_epoch
-          else:
-              return 0
+            xm.master_print("Loading optimizer state")
+            load_state_dict = checkpoint['optimizer_state_dict']
+            optimizer.load_state_dict({k: v for k, v in load_state_dict.items()})
+
+            start_epoch = checkpoint['epoch'] + 1
+
+            xm.master_print(f"Resume Training from Start_Epoch:{start_epoch}")
+
+            return start_epoch
+        else:
+            return 0
 
     def load_finetuned_model(self, model):
 
-        xm.master_print("Synchronize checkpoint loading with all process")
+        xm.master_print("Loading finetuned VQAv2")
         checkpoint = self.config.model.vqa_finetuned
 
         xm.master_print("Synchronize checkpoint loading with all process")
-        xm.rendezvous("Loading Checkpoint") # sync all process
-                
-        xm.master_print(f"Loading checkpoint from {checkpoint}")                                          
-        checkpoint = torch.load(checkpoint, map_location=torch.device('cpu'))              
-        xm.rendezvous("Checkpoint loaded") # sync all process
+        xm.rendezvous("Loading Checkpoint")
 
-        xm.master_print("Loading model state")         
-        model.load_state_dict(checkpoint['model_state_dict'], strict=False)                                                
-        xm.master_print("Loading model state. Done!")                                         
+        xm.master_print(f"Loading checkpoint from {checkpoint}")
+        checkpoint = torch.load(checkpoint, map_location=torch.device('cpu'))
+        xm.rendezvous("Checkpoint loaded")
+
+        xm.master_print("Loading model state")
+        model.load_state_dict(checkpoint['model_state_dict'], strict=False)
+        xm.master_print("Loading model state. Done!")
 
     def save_checkpoint(self, model, optimizer, epoch, loss, file_name="checkpoint.pth.bar", is_best=False):
         """
@@ -144,13 +143,13 @@ class BaseAgent:
         raise NotImplementedError
 
     @property
-    def device(self):                    
+    def device(self):
         return self._device
 
     @property
-    def model(self):                
+    def model(self):
         return self._model
-    
+
     @classmethod
     def setup_agent(cls, **kwargs):
         return cls()
@@ -164,10 +163,10 @@ class BaseAgent:
 
     @property
     def optimizer(self):
-        if self._optimizer is None:            
+        if self._optimizer is None:
             num_parameters = 0
             p_wd, p_non_wd = [], []
-            for n, p in self.model.named_parameters():                                
+            for n, p in self.model.named_parameters():
 
                 if not p.requires_grad:
                     continue  # frozen weights                
@@ -202,10 +201,10 @@ class BaseAgent:
             self.lr_sched_plateau = torch.optim.lr_scheduler.ReduceLROnPlateau(
                 self.optimizer,
                 mode='min',
-                factor=0.1, # reduce LR by 10x
+                factor=0.1,  # reduce LR by 10x
                 patience=2,  # epochs that scheduler will wait to check and aplly lr reducing
-                threshold=0.0001, # minimum change to qualify as "improvement"
-                cooldown=1, # epochs that scheduler will pause lr checkings
+                threshold=0.0001,  # minimum change to qualify as "improvement"
+                cooldown=1,  # epochs that scheduler will pause lr checkings
                 min_lr=self.config.run.min_lr
             )
 
@@ -228,7 +227,7 @@ class BaseAgent:
             warmup_start_lr = self.config.run.get("warmup_start_lr", -1)
             warmup_steps = self.config.run.get("warmup_steps", 0)
             warmup_max_lr = self.config.run.get("warmup_max_lr", 0)
-            iters_per_epoch = self.config.run.get("iters_per_epoch", None)                                    
+            iters_per_epoch = self.config.run.get("iters_per_epoch", None)
 
             if iters_per_epoch is None:
                 try:
@@ -253,56 +252,55 @@ class BaseAgent:
     @property
     def logger(self):
         logger = registry.get_configuration_class("logger")
-        return logger  
-    
-    
+        return logger
+
     def log_info_master_print(self, message):
-        if xm.is_master_ordinal():          
+        if xm.is_master_ordinal():
             self.logger.info(message)
 
     def log_error_master_print(self, message):
-        if xm.is_master_ordinal():          
+        if xm.is_master_ordinal():
             self.logger.error(message)
 
-    def save_history(self, epoch, train_loss, val_loss, lr):        
+    def save_history(self, epoch, train_loss, val_loss, lr):
         try:
             path = self.config.run.output_dir
             file_name_path = os.path.join(path, "loss_history.json")
 
             if os.path.exists(file_name_path):
-                with open(file_name_path,"r") as f:                    
-                    self.loss_history = json.load(f)             
+                with open(file_name_path, "r") as f:
+                    self.loss_history = json.load(f)
 
             self.loss_history["epoch"].append(epoch)
             self.loss_history["train_loss"].append(train_loss)
             self.loss_history["val_loss"].append(val_loss)
             # self.loss_history["lr"].append(lr)
-            
+
             with open(file_name_path, "w") as f:
                 json.dump(self.loss_history, f, indent=4)
 
             # self.plot_result(self.loss_history)
 
-        except Exception as e: 
+        except Exception as e:
             xm.master_print(f"Error on saving loss history {e}.")
-    
+
     def load_history(self):
         path = self.config.run.output_dir
         file_name_path = os.path.join(path, "loss_history.json")
         if os.path.exists(file_name_path):
             with open(file_name_path, "r") as f:
-                self.loss_history = json.load(f)                
-    
-    def plot_result(self, loss_history):    
-        try:     
+                self.loss_history = json.load(f)
+
+    def plot_result(self, loss_history):
+        try:
             path = self.config.run.output_dir
             file_name_path = os.path.join(path, "loss_history.png")
 
             train_loss = loss_history["train_loss"]
             val_loss = loss_history["val_loss"]
-            lr_schedule = loss_history["lr"] 
-            
-            fig , ax1 = plt.subplots(figsize=(8, 6))
+            lr_schedule = loss_history["lr"]
+
+            fig, ax1 = plt.subplots(figsize=(8, 6))
 
             # Plot loss
             ax1.plot(range(1, len(train_loss) + 1), train_loss, label="Train Loss", marker="o", color="blue")
@@ -315,7 +313,8 @@ class BaseAgent:
 
             # Add a secondary y-axis for learning rate
             ax2 = ax1.twinx()
-            ax2.plot(range(1, len(lr_schedule) + 1), lr_schedule, label="Learning Rate", marker="^", color="green", linestyle="dashed")
+            ax2.plot(range(1, len(lr_schedule) + 1), lr_schedule, label="Learning Rate", marker="^", color="green",
+                     linestyle="dashed")
             ax2.set_ylabel("Learning Rate")
             ax2.legend(loc="upper right")
 
@@ -325,12 +324,3 @@ class BaseAgent:
 
         except Exception as e:
             xm.master_print(f"Error on ploting loss history {e}.")
-
-
-
-
-
-
-        
-
-
