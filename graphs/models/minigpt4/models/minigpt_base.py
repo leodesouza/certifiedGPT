@@ -413,7 +413,7 @@ class MiniGPTBase(BaseModel):
         with self.maybe_autocast():
             embs = embs.to(xm.xla_device())
             attn_mask = attn_mask.to(xm.xla_device())
-            #xm.mark_step()
+            xm.mark_step()
 
             outputs = self.llama_model.generate(
                 inputs_embeds=embs,
@@ -428,7 +428,7 @@ class MiniGPTBase(BaseModel):
                 repetition_penalty=repetition_penalty,
                 # stopping_criteria=stopping_criteria,
             )
-        #xm.mark_step()
+        xm.mark_step()
 
         # with self.maybe_autocast():
         #     outputs = self.llama_model.generate(
