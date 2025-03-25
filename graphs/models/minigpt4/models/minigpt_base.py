@@ -413,8 +413,6 @@ class MiniGPTBase(BaseModel):
         with self.maybe_autocast():
             embs = embs.to(xm.xla_device())
             attn_mask = attn_mask.to(xm.xla_device())
-            xm.mark_step()
-
             outputs = self.llama_model.generate(
                 inputs_embeds=embs,
                 attention_mask=attn_mask,
