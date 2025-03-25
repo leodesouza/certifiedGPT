@@ -141,7 +141,8 @@ class Smooth(object):
                 predictions = []
                 xm.master_print("passing batch_sample to model (forward)")
                 answers = (self.base_decoder.
-                           generate(batch_sample["image"], texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False))
+                           generate(batch_sample["image"], texts, max_new_tokens=self.config.run.max_new_tokens,
+                                    do_sample=False))
 
                 for answer, q_id, question, img_id in zip(answers, question_id, question, image_id):
                     result = ()
@@ -156,7 +157,6 @@ class Smooth(object):
                 xm.mark_step()
                 xm.master_print(f"answer: {answers}")
                 xm.master_print(f"predictions: {predictions}")
-
 
                 # predicted_tokens = torch.argmax(logits, dim=-1)
                 # generated_text = self.base_decoder.llama_tokenizer.batch_decode(predicted_tokens, skip_special_tokens=True)
@@ -185,7 +185,7 @@ class Smooth(object):
         """
         return proportion_confint(NA, N, alpha=2 * alpha, method="beta")[0]
 
-    def prepare_texts(texts, conv_temp):
+    def prepare_texts(self, texts, conv_temp):
         convs = [conv_temp.copy() for _ in range(len(texts))]
         [conv.append_message(
             conv.roles[0], text) for conv, text in zip(convs, texts)]
