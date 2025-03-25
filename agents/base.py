@@ -80,7 +80,8 @@ class BaseAgent:
               return 0
 
     def load_finetuned_model(self, model):
-        
+
+        xm.master_print("Synchronize checkpoint loading with all process")
         checkpoint = self.config.model.vqa_finetuned
 
         xm.master_print("Synchronize checkpoint loading with all process")

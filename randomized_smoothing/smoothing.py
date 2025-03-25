@@ -140,17 +140,19 @@ class Smooth(object):
                 texts = self.prepare_texts(question, conv_temp)
                 predictions = []
                 xm.master_print("passing batch_sample to model (forward)")
-                answers = (self.base_decoder.
-                           generate(batch_sample["image"], texts, max_new_tokens=self.config.run.max_new_tokens,
-                                    do_sample=False))
+                max_tokens = self.config.run.max_new_tokens
+                answers = (self.base_decoder.generate(batch_sample["image"], texts, max_new_tokens=max_tokens, do_sample=False))
                 xm.mark_step()
 
                 for answer, q_id, question, img_id in zip(answers, question_id, question, image_id):
-                    result = ()
+                    result = dict()
                     answer = answer.lower().replace('<unk>', '').strip()
                     result['answer'] = answer
                     result['question_id'] = int(question_id)
                     predictions.append(result)
+
+                xm.master_print(f"predictions: {predictions}")
+                raise Exception("terminou!!!")
 
                 # with xla_amp.autocast(enabled=self.config.run.amp, device=self._device):
                 #     outputs = self.base_decoder.generate(batch_sample)
