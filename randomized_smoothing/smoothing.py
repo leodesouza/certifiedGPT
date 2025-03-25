@@ -138,7 +138,7 @@ class Smooth(object):
                 xm.mark_step()
 
                 predicted_tokens = torch.argmax(logits, dim=-1)
-                generated_text = self.model.llama_tokenizer.batch_decode(predicted_tokens, skip_special_tokens=True)
+                generated_text = self.base_decoder.llama_tokenizer.batch_decode(predicted_tokens, skip_special_tokens=True)
                 xm.master_print(f"generated text: {generated_text}")
                 probs = torch.softmax(logits, dim=-1)
                 xm.master_print("calc probs and asign to counts")
