@@ -118,20 +118,20 @@ class Smooth(object):
                 this_batch_size = min(batch_size, num)
                 num -= this_batch_size
 
-                image = batch_sample["image"]
-                batch_image = image.repeat((this_batch_size, 1, 1, 1))
-                noise = torch.randn_like(batch_image, device=self._device) * self.sigma
-                batch_image += noise
-                batch_sample["image"] = batch_image
+                # image = batch_sample["image"]
+                # batch_image = image.repeat((this_batch_size, 1, 1, 1))
+                # noise = torch.randn_like(batch_image, device=self._device) * self.sigma
+                # batch_image += noise
+                # batch_sample["image"] = batch_image
 
-                batch_question = question * this_batch_size
-                batch_sample["instruction_input"] = batch_question
-
-                batch_question_id = question_id.repeat((this_batch_size, 1, 1, 1))
-                batch_sample["question_id"] = batch_question_id
-
-                batch_answers = answers * this_batch_size
-                batch_sample["answer"] = batch_answers
+                # batch_question = question * this_batch_size
+                # batch_sample["instruction_input"] = batch_question
+                #
+                # batch_question_id = question_id.repeat((this_batch_size, 1, 1, 1))
+                # batch_sample["question_id"] = batch_question_id
+                #
+                # batch_answers = answers * this_batch_size
+                # batch_sample["answer"] = batch_answers
 
                 xm.master_print("passing batch_sample to model (forward)")
                 with xla_amp.autocast(enabled=self.config.run.amp, device=self._device):
