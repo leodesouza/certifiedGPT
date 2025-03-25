@@ -137,7 +137,8 @@ class Smooth(object):
                 # batch_answers = answers * this_batch_size
                 # batch_sample["answer"] = batch_answers
 
-                texts = self.prepare_texts(question, conv_temp)
+                texts = self.prepare_texts(question[0], conv_temp)
+                xm.master_print(f"Text: {texts}")
                 predictions = []
                 xm.master_print("passing batch_sample to model (forward)")
                 max_tokens = self.config.run.max_new_tokens
