@@ -143,6 +143,7 @@ class Smooth(object):
                 answers = (self.base_decoder.
                            generate(batch_sample["image"], texts, max_new_tokens=self.config.run.max_new_tokens,
                                     do_sample=False))
+                xm.mark_step()
 
                 for answer, q_id, question, img_id in zip(answers, question_id, question, image_id):
                     result = ()
