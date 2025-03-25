@@ -13,6 +13,7 @@ from statsmodels.stats.proportion import proportion_confint
 import torch_xla.core.xla_model as xm
 import torch_xla.amp as xla_amp
 from common.registry import registry
+from graphs.models.minigpt4.conversation.conversation import CONV_VISION_LLama2
 
 
 class Smooth(object):
@@ -107,6 +108,9 @@ class Smooth(object):
         xm.master_print(f"Answer: {answers}")
         xm.master_print(f"ImageId: {image_id}")
 
+        conv_temp = CONV_VISION_LLama2.copy()
+        conv_temp.system = ""
+
         #
         # texts = self.prepare_texts(questions, conv_temp)
         # answers = self.model.generate(images, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False)
@@ -133,29 +137,33 @@ class Smooth(object):
                 # batch_answers = answers * this_batch_size
                 # batch_sample["answer"] = batch_answers
 
+                texts = self.prepare_texts(question, conv_temp)
+                predictions = []
                 xm.master_print("passing batch_sample to model (forward)")
-                with xla_amp.autocast(enabled=self.config.run.amp, device=self._device):
-                    outputs = self.base_decoder(batch_sample)
-                    logits = outputs.logits
-                xm.mark_step()
+                answers = (self.base_decoder.
+                           generate(batch_sample["image"], texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False))
 
-                answers = []
-                for output_token in outputs:
-                    if output_token[0] == 0:
-                        output_token = output_token[1:]
-                    output_texts = self.base_decoder.llama_tokenizer.decode(output_token, skip_special_tokens=True)
-                    output_texts = output_texts.split('</s>')[0]  # remove the stop sign </s>
-                    output_texts = output_texts.replace("<s>", "")
-                    output_texts = output_texts.split(r'[/INST]')[-1].strip()
-                    answers.append(output_texts)
+                for answer, q_id, question, img_id in zip(answers, question_id, question, image_id):
+                    result = ()
+                    answer = answer.lower().replace('<unk>', '').strip()
+                    result['answer'] = answer
+                    result['question_id'] = int(question_id)
+                    predictions.append(result)
+
+                # with xla_amp.autocast(enabled=self.config.run.amp, device=self._device):
+                #     outputs = self.base_decoder.generate(batch_sample)
+                #     logits = outputs.logits
+                xm.mark_step()
                 xm.master_print(f"answer: {answers}")
+                xm.master_print(f"predictions: {predictions}")
+
 
                 # predicted_tokens = torch.argmax(logits, dim=-1)
                 # generated_text = self.base_decoder.llama_tokenizer.batch_decode(predicted_tokens, skip_special_tokens=True)
                 # xm.master_print(f"generated text: {generated_text}")
                 # probs = torch.softmax(logits, dim=-1)
                 # xm.master_print("calc probs and asign to counts")
-                counts += probs.cpu().numpy().sum(axis=0)
+                # counts += probs.cpu().numpy().sum(axis=0)
 
             return counts
 
@@ -176,3 +184,11 @@ class Smooth(object):
         :return: a lower bound on the binomial proportion which holds true w.p at least (1 - alpha) over the samples
         """
         return proportion_confint(NA, N, alpha=2 * alpha, method="beta")[0]
+
+    def prepare_texts(texts, conv_temp):
+        convs = [conv_temp.copy() for _ in range(len(texts))]
+        [conv.append_message(
+            conv.roles[0], text) for conv, text in zip(convs, texts)]
+        [conv.append_message(conv.roles[1], None) for conv in convs]
+        texts = [conv.get_prompt() for conv in convs]
+        return texts
