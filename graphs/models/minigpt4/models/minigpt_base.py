@@ -409,6 +409,7 @@ class MiniGPTBase(BaseModel):
             embs[i, -emb_len:] = emb[0]
             attn_mask[i, -emb_len:] = 1
 
+        xm.master_print("llama_model.generate")
         with self.maybe_autocast():
             outputs = self.llama_model.generate(
                 inputs_embeds=embs,
@@ -433,6 +434,7 @@ class MiniGPTBase(BaseModel):
         #         do_sample=do_sample,
         #         # stopping_criteria=stopping_criteria,
         #     )
+        xm.master_print("reading answers")
         answers = []
         for output_token in outputs:
             if output_token[0] == 0:
