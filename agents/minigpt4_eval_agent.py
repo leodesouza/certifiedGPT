@@ -94,7 +94,8 @@ class MiniGPT4EvalAgent(BaseAgent):
             img_ids = batch_sample["img_id"]
 
             texts = self.prepare_texts(questions, conv_temp)
-            answers = self.model.generate(image, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False)
+            answers = (self.model.
+                       generate(image, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False))
             xm.mark_step()
 
             for answer, question_id, question, img_id in zip(answers, question_ids, questions, img_ids):
