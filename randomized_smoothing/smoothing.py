@@ -97,11 +97,16 @@ class Smooth(object):
         :return: an ndarray[int] of length num_classes containing the per-class counts
         """
 
+        question = batch_sample["instruction_input"]
+        answers = batch_sample["answer"]
+        question_id = batch_sample["question_id"]
+        image_id = batch_sample["image_id"]
 
-        # questions = batch_sample["instruction_input"]
-        # answers = batch_sample["instruction_input"]
-        # question_ids = batch_sample["question_id"]
-        # img_ids = batch_sample["img_id"]
+        xm.master_print(f"QuestionId: {question_id}")
+        xm.master_print(f"Question: {question}")
+        xm.master_print(f"Answer: {answers}")
+        xm.master_print(f"ImageId: {image_id}")
+
         #
         # texts = self.prepare_texts(questions, conv_temp)
         # answers = self.model.generate(images, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False)
@@ -119,15 +124,12 @@ class Smooth(object):
                 batch_image += noise
                 batch_sample["image"] = batch_image
 
-                question = batch_sample["instruction_input"]
                 batch_question = question * this_batch_size
                 batch_sample["instruction_input"] = batch_question
 
-                question_id = batch_sample["question_id"]
                 batch_question_id = question_id.repeat((this_batch_size, 1, 1, 1))
                 batch_sample["question_id"] = batch_question_id
 
-                answers = batch_sample["answer"]
                 batch_answers = answers * this_batch_size
                 batch_sample["answer"] = batch_answers
 
