@@ -410,6 +410,7 @@ class MiniGPTBase(BaseModel):
             attn_mask[i, -emb_len:] = 1
 
         xm.master_print("llama_model.generate")
+        xm.mark_step()
         with self.maybe_autocast():
             outputs = self.llama_model.generate(
                 inputs_embeds=embs,
