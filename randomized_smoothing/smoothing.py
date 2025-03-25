@@ -142,6 +142,7 @@ class Smooth(object):
                 xm.master_print("passing batch_sample to model (forward)")
                 max_tokens = self.config.run.max_new_tokens
                 answers = (self.base_decoder.generate(batch_sample["image"], texts, max_new_tokens=max_tokens, do_sample=False))
+                xm.master_print(f"answers{answers}")
 
                 for answer, q_id, question, img_id in zip(answers, question_id, question, image_id):
                     result = dict()
