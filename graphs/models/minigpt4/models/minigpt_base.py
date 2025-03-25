@@ -384,12 +384,15 @@ class MiniGPTBase(BaseModel):
             function for generate test use
         '''
 
-        stopping_criteria = StoppingCriteriaList([StoppingCriteriaSub(
-            stops=[torch.tensor([i]).to(self.device) for i in stop_words_ids])])
+        xm.master_print("Enter generate ")
+        # stopping_criteria = StoppingCriteriaList([StoppingCriteriaSub(
+        #     stops=[torch.tensor([i]).to(self.device) for i in stop_words_ids])])
 
+        xm.master_print("encode image")
         img_embeds, atts_img = self.encode_img(images.to(self.device))
         image_lists = [[image_emb[None]] for image_emb in img_embeds]
 
+        xm.master_print("embed text and image")
         batch_embs = [self.get_context_emb(text, img_list) for text, img_list in zip(texts, image_lists)]
 
         batch_size = len(batch_embs)
@@ -400,6 +403,7 @@ class MiniGPTBase(BaseModel):
 
         embs = torch.zeros([batch_size, max_len, emb_dim], dtype=dtype, device=device)
         attn_mask = torch.zeros([batch_size, max_len], dtype=torch.int, device=device)
+        xm.master_print("enumarate bach_embs")
         for i, emb in enumerate(batch_embs):
             emb_len = emb.shape[1]
             embs[i, -emb_len:] = emb[0]
