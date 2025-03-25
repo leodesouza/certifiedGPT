@@ -137,17 +137,9 @@ class Smooth(object):
                     logits = outputs.logits
                 xm.mark_step()
 
-                answers = []
-                for output_token in outputs[0]:
-                    if output_token[0] == 0:
-                        output_token = output_token[1:]
-                    output_texts = self.base_decoder.llama_tokenizer.decode(output_token, skip_special_tokens=True)
-                    output_texts = output_texts.split('</s>')[0]  # remove the stop sign </s>
-                    output_texts = output_texts.replace("<s>", "")
-                    output_texts = output_texts.split(r'[/INST]')[-1].strip()
-                    answers.append(output_texts)
-
-                xm.master_print(f"answers: {answers}")
+                predicted_tokens = torch.argmax(logits, dim=-1)
+                generated_text = self.llama_tokenizer.batch_decode(predicted_tokens, skip_special_tokens=True)
+                xm.master_print(f"generated text: {generated_text}")
                 probs = torch.softmax(logits, dim=-1)
                 xm.master_print("calc probs and asign to counts")
                 counts += probs.cpu().numpy().sum(axis=0)
