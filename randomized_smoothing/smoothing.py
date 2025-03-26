@@ -14,6 +14,7 @@ import torch_xla.core.xla_model as xm
 import torch_xla.amp as xla_amp
 from common.registry import registry
 from graphs.models.minigpt4.conversation.conversation import CONV_VISION_LLama2
+import torch_xla.test.test_utils as test_utils
 
 
 class Smooth(object):
@@ -115,10 +116,17 @@ class Smooth(object):
         # texts = self.prepare_texts(questions, conv_temp)
         # answers = self.model.generate(images, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False)
         # xm.mark_step()
+
+        step = 1
+        xm.master_print(f" _sample_noise started: {(test_utils.now())}")
         xm.master_print(f"certify batch_size: {batch_size}")
+        xm.master_print(f"number of samples: {num}")
         with torch.no_grad():
             counts = np.zeros(self.num_classes, dtype=int)
             for _ in range(ceil(num / batch_size)):
+                xm.master_print(f"sample noise STEP {step}")
+                step += 1
+
                 this_batch_size = min(batch_size, num)
                 num -= this_batch_size
 
@@ -148,6 +156,7 @@ class Smooth(object):
                     predictions.append(result)
 
                 xm.master_print(f"predictions: {predictions}")
+                xm.master_print(f" _sample_noise ended: {(test_utils.now())}")
                 raise Exception("terminou!!!")
 
                 # with xla_amp.autocast(enabled=self.config.run.amp, device=self._device):
