@@ -28,7 +28,7 @@ model:
 
 datasets:
   vqav2:
-    batch_size: 52    
+    batch_size: 48    
     vis_processor:
       train:
         name: "blip2_image_train"
@@ -66,10 +66,10 @@ run:
   lr_sched: "linear_warmup_cosine_lr"  
   
   #linear_warmup_cosine_lr -> warmup_lr_schedule
-  warmup_steps: 48
+  warmup_steps: 53
   warmup_start_lr: 1e-6   
   warmup_max_lr: 1e-5        
-  iters_per_epoch: 48
+  iters_per_epoch: 53
 
   #linear_warmup_cosine_lr -> cosine_lr_schedule
   init_lr: 1e-5 
@@ -99,7 +99,7 @@ run:
 
 # DataLoader
   distributed: True  
-  num_workers: 2 # n of workers to load data
+  num_workers: 1 # n of workers to load data
 
 # debug
   debug_graph_computation: False
