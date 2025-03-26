@@ -122,28 +122,20 @@ class Smooth(object):
                 this_batch_size = min(batch_size, num)
                 num -= this_batch_size
 
-                # image = batch_sample["image"]
-                # batch_image = image.repeat((this_batch_size, 1, 1, 1))
-                # noise = torch.randn_like(batch_image, device=self._device) * self.sigma
-                # batch_image += noise
-                # batch_sample["image"] = batch_image
+                image = batch_sample["image"]
+                batch_image = image.repeat((this_batch_size, 1, 1, 1))
+                noise = torch.randn_like(batch_image, device=self._device) * self.sigma
+                batch_image += noise
 
-                # batch_question = question * this_batch_size
-                # batch_sample["instruction_input"] = batch_question
-                #
-                # batch_question_id = question_id.repeat((this_batch_size, 1, 1, 1))
-                # batch_sample["question_id"] = batch_question_id
-                #
-                # batch_answers = answers * this_batch_size
-                # batch_sample["answer"] = batch_answers
-
-                texts = self.prepare_texts(question, conv_temp)
+                batch_question = question * this_batch_size
+                texts = self.prepare_texts(batch_question, conv_temp)
                 xm.master_print(f"Text: {texts}")
+
                 predictions = []
+
                 xm.master_print("passing batch_sample to model (forward)")
                 max_tokens = self.config.run.max_new_tokens
-
-                answers = (self.base_decoder.generate(batch_sample["image"], texts, max_new_tokens=max_tokens, do_sample=False))
+                answers = (self.base_decoder.generate(batch_image, texts, max_new_tokens=max_tokens, do_sample=False))
                 xm.mark_step()
 
                 xm.master_print(f"answers{answers}")
