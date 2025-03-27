@@ -23,10 +23,10 @@ datasets:
       images:
         train:
           path:               
-               - /home/leonardosouza/sample_10k/train
+               - /home/swf_developer/sample_10k/train
         val:
           path:               
-               - /home/leonardosouza/sample_10k/val
+               - /home/swf_developer/sample_10k/val
         # test:
         #   path:
         #        - ${env:DATA_DIR}/images/test2015
