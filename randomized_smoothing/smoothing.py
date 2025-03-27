@@ -131,29 +131,33 @@ class Smooth(object):
                 batch_image += noise
 
                 batch_question = question * this_batch_size
-                texts = self.prepare_texts(batch_question, conv_temp)
-                xm.master_print(f"Text: {texts}")
+                questions = self.prepare_texts(batch_question, conv_temp)
+                xm.master_print(f"Texts: {questions}")
 
                 predictions = []
 
                 xm.master_print("passing batch_sample to model (forward)")
                 max_tokens = self.config.run.max_new_tokens
                 xm.master_print(f"batch_image shape {batch_image.shape}")
-                answers, probs = (self.base_decoder.generate(batch_image, texts, max_new_tokens=max_tokens, do_sample=False))
+                answers, probs = (self.base_decoder.generate(batch_image, questions, max_new_tokens=max_tokens, do_sample=False))
                 xm.mark_step()
 
                 xm.master_print(f"answers: {answers}")
                 xm.master_print(f"probs: {probs}")
                 
 
-                for answer, q_id, question, img_id in zip(answers, question_id, question, image_id):
+                for question, answer, prob, question, img_id in zip(questions, answers, probs, image_id):
                     result = dict()
                     answer = answer.lower().replace('<unk>', '').strip()
+                    result['question'] = question
                     result['answer'] = answer
-                    result['question_id'] = int(question_id)
+                    result['prob'] = prob
+                    result['image_id'] = int(img_id)
                     predictions.append(result)
 
+                
                 xm.master_print(f"predictions: {predictions}")
+
                 xm.master_print(f" _sample_noise ended: {(test_utils.now())}")
                 raise Exception("terminou!!!")
 
