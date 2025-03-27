@@ -429,9 +429,14 @@ class MiniGPTBase(BaseModel):
                 # stopping_criteria=stopping_criteria,
             )
         xm.mark_step()
+
+        print(f"Generated sequences before slicing:\n{outputs.sequences}")
+        print(f"Shape before slicing: {outputs.sequences.shape}")
+        print(f"Embeddings length: {embs.shape[1]}")
+
         
         generated_tokens_id = outputs.sequences[:, embs.shape[1]:] # ignore input tokens
-        
+
         if generated_tokens_id.numel() == 0:
             raise ValueError("generated_tokens_id is empty. Check if llama_model.generate() is returning valid sequences.")
 
