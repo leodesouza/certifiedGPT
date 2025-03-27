@@ -376,7 +376,7 @@ class MiniGPTBase(BaseModel):
             top_p=0.9,
             repetition_penalty=1,
             length_penalty=1,
-            temperature=0.7,
+            temperature=1,
             do_sample=False,
             stop_words_ids=[2],
     ):

@@ -139,7 +139,7 @@ class Smooth(object):
                 xm.master_print("passing batch_sample to model (forward)")
                 max_tokens = self.config.run.max_new_tokens
                 xm.master_print(f"batch_image shape {batch_image.shape}")
-                answers, probs = (self.base_decoder.generate(batch_image, texts, max_new_tokens=max_tokens, do_sample=True))
+                answers, probs = (self.base_decoder.generate(batch_image, texts, max_new_tokens=max_tokens, do_sample=False))
                 xm.mark_step()
 
                 xm.master_print(f"answers: {answers}")
