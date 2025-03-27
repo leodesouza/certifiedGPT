@@ -431,9 +431,15 @@ class MiniGPTBase(BaseModel):
         xm.mark_step()
         
         generated_tokens_id = outputs.sequences[:, embs.shape[1]:] # ignore input tokens
+        
+        if generated_tokens_id.numel() == 0:
+            raise ValueError("generated_tokens_id is empty. Check if llama_model.generate() is returning valid sequences.")
+
         scores = outputs.scores  # List of logits for each timestep
         
         probs = [torch.nn.functional.softmax(logits, dim=-1) for logits in scores]        
+        if len(probs) == 0:
+            raise ValueError("probs is empty. Ensure llama_model.generate() is generating valid logits.")
         
         #Collects all chosen token probabilities into a single tensor.
         chosen_probs = torch.stack([p[i, idx] for i, (p, idx) in enumerate(zip(probs, generated_tokens_id[0]))])
