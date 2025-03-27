@@ -52,8 +52,7 @@ class Smooth(object):
         xm.master_print("draw samples of f(x+ epsilon)")
         # draw samples of f(x+ epsilon)
         counts_selection = self._sample_noise(x, n0, batch_size)
-        xm.master_print(f"Printing counts_selection:{counts_selection}")
-        return
+        xm.master_print(f"Printing counts_selection:{counts_selection}")        
         # use these samples to take a guess at the top class
         cAHat = counts_selection.argmax().item()
         # draw more samples of f(x + epsilon)
@@ -112,11 +111,7 @@ class Smooth(object):
         conv_temp = CONV_VISION_LLama2.copy()
         conv_temp.system = ""
 
-        #
-        # texts = self.prepare_texts(questions, conv_temp)
-        # answers = self.model.generate(images, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False)
-        # xm.mark_step()
-
+ 
         step = 1
         xm.master_print(f" _sample_noise started: {(test_utils.now())}")
         xm.master_print(f"certify batch_size: {batch_size}")
@@ -144,10 +139,12 @@ class Smooth(object):
                 xm.master_print("passing batch_sample to model (forward)")
                 max_tokens = self.config.run.max_new_tokens
                 xm.master_print(f"batch_image shape {batch_image.shape}")
-                answers = (self.base_decoder.generate(batch_image, texts, max_new_tokens=max_tokens, do_sample=False))
+                answers, probs = (self.base_decoder.generate(batch_image, texts, max_new_tokens=max_tokens, do_sample=False))
                 xm.mark_step()
 
-                xm.master_print(f"answers{answers}")
+                xm.master_print(f"answers: {answers}")
+                xm.master_print(f"probs: {probs}")
+                
 
                 for answer, q_id, question, img_id in zip(answers, question_id, question, image_id):
                     result = dict()

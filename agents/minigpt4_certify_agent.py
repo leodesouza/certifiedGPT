@@ -61,14 +61,14 @@ class MiniGPT4CertifyAgent(BaseAgent):
                     xm.master_print("No noise will be applied to the image inputs")
 
             self.load_finetuned_model(self._model)
-            self.certify(self._dataloaders)
+            self.certify()
 
         except Exception as e:
             xm.master_print(f"Error on agent run: {test_utils.now()}. Details: {e}")
             self.logger.error(f"Error on agent run: {test_utils.now()}. Details: {e}")
 
     @torch.no_grad()
-    def certify(self, dataloader):
+    def certify(self):
         total_batches = torch.tensor(0, device=self.device)
         val_loader = self._dataloaders["val"]
         val_loader = pl.MpDeviceLoader(val_loader, self.device)

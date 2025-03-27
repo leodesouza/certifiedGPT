@@ -423,23 +423,27 @@ class MiniGPTBase(BaseModel):
                 do_sample=do_sample,
                 min_length=min_length,
                 top_p=top_p,
-                repetition_penalty=repetition_penalty,
+                repetition_penalty=repetition_penalty,                
+                return_dict_in_generate=True,
+                output_scores=True
                 # stopping_criteria=stopping_criteria,
             )
         xm.mark_step()
+        
+        generated_tokens_id = outputs.sequences[:, embs.shape[1]:] # ignore input tokens
+        scores = outputs.scores  # List of logits for each timestep
+        
+        probs = [torch.nn.functional.softmax(logits, dim=-1) for logits in scores]        
+        
+        #Collects all chosen token probabilities into a single tensor.
+        chosen_probs = torch.stack([p[i, idx] for i, (p, idx) in enumerate(zip(probs, generated_tokens_id[0]))])
 
-        # with self.maybe_autocast():
-        #     outputs = self.llama_model.generate(
-        #         inputs_embeds=embs,
-        #         attention_mask=attn_mask,
-        #         max_new_tokens=max_new_tokens,
-        #         num_beams=num_beams,
-        #         do_sample=do_sample,
-        #         # stopping_criteria=stopping_criteria,
-        #     )
-        xm.master_print("reading answers")
+        full_answer_prob = torch.prod(chosen_probs).item()
+        # log_prob = torch.sum(torch.log(chosen_probs)).item()
+        
+        xm.master_print("reading answers")        
         answers = []
-        for output_token in outputs:
+        for output_token in outputs.sequences:
             if output_token[0] == 0:
                 output_token = output_token[1:]
             output_texts = self.llama_tokenizer.decode(output_token, skip_special_tokens=True)
@@ -448,7 +452,7 @@ class MiniGPTBase(BaseModel):
             output_texts = output_texts.split(r'[/INST]')[-1].strip()
             answers.append(output_texts)
 
-        return answers
+        return answers, full_answer_prob
 
     @torch.no_grad()
     def multi_select(self, images, texts, answers, num_cand=None):
