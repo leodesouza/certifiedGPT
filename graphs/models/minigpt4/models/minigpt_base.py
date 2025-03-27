@@ -435,7 +435,8 @@ class MiniGPTBase(BaseModel):
         print(f"Embeddings length: {embs.shape[1]}")
 
         
-        generated_tokens_id = outputs.sequences[:, embs.shape[1]:] # ignore input tokens
+        # generated_tokens_id = outputs.sequences[:, embs.shape[1]:] # ignore input tokens
+        generated_tokens_id = outputs.sequences
 
         if generated_tokens_id.numel() == 0:
             raise ValueError("generated_tokens_id is empty. Check if llama_model.generate() is returning valid sequences.")
@@ -447,7 +448,8 @@ class MiniGPTBase(BaseModel):
             raise ValueError("probs is empty. Ensure llama_model.generate() is generating valid logits.")
         
         #Collects all chosen token probabilities into a single tensor.
-        chosen_probs = torch.stack([p[i, idx] for i, (p, idx) in enumerate(zip(probs, generated_tokens_id[0]))])
+        # chosen_probs = torch.stack([p[i, idx] for i, (p, idx) in enumerate(zip(probs, generated_tokens_id[0]))])
+        chosen_probs = torch.stack([p[0, idx] for p, idx in zip(probs, generated_tokens_id[0])])
 
         full_answer_prob = torch.prod(chosen_probs).item()
         # log_prob = torch.sum(torch.log(chosen_probs)).item()
