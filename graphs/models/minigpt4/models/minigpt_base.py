@@ -447,39 +447,34 @@ class MiniGPTBase(BaseModel):
         print(f"Shape before slicing: {outputs.sequences.shape}")
         print(f"Embeddings length: {embs.shape[1]}")
 
-        
-        # generated_tokens_id = outputs.sequences[:, embs.shape[1]:] # ignore input tokens
+        scores = outputs.scores  # List of logits for each timestep                
         generated_tokens_id = outputs.sequences
-
         if generated_tokens_id.numel() == 0:
             raise ValueError("generated_tokens_id is empty. Check if llama_model.generate() is returning valid sequences.")
-
-        scores = outputs.scores  # List of logits for each timestep
         
         probs = [torch.nn.functional.softmax(logits, dim=-1) for logits in scores]        
         if len(probs) == 0:
             raise ValueError("probs is empty. Ensure llama_model.generate() is generating valid logits.")
-        
-        #Collects all chosen token probabilities into a single tensor.
-        # chosen_probs = torch.stack([p[i, idx] for i, (p, idx) in enumerate(zip(probs, generated_tokens_id[0]))])
-        chosen_probs = torch.stack([p[0, idx] for p, idx in zip(probs, generated_tokens_id[0])])
-
-        full_answer_prob = torch.prod(chosen_probs).item()
-        # log_prob = torch.sum(torch.log(chosen_probs)).item()
+                
+        answer_probs = [] 
+        for i in range(generated_tokens_id.shape[0]):
+            chosen_probs = torch.stack([p[i, idx] for p, idx in zip(probs, generated_tokens_id[i])])
+            answer_prob = torch.prod(chosen_probs).item()  # Multiply probabilities for the full answer
+            answer_probs.append(answer_prob)
         
         xm.master_print("reading answers")        
         xm.master_print(f"chosen_probs: {chosen_probs}")
         answers = []
         for output_token in outputs.sequences:
             if output_token[0] == 0:
-                output_token = output_token[1:]
+                output_token = output_token[1:]                
             output_texts = self.llama_tokenizer.decode(output_token, skip_special_tokens=True)
             output_texts = output_texts.split('</s>')[0]  # remove the stop sign </s>
             output_texts = output_texts.replace("<s>", "")
             output_texts = output_texts.split(r'[/INST]')[-1].strip()
             answers.append(output_texts)
 
-        return answers, full_answer_prob
+        return answers, answer_probs
 
     @torch.no_grad()
     def multi_select(self, images, texts, answers, num_cand=None):
