@@ -51,8 +51,9 @@ class Smooth(object):
         self.base_decoder.eval()
         xm.master_print("draw samples of f(x+ epsilon)")
         # draw samples of f(x+ epsilon)
-        counts_selection = self._sample_noise(x, n0, batch_size)
-        xm.master_print(f"Printing counts_selection:{counts_selection}")        
+        counts_selection = self._sample_noise(x, n0, batch_size)        
+        xm.master_print(f"Printing counts_selection:{counts_selection}")
+        raise Exception("terminou")        
         # use these samples to take a guess at the top class
         cAHat = counts_selection.argmax().item()
         # draw more samples of f(x + epsilon)
@@ -100,19 +101,12 @@ class Smooth(object):
 
         question = batch_sample["instruction_input"]
         answers = batch_sample["answer"]
-        question_id = batch_sample["question_id"]
-        image_id = batch_sample["image_id"]
-
-        xm.master_print(f"QuestionId: {question_id}")
-        xm.master_print(f"Question: {question}")
-        xm.master_print(f"Answer: {answers}")
-        xm.master_print(f"ImageId: {image_id}")
-
         conv_temp = CONV_VISION_LLama2.copy()
         conv_temp.system = ""
                  
         with torch.no_grad():
-            counts = np.zeros(self.num_classes, dtype=int)
+            
+            predictions = []
             for _ in range(ceil(num / batch_size)):
                                 
                 this_batch_size = min(batch_size, num)
@@ -123,8 +117,7 @@ class Smooth(object):
                 noise = torch.randn_like(batch_image, device=self._device) * self.sigma
                 
                 batch_question = question * this_batch_size
-                questions = self.prepare_texts(batch_question, conv_temp)                
-                predictions = []                
+                questions = self.prepare_texts(batch_question, conv_temp)                                
                 max_tokens = self.config.run.max_new_tokens 
 
                 with xla_amp.autocast(enabled=self.config.run.amp, device=self._device):
@@ -132,27 +125,11 @@ class Smooth(object):
                 
                 xm.mark_step()                
 
-                for answer, prob in zip(answers, probs):
-                    result = dict()
-                    answer = answer.lower().replace('<unk>', '').strip()                    
-                    result['answer'] = answer
-                    result['prob'] = prob                    
-                    predictions.append(result)
-            
-                xm.master_print(f"predictions: {predictions}")
-                xm.master_print(f"probs: {probs}")
-                xm.master_print(f"answers: {answers}")
+                for answer, prob in zip(answers, probs):                    
+                    answer = answer.lower().replace('<unk>', '').strip()                                        
+                    predictions.append((answer, prob.item()))                                                                                            
 
-                raise Exception("terminou!!!")
-                                
-                # predicted_tokens = torch.argmax(logits, dim=-1)
-                # generated_text = self.base_decoder.llama_tokenizer.batch_decode(predicted_tokens, skip_special_tokens=True)
-                # xm.master_print(f"generated text: {generated_text}")
-                # probs = torch.softmax(logits, dim=-1)
-                # xm.master_print("calc probs and asign to counts")
-                # counts += probs.cpu().numpy().sum(axis=0)
-
-            return counts
+            return predictions
 
     def _count_arr(self, arr: np.ndarray, length: int) -> np.ndarray:
         counts = np.zeros(length, dtype=int)
