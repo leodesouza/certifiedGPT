@@ -468,6 +468,7 @@ class MiniGPTBase(BaseModel):
         # log_prob = torch.sum(torch.log(chosen_probs)).item()
         
         xm.master_print("reading answers")        
+        xm.master_print(f"chosen_probs: {chosen_probs}")
         answers = []
         for output_token in outputs.sequences:
             if output_token[0] == 0:
