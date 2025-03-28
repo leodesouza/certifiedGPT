@@ -132,13 +132,11 @@ class Smooth(object):
                 
                 xm.mark_step()                
 
-                for question, answer, prob, img_id in zip(questions, answers, probs, image_id):
+                for answer, prob in zip(answers, probs):
                     result = dict()
-                    answer = answer.lower().replace('<unk>', '').strip()
-                    result['question'] = question
+                    answer = answer.lower().replace('<unk>', '').strip()                    
                     result['answer'] = answer
-                    result['prob'] = prob
-                    result['image_id'] = int(img_id)
+                    result['prob'] = prob                    
                     predictions.append(result)
             
                 xm.master_print(f"predictions: {predictions}")
