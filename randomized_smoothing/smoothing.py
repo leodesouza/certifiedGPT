@@ -128,7 +128,7 @@ class Smooth(object):
 
                 for answer, prob in zip(answers, probs):                    
                     answer = answer.lower().replace('<unk>', '').strip()                                        
-                    predictions.append((answer, prob.item()))                                                                                            
+                    predictions.append((answer, prob))                                                                                            
 
             return predictions
 
