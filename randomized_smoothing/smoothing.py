@@ -143,6 +143,7 @@ class Smooth(object):
             
                 xm.master_print(f"predictions: {predictions}")
                 xm.master_print(f"probs: {probs}")
+                xm.master_print(f"answers: {answers}")
 
                 raise Exception("terminou!!!")
                                 
