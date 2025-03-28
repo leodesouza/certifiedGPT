@@ -110,43 +110,29 @@ class Smooth(object):
 
         conv_temp = CONV_VISION_LLama2.copy()
         conv_temp.system = ""
-
- 
-        step = 1
-        xm.master_print(f" _sample_noise started: {(test_utils.now())}")
-        xm.master_print(f"certify batch_size: {batch_size}")
-        xm.master_print(f"number of samples: {num}")
+                 
         with torch.no_grad():
             counts = np.zeros(self.num_classes, dtype=int)
             for _ in range(ceil(num / batch_size)):
-                xm.master_print(f"sample noise STEP {step}")
-                step += 1
-
+                                
                 this_batch_size = min(batch_size, num)
                 num -= this_batch_size
 
                 image = batch_sample["image"]
                 batch_image = image.repeat((this_batch_size, 1, 1, 1))
                 noise = torch.randn_like(batch_image, device=self._device) * self.sigma
-                batch_image += noise
-
-                batch_question = question * this_batch_size
-                questions = self.prepare_texts(batch_question, conv_temp)
-                xm.master_print(f"Texts: {questions}")
-
-                predictions = []
-
-                xm.master_print("passing batch_sample to model (forward)")
-                max_tokens = self.config.run.max_new_tokens
-                xm.master_print(f"batch_image shape {batch_image.shape}")
-                answers, probs = (self.base_decoder.generate(batch_image, questions, max_new_tokens=max_tokens, do_sample=False))
-                xm.mark_step()
-
-                xm.master_print(f"answers: {answers}")
-                xm.master_print(f"probs: {probs}")
                 
+                batch_question = question * this_batch_size
+                questions = self.prepare_texts(batch_question, conv_temp)                
+                predictions = []                
+                max_tokens = self.config.run.max_new_tokens 
 
-                for question, answer, prob, question, img_id in zip(questions, answers, probs, image_id):
+                with xla_amp.autocast(enabled=self.config.run.amp, device=self._device):
+                    answers, probs = (self.base_decoder.generate(batch_image + noise, questions, max_new_tokens=max_tokens, do_sample=False))
+                
+                xm.mark_step()                
+
+                for question, answer, prob, img_id in zip(questions, answers, probs, image_id):
                     result = dict()
                     answer = answer.lower().replace('<unk>', '').strip()
                     result['question'] = question
@@ -154,20 +140,11 @@ class Smooth(object):
                     result['prob'] = prob
                     result['image_id'] = int(img_id)
                     predictions.append(result)
-
-                
+            
                 xm.master_print(f"predictions: {predictions}")
 
-                xm.master_print(f" _sample_noise ended: {(test_utils.now())}")
                 raise Exception("terminou!!!")
-
-                # with xla_amp.autocast(enabled=self.config.run.amp, device=self._device):
-                #     outputs = self.base_decoder.generate(batch_sample)
-                #     logits = outputs.logits
-
-                xm.master_print(f"answer: {answers}")
-                xm.master_print(f"predictions: {predictions}")
-
+                                
                 # predicted_tokens = torch.argmax(logits, dim=-1)
                 # generated_text = self.base_decoder.llama_tokenizer.batch_decode(predicted_tokens, skip_special_tokens=True)
                 # xm.master_print(f"generated text: {generated_text}")
