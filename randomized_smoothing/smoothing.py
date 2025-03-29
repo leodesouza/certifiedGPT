@@ -59,12 +59,15 @@ class Smooth(object):
         # use these samples to take a guess at the top class
         cAHat = probs.argmax().item()
         xm.master_print(f"cAHat:{cAHat}")
-
-        raise Exception("terminou") 
+        
         # draw more samples of f(x + epsilon)
-        counts_estimation = self._sample_noise(x, n, batch_size)
+        sample_for_estimation = self._sample_noise(x, n, batch_size)
         # use these samples to estimate a lower bound on pA
-        nA = counts_estimation[cAHat].item()
+        nA = sample_for_estimation[cAHat].item()
+
+        xm.master_print(f"nA:{nA}")
+        
+        raise Exception("terminou") 
         pABar = self._lower_confidence_bound(nA, n, alpha)
         if pABar < 0.5:
             return Smooth.ABSTAIN, 0.0
