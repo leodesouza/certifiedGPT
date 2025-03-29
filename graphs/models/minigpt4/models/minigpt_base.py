@@ -396,16 +396,10 @@ class MiniGPTBase(BaseModel):
         '''
             function for generate test use
         '''
-
-        xm.master_print("Enter generate ")
-        # stopping_criteria = StoppingCriteriaList([StoppingCriteriaSub(
-        #     stops=[torch.tensor([i]).to(self.device) for i in stop_words_ids])])
-
-        xm.master_print("encode image")
+                
         img_embeds, atts_img = self.encode_img(images.to(self.device))
         image_lists = [[image_emb[None]] for image_emb in img_embeds]
-
-        xm.master_print("embed text and image")
+        
         batch_embs = [self.get_context_emb(text, img_list) for text, img_list in zip(texts, image_lists)]
 
         batch_size = len(batch_embs)
@@ -415,14 +409,12 @@ class MiniGPTBase(BaseModel):
         device = batch_embs[0].device
 
         embs = torch.zeros([batch_size, max_len, emb_dim], dtype=dtype, device=device)
-        attn_mask = torch.zeros([batch_size, max_len], dtype=torch.int, device=device)
-        xm.master_print("enumarate bach_embs")
+        attn_mask = torch.zeros([batch_size, max_len], dtype=torch.int, device=device)        
         for i, emb in enumerate(batch_embs):
             emb_len = emb.shape[1]
             embs[i, -emb_len:] = emb[0]
             attn_mask[i, -emb_len:] = 1
-
-        xm.master_print("llama_model.generate")
+        
         with self.maybe_autocast():
             embs = embs.to(xm.xla_device())
             attn_mask = attn_mask.to(xm.xla_device())
@@ -438,32 +430,20 @@ class MiniGPTBase(BaseModel):
                 top_p=top_p,
                 repetition_penalty=repetition_penalty,                
                 return_dict_in_generate=True,
-                output_scores=True
-                # stopping_criteria=stopping_criteria,
+                output_scores=True                
             )
         xm.mark_step()
-
-        print(f"Generated sequences before slicing:\n{outputs.sequences}")
-        print(f"Shape before slicing: {outputs.sequences.shape}")
-        print(f"Embeddings length: {embs.shape[1]}")
-
-        scores = outputs.scores  # List of logits for each timestep                
-        generated_tokens_id = outputs.sequences
-        if generated_tokens_id.numel() == 0:
-            raise ValueError("generated_tokens_id is empty. Check if llama_model.generate() is returning valid sequences.")
         
+        scores = outputs.scores 
+        generated_tokens_id = outputs.sequences        
         probs = [torch.nn.functional.softmax(logits, dim=-1) for logits in scores]        
-        if len(probs) == 0:
-            raise ValueError("probs is empty. Ensure llama_model.generate() is generating valid logits.")
                 
         answer_probs = [] 
         for i in range(generated_tokens_id.shape[0]):
             chosen_probs = torch.stack([p[i, idx] for p, idx in zip(probs, generated_tokens_id[i])])
-            answer_prob = torch.prod(chosen_probs).item()  # Multiply probabilities for the full answer
+            answer_prob = torch.prod(chosen_probs).item() 
             answer_probs.append(answer_prob)
-        
-        xm.master_print("reading answers")        
-        xm.master_print(f"chosen_probs: {chosen_probs}")
+                
         answers = []
         for output_token in outputs.sequences:
             if output_token[0] == 0:

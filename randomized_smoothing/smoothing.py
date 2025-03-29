@@ -62,11 +62,12 @@ class Smooth(object):
         
         # draw more samples of f(x + epsilon)
         sample_for_estimation = self._sample_noise(x, n, batch_size)
+        xm.master_print(f"Printing sample_for_estimation:{sample_for_estimation}")
         # use these samples to estimate a lower bound on pA
         nA = sample_for_estimation[cAHat].item()
 
         xm.master_print(f"nA:{nA}")
-        
+
         raise Exception("terminou") 
         pABar = self._lower_confidence_bound(nA, n, alpha)
         if pABar < 0.5:
