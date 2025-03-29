@@ -54,22 +54,23 @@ class Smooth(object):
         sample_for_selection = self._sample_noise(x, n0, batch_size)        
         xm.master_print(f"Sigma:{self.sigma}")
         xm.master_print(f"Printing counts_selection:{sample_for_selection}")
-        probs_selection = np.array(sample_for_selection[:,1], dtype=float)
-               
+        probs_selection = np.array(sample_for_selection[:,1], dtype=float)               
         # use these samples to take a guess at the top class
-        cAHat = probs_selection.argmax().item()
-        xm.master_print(f"cAHat:{cAHat}")
+        pAHat = probs_selection.argmax().item()
+        text = sample_for_selection[pAHat][0]        
+        xm.master_print(f"TEXT (pAHat):{text}")
         
         # draw more samples of f(x + epsilon)
         sample_for_estimation = self._sample_noise(x, n, batch_size)
         xm.master_print(f"Printing sample_for_estimation:{sample_for_estimation}")
-        probs_estimation = np.array(sample_for_estimation[:,1], dtype=float)
+        # probs_estimation = np.array(sample_for_estimation[:,1], dtype=float)
         # use these samples to estimate a lower bound on pA
-        nA = probs_estimation[cAHat].item()
+        #nA = probs_estimation[cAHat].item()
+        nA = sum(1 for row in sample_for_estimation if row == text)
 
         xm.master_print(f"nA:{nA}")
-
         raise Exception("terminou") 
+    
         pABar = self._lower_confidence_bound(nA, n, alpha)
         if pABar < 0.5:
             return Smooth.ABSTAIN, 0.0
@@ -137,7 +138,7 @@ class Smooth(object):
 
                 for answer, prob in zip(answers, probs):                    
                     answer = answer.lower().replace('<unk>', '').strip()                                        
-                    predictions.append((answer, prob))
+                    predictions.append((answer, prob))                    
 
             predictions = np.array(predictions, dtype=object)
             return predictions
