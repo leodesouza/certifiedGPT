@@ -69,14 +69,13 @@ class Smooth(object):
         nA = sum(1 for row in sample_for_estimation if row[0] == text)
 
         xm.master_print(f"nA:{nA}")
-        raise Exception("terminou") 
-    
+                    
         pABar = self._lower_confidence_bound(nA, n, alpha)
         if pABar < 0.5:
             return Smooth.ABSTAIN, 0.0
         else:
             radius = self.sigma * norm.ppf(pABar)
-            return cAHat, radius
+            return text, radius                    
 
     def predict(self, x: torch.tensor, n: int, alpha: float, batch_size: int) -> int:
         """ Monte Carlo algorithm for evaluating the prediction of g at x.  With probability at least 1 - alpha, the
