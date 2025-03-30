@@ -66,7 +66,7 @@ class Smooth(object):
         # probs_estimation = np.array(sample_for_estimation[:,1], dtype=float)
         # use these samples to estimate a lower bound on pA
         #nA = probs_estimation[cAHat].item()
-        nA = sum(1 for row in sample_for_estimation if row == text)
+        nA = sum(1 for row in sample_for_estimation if row[0] == text)
 
         xm.master_print(f"nA:{nA}")
         raise Exception("terminou") 
