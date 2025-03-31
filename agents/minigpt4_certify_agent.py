@@ -89,10 +89,11 @@ class MiniGPT4CertifyAgent(BaseAgent):
                 continue
             if step == self.config.run.max:
                 break
-            xm.master_print(f"Certify step: {step} - {(test_utils.now())}")
-
+            
+            xm.master_print(f"Start Certify step: {step} - {(test_utils.now())}")
             # certify prediction of smoothed decoder around images
             prediction, radius = self.smoothed_decoder.certify(batch_sample, n0, n, self.config.run.alpha, batch_size=self.config.run.batch_size)
+            xm.master_print(f"End Certify step: {step} - {(test_utils.now())}")
 
             xm.master_print(f"prediction and radius :{prediction, radius}")
             raise Exception("terminou") 

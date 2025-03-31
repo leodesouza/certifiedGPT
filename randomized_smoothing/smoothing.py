@@ -51,18 +51,14 @@ class Smooth(object):
         self.base_decoder.eval()
         xm.master_print("draw samples of f(x+ epsilon)")
         # draw samples of f(x+ epsilon)
-        sample_for_selection = self._sample_noise(x, n0, batch_size)        
-        xm.master_print(f"Sigma:{self.sigma}")
-        xm.master_print(f"Printing counts_selection:{sample_for_selection}")
+        sample_for_selection = self._sample_noise(x, n0, batch_size)                
         probs_selection = np.array(sample_for_selection[:,1], dtype=float)               
         # use these samples to take a guess at the top class
         pAHat = probs_selection.argmax().item()
         text = sample_for_selection[pAHat][0]        
-        xm.master_print(f"TEXT (pAHat):{text}")
-        
+        xm.master_print(f"TEXT (pAHat):{text}")        
         # draw more samples of f(x + epsilon)
-        sample_for_estimation = self._sample_noise(x, n, batch_size)
-        xm.master_print(f"Printing sample_for_estimation:{sample_for_estimation}")
+        sample_for_estimation = self._sample_noise(x, n, batch_size)        
         # probs_estimation = np.array(sample_for_estimation[:,1], dtype=float)
         # use these samples to estimate a lower bound on pA
         #nA = probs_estimation[cAHat].item()
