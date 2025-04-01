@@ -380,19 +380,7 @@ class MiniGPTBase(BaseModel):
             do_sample=False,
             stop_words_ids=[2],
     ):
-        
-        #   self,
-        #     images,
-        #     texts,
-        #     num_beams=1,
-        #     max_new_tokens=5,
-        #     min_length=1,
-        #     top_p=0.9,
-        #     repetition_penalty=1,
-        #     length_penalty=1,
-        #     temperature=1,
-        #     do_sample=False,
-        #     stop_words_ids=[2],
+                
         '''
             function for generate test use
         '''

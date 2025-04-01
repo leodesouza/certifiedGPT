@@ -49,22 +49,18 @@ class Smooth(object):
                  in the case of abstention, the class will be ABSTAIN and the radius 0.
         """
         self.base_decoder.eval()
-        xm.master_print("draw samples of f(x+ epsilon)")
+
         # draw samples of f(x+ epsilon)
         sample_for_selection = self._sample_noise(x, n0, batch_size)                
-        probs_selection = np.array(sample_for_selection[:,1], dtype=float)               
-        # use these samples to take a guess at the top class
-        pAHat = probs_selection.argmax().item()
-        text = sample_for_selection[pAHat][0]        
-        xm.master_print(f"TEXT (pAHat):{text}")        
-        # draw more samples of f(x + epsilon)
-        sample_for_estimation = self._sample_noise(x, n, batch_size)        
-        # probs_estimation = np.array(sample_for_estimation[:,1], dtype=float)
-        # use these samples to estimate a lower bound on pA
-        #nA = probs_estimation[cAHat].item()
-        nA = sum(1 for row in sample_for_estimation if row[0] == text)
 
-        xm.master_print(f"nA:{nA}")
+        # use these samples to take a guess at the top class
+        probs_selection = np.array(sample_for_selection[:,1], dtype=float)                       
+        pAHat = probs_selection.argmax().item()
+        text = sample_for_selection[pAHat][0]                
+
+        # draw more samples of f(x + epsilon)
+        sample_for_estimation = self._sample_noise(x, n, batch_size)                
+        nA = sum(1 for row in sample_for_estimation if row[0] == text)        
                     
         pABar = self._lower_confidence_bound(nA, n, alpha)
         if pABar < 0.5:

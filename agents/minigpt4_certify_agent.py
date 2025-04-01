@@ -91,26 +91,21 @@ class MiniGPT4CertifyAgent(BaseAgent):
                 break
             
             xm.master_print(f"Start Certify step: {step} - {(test_utils.now())}")
+            answer = batch_sample["answer"]
+            xm.master_print(f"answer from dataset: {answer}")            
             # certify prediction of smoothed decoder around images
-            prediction, radius = self.smoothed_decoder.certify(batch_sample, n0, n, self.config.run.alpha, batch_size=self.config.run.batch_size)
-            xm.master_print(f"End Certify step: {step} - {(test_utils.now())}")
+            prediction, radius = self.smoothed_decoder.certify(
+                batch_sample, n0, n, self.config.run.alpha, batch_size=self.config.run.batch_size
+            )
+            
+            _, _, f1 = score([prediction], [answer], rescale_with_baseline=True)
+            similarity_threshold = self.config.run.similarity_threshold
+            
+            correct  = f1.item() >= similarity_threshold
+            xm.master_print(f"correct ?: {correct}")
 
-            xm.master_print(f"prediction and radius :{prediction, radius}")
-            raise Exception("terminou") 
-            # # is_similar = prediction == answer
-            total_batches += 1
-
+            xm.master_print(f"End Certify step: {step} - {(test_utils.now())}")                        
         xm.master_print(f"Certify ended: {(test_utils.now())}")
-
-
-    def compute_bertscore(predictions, answers, lang='en'):
-        p, r, f1 = score(predictions, answers, lang=lang, rescale_with_baseline=True)
-
-        return {
-            "precision": p.mean().item(),
-            "recall": r.mean().item(),
-            "f1": f1.mean().item()
-        }
 
     def finalize(self):
         pass
