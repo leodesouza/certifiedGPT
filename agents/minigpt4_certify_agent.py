@@ -115,6 +115,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
                 xm.master_print(f"correct ?: {correct}")
             
             xm.master_print(f"correct ?: {correct}")
+            raise Exception("terminou")
 
             xm.master_print(f"End Certify step: {step} - {(test_utils.now())}")                        
         xm.master_print(f"Certify ended: {(test_utils.now())}")
