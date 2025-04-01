@@ -97,6 +97,8 @@ class MiniGPT4CertifyAgent(BaseAgent):
             prediction, radius = self.smoothed_decoder.certify(
                 batch_sample, n0, n, self.config.run.alpha, batch_size=self.config.run.batch_size
             )
+
+            xm.master_print(f"prediction and radius: {prediction} - { radius}")            
                         
             for a in answers: 
                 text = a[0]
