@@ -320,8 +320,8 @@ class VQAv2EvalDataset(BaseDataset):
                     continue
                 
                 if answer_confidence == 'yes':                    
-                    answer = self.text_processor(answer)
-                    answers.append(answer)    
+                    answer = self.text_processor(answer[0])
+                    answers.append(answer[0])    
                                                                                   
             return {
                 "image": image,

@@ -99,7 +99,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
             )
                         
             for a in answers:                
-                _, _, f1 = score([prediction], [a], rescale_with_baseline=True)
+                _, _, f1 = score([prediction], [a], lang="en", rescale_with_baseline=True)
                 similarity_threshold = self.config.run.similarity_threshold            
                 correct  = f1.item() >= similarity_threshold
                 if correct:
