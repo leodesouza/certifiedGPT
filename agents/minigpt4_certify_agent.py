@@ -122,6 +122,9 @@ class MiniGPT4CertifyAgent(BaseAgent):
                     # correct  = f1.item() >= similarity_threshold
                     similarity = util.cos_sim(embp, embt)
                     similarity_score = similarity
+
+                    xm.master_print(f"similarity_score: {similarity_score}")
+                    xm.master_print(f"similarity_threshold: {similarity_threshold}")
                     correct  = similarity_score >= similarity_threshold
                     if correct:
                         break
