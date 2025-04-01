@@ -98,6 +98,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
                 batch_sample, n0, n, self.config.run.alpha, batch_size=self.config.run.batch_size
             )
 
+            correct = False
             if prediction == self.smoothed_decoder.ABSTAIN:
                 xm.master_print("ABSTAIN")                            
             else:                
@@ -115,6 +116,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
                 xm.master_print(f"correct ?: {correct}")
             
             xm.master_print(f"correct ?: {correct}")
+            
             raise Exception("terminou")
 
             xm.master_print(f"End Certify step: {step} - {(test_utils.now())}")                        
