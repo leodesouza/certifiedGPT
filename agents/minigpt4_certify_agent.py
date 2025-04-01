@@ -90,19 +90,22 @@ class MiniGPT4CertifyAgent(BaseAgent):
             if step == self.config.run.max:
                 break
             
-            xm.master_print(f"Start Certify step: {step} - {(test_utils.now())}")
-            answer = batch_sample["answer"]
+            xm.master_print(f"Start Certify step: {step} - {(test_utils.now())}")            
+            answers = batch_sample["answer"]
             xm.master_print(f"answer from dataset: {answer}")            
             xm.master_print(f"batch_sample: {batch_sample}")            
             # certify prediction of smoothed decoder around images
             prediction, radius = self.smoothed_decoder.certify(
                 batch_sample, n0, n, self.config.run.alpha, batch_size=self.config.run.batch_size
             )
-            
-            _, _, f1 = score([prediction], [answer], rescale_with_baseline=True)
-            similarity_threshold = self.config.run.similarity_threshold
-            
-            correct  = f1.item() >= similarity_threshold
+                        
+            for a in answers:                
+                _, _, f1 = score([prediction], [a], rescale_with_baseline=True)
+                similarity_threshold = self.config.run.similarity_threshold            
+                correct  = f1.item() >= similarity_threshold
+                if correct:
+                    break
+
             xm.master_print(f"correct ?: {correct}")
 
             xm.master_print(f"End Certify step: {step} - {(test_utils.now())}")                        
