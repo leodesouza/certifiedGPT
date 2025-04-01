@@ -100,7 +100,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
 
             if prediction == self.smoothed_decoder.ABSTAIN:
                 xm.master_print("ABSTAIN")                            
-            else                
+            else:                
                 xm.master_print(f"prediction and radius: {prediction} - { radius}")            
                         
                 for a in answers: 
