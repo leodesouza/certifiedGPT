@@ -8,7 +8,7 @@
 from common.registry import registry
 from configs.all_config_paths import get_database_config_path
 from datasets.builders.base_dataset_builder import BaseDatasetBuilder
-from datasets.datasets.vqav2_dataset import VQAv2Dataset, VQAv2TestDataset
+from datasets.datasets.vqav2_dataset import VQAv2Dataset, VQAv2TestDataset, VQAv2EvalDataset
 from datasets.datasets.cc_sbu_align_dataset import CCSbuDataset
 from pathlib import Path
 
@@ -23,8 +23,9 @@ class VQAv2Builder(BaseDatasetBuilder):
 
 
 @registry.register_builder("evalvqav2")
-class VQAv2EvalBuilder(BaseDatasetBuilder):
-    eval_datasets_cls = VQAv2Dataset
+class VQAv2EvalBuilder(BaseDatasetBuilder):    
+    eval_datasets_cls = VQAv2EvalDataset
+    
 
     DATASET_CONFIG_DICT = {
         "default": "configs/datasets/vqav2/defaults_vqa.yaml"
