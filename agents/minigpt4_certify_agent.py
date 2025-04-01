@@ -35,6 +35,8 @@ import torch_xla.amp as xla_amp
 # source: https://github.com/pytorch/xla/
 dist.init_process_group(backend='xla', init_method='xla://')
 
+from sentence_transformers import SentenceTransformer, util
+
 
 @registry.register_agent("image_text_eval")
 class MiniGPT4CertifyAgent(BaseAgent):
@@ -46,7 +48,8 @@ class MiniGPT4CertifyAgent(BaseAgent):
         self._tpu_metrics = TPUMetrics()
         self.questions_paths = None
         self.annotations_paths = None
-        self.smoothed_decoder = Smooth(self._model, self.config.run.number_answers, self.config.run.noise_level)
+        self.smoothed_decoder = Smooth(self._model, self.config.run.number_answers, self.config.run.noise_level)                
+        self.sentence_transformer = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
     def run(self):
         try:
@@ -112,9 +115,14 @@ class MiniGPT4CertifyAgent(BaseAgent):
                 for a in answers: 
                     text = a[0]
                     xm.master_print(f"compute score for : {text}")                           
-                    _, _, f1 = score([prediction], [text], model_type="roberta-large", lang="en", rescale_with_baseline=True)
+                    # _, _, f1 = score([prediction], [text], model_type="roberta-large", rescale_with_baseline=True)
                     similarity_threshold = self.config.run.similarity_threshold            
-                    correct  = f1.item() >= similarity_threshold
+                    embp = self.sentence_transformer.encode(prediction)
+                    embt = self.sentence_transformer.encode(text)                    
+                    # correct  = f1.item() >= similarity_threshold
+                    similarity = util.cos_sim(embp, embt)
+                    similarity_score = similarity.item()
+                    correct  = similarity_score.item() >= similarity_threshold
                     if correct:
                         break
 
