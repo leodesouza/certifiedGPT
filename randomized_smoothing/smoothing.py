@@ -101,8 +101,7 @@ class Smooth(object):
         :return: an ndarray[int] of length num_classes containing the per-class counts
         """
 
-        question = batch_sample["instruction_input"]
-        answers = batch_sample["answer"]
+        question = batch_sample["instruction_input"]        
         conv_temp = CONV_VISION_LLama2.copy()
         conv_temp.system = ""
                  
