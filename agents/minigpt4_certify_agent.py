@@ -94,9 +94,14 @@ class MiniGPT4CertifyAgent(BaseAgent):
             answers = batch_sample["answer"]            
             xm.master_print(f"batch_sample: {batch_sample}")            
             # certify prediction of smoothed decoder around images
+            before_time = time()
             prediction, radius = self.smoothed_decoder.certify(
                 batch_sample, n0, n, self.config.run.alpha, batch_size=self.config.run.batch_size
             )
+            after_time = time()
+
+            time_elapsed = str(datetime.timedelta(seconds=(after_time - before_time)))
+            xm.master_print(f"time_elapsed: {time_elapsed}")            
 
             correct = False
             if prediction == self.smoothed_decoder.ABSTAIN:
@@ -116,7 +121,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
                 xm.master_print(f"correct ?: {correct}")
             
             xm.master_print(f"correct ?: {correct}")
-            
+
             raise Exception("terminou")
 
             xm.master_print(f"End Certify step: {step} - {(test_utils.now())}")                        

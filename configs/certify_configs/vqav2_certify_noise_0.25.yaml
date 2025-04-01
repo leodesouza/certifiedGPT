@@ -53,8 +53,8 @@ run:
   wandb: True
   wandb_api_key: ${env:WANDB_API_KEY}
   wandb_name: "vqav2_eval_batch52_noise_0.5"
-  number_monte_carlo_samples_for_selection: 2
-  number_monte_carlo_samples_for_estimation: 2
+  number_monte_carlo_samples_for_selection: 48
+  number_monte_carlo_samples_for_estimation: 100
   skip: 100 # certify every skip examples
   max: 1000 # and break when step == max
   alpha: 0.001 # the failure probability
