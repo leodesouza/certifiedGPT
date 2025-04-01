@@ -112,7 +112,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
                 for a in answers: 
                     text = a[0]
                     xm.master_print(f"compute score for : {text}")                           
-                    _, _, f1 = score([prediction], [text], model_type="bert-base-uncased", lang="en", rescale_with_baseline=True)
+                    _, _, f1 = score([prediction], [text], model_type="roberta-large", lang="en", rescale_with_baseline=True)
                     similarity_threshold = self.config.run.similarity_threshold            
                     correct  = f1.item() >= similarity_threshold
                     if correct:
