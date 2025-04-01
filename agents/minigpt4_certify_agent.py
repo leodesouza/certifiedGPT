@@ -91,8 +91,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
                 break
             
             xm.master_print(f"Start Certify step: {step} - {(test_utils.now())}")            
-            answers = batch_sample["answer"]
-            xm.master_print(f"answer from dataset: {answer}")            
+            answers = batch_sample["answer"]            
             xm.master_print(f"batch_sample: {batch_sample}")            
             # certify prediction of smoothed decoder around images
             prediction, radius = self.smoothed_decoder.certify(
