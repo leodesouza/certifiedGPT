@@ -98,18 +98,21 @@ class MiniGPT4CertifyAgent(BaseAgent):
                 batch_sample, n0, n, self.config.run.alpha, batch_size=self.config.run.batch_size
             )
 
-            xm.master_print(f"prediction and radius: {prediction} - { radius}")            
+            if prediction == self.smoothed_decoder.ABSTAIN:
+                xm.master_print("ABSTAIN")                            
+            else                
+                xm.master_print(f"prediction and radius: {prediction} - { radius}")            
                         
-            for a in answers: 
-                text = a[0]
-                xm.master_print(f"compute score for : {text}")                           
-                _, _, f1 = score([prediction], [text], lang="en", rescale_with_baseline=True)
-                similarity_threshold = self.config.run.similarity_threshold            
-                correct  = f1.item() >= similarity_threshold
-                if correct:
-                    break
+                for a in answers: 
+                    text = a[0]
+                    xm.master_print(f"compute score for : {text}")                           
+                    _, _, f1 = score([prediction], [text], lang="en", rescale_with_baseline=True)
+                    similarity_threshold = self.config.run.similarity_threshold            
+                    correct  = f1.item() >= similarity_threshold
+                    if correct:
+                        break
 
-            xm.master_print(f"correct ?: {correct}")
+                xm.master_print(f"correct ?: {correct}")
 
             xm.master_print(f"End Certify step: {step} - {(test_utils.now())}")                        
         xm.master_print(f"Certify ended: {(test_utils.now())}")
