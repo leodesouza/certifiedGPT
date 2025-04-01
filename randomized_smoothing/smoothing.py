@@ -57,8 +57,7 @@ class Smooth(object):
         probs_selection = np.array(sample_for_selection[:,1], dtype=float)                       
         pAHat = probs_selection.argmax().item()
         text = sample_for_selection[pAHat][0]   
-        xm.master_print(f"text: {text}")             
-
+        
         # draw more samples of f(x + epsilon)
         sample_for_estimation = self._sample_noise(x, n, batch_size)                
         nA = sum(1 for row in sample_for_estimation if row[0] == text)        

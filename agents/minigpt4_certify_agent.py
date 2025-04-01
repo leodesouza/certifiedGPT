@@ -50,6 +50,8 @@ class MiniGPT4CertifyAgent(BaseAgent):
         self.annotations_paths = None
         self.smoothed_decoder = Smooth(self._model, self.config.run.number_answers, self.config.run.noise_level)                
         self.sentence_transformer = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+        self.results = ["idx\answer\predicted\radius\correct\time"]
+            
 
     def run(self):
         try:
@@ -93,9 +95,10 @@ class MiniGPT4CertifyAgent(BaseAgent):
             if step == self.config.run.max:
                 break
             
-            xm.master_print(f"Start Certify step: {step} - {(test_utils.now())}")            
+            xm.master_print(f"Step {step} Started. {(test_utils.now())}")              
             answers = batch_sample["answer"]            
-            xm.master_print(f"batch_sample: {batch_sample}")            
+            xm.master_print(f"batch_sample: {batch_sample}")  
+                     
             # certify prediction of smoothed decoder around images
             before_time = time()
             prediction, radius = self.smoothed_decoder.certify(
@@ -107,40 +110,34 @@ class MiniGPT4CertifyAgent(BaseAgent):
             xm.master_print(f"time_elapsed: {time_elapsed}")            
 
             correct = False
-            if prediction == self.smoothed_decoder.ABSTAIN:
-                xm.master_print("ABSTAIN")                            
-            else:                
-                xm.master_print(f"prediction and radius: {prediction} - { radius}")            
-                        
+            if prediction != self.smoothed_decoder.ABSTAIN:                                                                    
                 for a in answers: 
                     text = a[0]
-                    xm.master_print(f"compute score for : {text}")                           
-                    # _, _, f1 = score([prediction], [text], model_type="roberta-large", rescale_with_baseline=True)
+                    xm.master_print(f"compute score for : {text}")                                               
                     similarity_threshold = self.config.run.similarity_threshold            
                     embp = self.sentence_transformer.encode(prediction)
-                    embt = self.sentence_transformer.encode(text)                    
-                    # correct  = f1.item() >= similarity_threshold
+                    embt = self.sentence_transformer.encode(text)                                        
                     similarity = util.cos_sim(embp, embt)
-                    similarity_score = similarity.item()
-
-                    xm.master_print(f"similarity_score: {similarity_score}")
-                    xm.master_print(f"similarity_threshold: {similarity_threshold}")
+                    similarity_score = similarity.item()                    
                     correct  = similarity_score >= similarity_threshold
                     if correct:
                         break
 
-                xm.master_print(f"correct ?: {correct}")
-            
-            xm.master_print(f"correct ?: {correct}")
+            self.results.append(f"{step}\{answers}\{prediction}\{radius}\{correct}\,{time_elapsed}")                
 
-            raise Exception("terminou")
+            if xm.is_master_ordinal():
+                file_path = os.path.join(self.config.run.output_dir,"certify_output.txt")
+                file_exists = os.path.exists(file_path)
 
-            xm.master_print(f"End Certify step: {step} - {(test_utils.now())}")                        
+                with open(file_path, 'a') as f:
+                    if not file_exists:
+                        f.write("{step}\{answers}\{prediction}\{radius}\{correct}\,{time_elapsed}")
+                    f.write("\n".join(self.results) + "\n")
+
+            xm.master_print(f"Step {step} Ended. {(test_utils.now())}")  
+
         xm.master_print(f"Certify ended: {(test_utils.now())}")
-
-    def finalize(self):
-        pass
-
+    
     @classmethod
     def setup_agent(cls, **kwargs):
         return cls()
