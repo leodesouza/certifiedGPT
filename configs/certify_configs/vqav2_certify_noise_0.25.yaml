@@ -60,7 +60,7 @@ run:
   alpha: 0.001 # the failure probability
   number_answers: 10206
   batch_size: 48 # for certification
-  similarity_threshold: 7.5
+  similarity_threshold: 0.7
 
 # DataLoader
   distributed: False
