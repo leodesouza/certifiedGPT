@@ -319,9 +319,9 @@ class VQAv2EvalDataset(BaseDataset):
                 if not answer:
                     continue
                 
-                if answer_confidence == 'yes':                    
-                    answer = self.text_processor(answer[0])
-                    answers.append(answer[0])    
+                if answer_confidence == "yes":                    
+                    an = self.text_processor(answer[0])
+                    answers.append(an)    
                                                                                   
             return {
                 "image": image,
