@@ -59,7 +59,7 @@ run:
   max: 1000 # and break when step == max
   alpha: 0.001 # the failure probability
   number_answers: 10206
-  batch_size: 2 # for certification
+  batch_size: 48 # for certification
   similarity_threshold: 7.5
 
 # DataLoader
