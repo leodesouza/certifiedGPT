@@ -121,7 +121,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
                     embt = self.sentence_transformer.encode(text)                    
                     # correct  = f1.item() >= similarity_threshold
                     similarity = util.cos_sim(embp, embt)
-                    similarity_score = similarity.item()
+                    similarity_score = similarity
                     correct  = similarity_score >= similarity_threshold
                     if correct:
                         break
