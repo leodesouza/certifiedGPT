@@ -84,9 +84,8 @@ class MiniGPT4CertifyAgent(BaseAgent):
         if len(val_loader) == 0:
             return float("inf")
 
-        xm.master_print(f"Certify started: {(test_utils.now())}")
-        predictions = []
-
+        xm.master_print(f"Certification started: {(test_utils.now())}")
+        
         self.model.eval()
         for step, batch_sample in enumerate(val_loader):
             # certify every skip examples and break when step == max
@@ -96,9 +95,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
                 break
             
             xm.master_print(f"Step {step} Started. {(test_utils.now())}")              
-            answers = batch_sample["answer"]            
-            xm.master_print(f"batch_sample: {batch_sample}")  
-                     
+            answers = batch_sample["answer"]                                             
             # certify prediction of smoothed decoder around images
             before_time = time()
             prediction, radius = self.smoothed_decoder.certify(
@@ -106,9 +103,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
             )
             after_time = time()
 
-            time_elapsed = str(datetime.timedelta(seconds=(after_time - before_time)))
-            xm.master_print(f"time_elapsed: {time_elapsed}")            
-
+            time_elapsed = str(datetime.timedelta(seconds=(after_time - before_time)))            
             correct = False
             if prediction != self.smoothed_decoder.ABSTAIN:                                                                    
                 for a in answers: 
@@ -136,7 +131,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
 
             xm.master_print(f"Step {step} Ended. {(test_utils.now())}")  
 
-        xm.master_print(f"Certify ended: {(test_utils.now())}")
+        xm.master_print(f"Certification ended: {(test_utils.now())}")
     
     @classmethod
     def setup_agent(cls, **kwargs):
