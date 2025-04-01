@@ -311,24 +311,18 @@ class VQAv2EvalDataset(BaseDataset):
 
             if num_answer == 0:
                 raise ValueError(f"No answers found for question_id {question_id}")
-                        
-
-            confidence_count = 0
-            for answer in all_answers:
-
-                if confidence_count == 2:
-                    break
-                                
+                                    
+            for answer in all_answers:                                
                 answer_confidence = answer.get("answer_confidence")
                 answer = answer.get("answer")
 
                 if not answer:
                     continue
                 
-                if answer_confidence == 'yes':
-                    confidence_count += 1
+                if answer_confidence == 'yes':                    
                     answer = self.text_processor(answer)
-                    answers.append(answer)                                                                      
+                    answers.append(answer)    
+                                                                                  
             return {
                 "image": image,
                 "question": question,
