@@ -91,7 +91,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
             xm.master_print(f"Step {step} Started. {(test_utils.now())}")              
               
             image_id = batch_sample["image_id"]
-            question = batch_sample["instruction_input"]
+            question_id = batch_sample["question_id"]
             answers = batch_sample["answer"]                                             
                         
             # certify prediction of smoothed decoder around images
@@ -106,7 +106,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
             if prediction != self.smoothed_decoder.ABSTAIN:                                                                    
                 for a in answers: 
                     text = a[0]
-
+                    xm.master_print(f"text to compare {text}")      
                     similarity_threshold = self.config.run.similarity_threshold            
                     embp = self.sentence_transformer.encode(prediction)
                     embt = self.sentence_transformer.encode(text)                                        
@@ -116,16 +116,16 @@ class MiniGPT4CertifyAgent(BaseAgent):
                     if correct:
                         break
 
-            self.results.append(f"{step}\t{image_id.item()}\t{question}\t{answers}\t{prediction}\t{radius:.3}\t{correct}\t{time_elapsed}")                
+            self.results.append(f"{step}\t{image_id.item()}\t{question_id.item()}\t{answers}\t{prediction}\t{radius:.3}\t{correct}\t{time_elapsed}")                
 
-            if xm.is_master_ordinal():
-                file_path = os.path.join(self.config.run.output_dir,"certify_output.txt")
-                file_exists = os.path.exists(file_path)
+        if xm.is_master_ordinal():
+            file_path = os.path.join(self.config.run.output_dir,"certify_output.txt")
+            file_exists = os.path.exists(file_path)
 
-                with open(file_path, 'a') as f:
-                    if not file_exists:
-                        f.write("step\timageid\tquestion\tanswer\tpredicted\tradius\tcorrect\ttime\n")
-                    f.write("\n".join(self.results) + "\n")
+            with open(file_path, 'a') as f:
+                if not file_exists:
+                    f.write("step\timageid\tquestion\tanswer\tpredicted\tradius\tcorrect\ttime\n")
+                f.write("\n".join(self.results) + "\n")
 
             xm.master_print(f"Step {step} Ended. {(test_utils.now())}")  
 
