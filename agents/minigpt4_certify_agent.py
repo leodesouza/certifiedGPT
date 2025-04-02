@@ -9,16 +9,14 @@ import os
 from time import time
 import datetime
 from pathlib import Path
-
 import numpy as np
+
 # Torch
 import torch
 import torch.distributed as dist
 from torch.utils.data import DataLoader, DistributedSampler
 
-
 # Pytorch XLA
-
 from torch_xla import runtime as xr
 import torch_xla.core.xla_model as xm
 import torch_xla.distributed.parallel_loader as pl
@@ -29,14 +27,11 @@ import torch_xla.test.test_utils as test_utils
 from randomized_smoothing.smoothing import Smooth
 from bert_score import score
 import torch_xla.amp as xla_amp
-
+from sentence_transformers import SentenceTransformer, util
 
 # rank and world size are inferred from XLA Device
 # source: https://github.com/pytorch/xla/
 dist.init_process_group(backend='xla', init_method='xla://')
-
-from sentence_transformers import SentenceTransformer, util
-
 
 @registry.register_agent("image_text_eval")
 class MiniGPT4CertifyAgent(BaseAgent):
@@ -98,8 +93,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
             image_id = batch_sample["image_id"]
             question = batch_sample["instruction_input"]
             answers = batch_sample["answer"]                                             
-            
-            
+                        
             # certify prediction of smoothed decoder around images
             before_time = time()
             prediction, radius = self.smoothed_decoder.certify(
