@@ -50,7 +50,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
         self.annotations_paths = None
         self.smoothed_decoder = Smooth(self._model, self.config.run.number_answers, self.config.run.noise_level)                
         self.sentence_transformer = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-        self.results = ["step\timageid\tquestion\tanswer\tpredicted\tradius\tcorrect\ttime"]
+        self.results = []
             
 
     def run(self):
@@ -112,7 +112,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
             if prediction != self.smoothed_decoder.ABSTAIN:                                                                    
                 for a in answers: 
                     text = a[0]
-                                        
+
                     similarity_threshold = self.config.run.similarity_threshold            
                     embp = self.sentence_transformer.encode(prediction)
                     embt = self.sentence_transformer.encode(text)                                        
@@ -122,7 +122,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
                     if correct:
                         break
 
-            self.results.append(f"{step}\t{image_id}\t{question}\t{answers}\t{prediction}\t{radius:.3}\t{correct}\t{time_elapsed}")                
+            self.results.append(f"{step}\t{image_id.item()}\t{question}\t{answers}\t{prediction}\t{radius:.3}\t{correct}\t{time_elapsed}")                
 
             if xm.is_master_ordinal():
                 file_path = os.path.join(self.config.run.output_dir,"certify_output.txt")
