@@ -73,8 +73,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
             self.logger.error(f"Error on agent run: {test_utils.now()}. Details: {e}")
 
     @torch.no_grad()
-    def certify(self):
-        total_batches = torch.tensor(0, device=self.device)
+    def certify(self):        
         val_loader = self._dataloaders["val"]
         val_loader = pl.MpDeviceLoader(val_loader, self.device)
 
