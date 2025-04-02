@@ -112,7 +112,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
             if prediction != self.smoothed_decoder.ABSTAIN:                                                                    
                 for a in answers: 
                     text = a[0]
-                    xm.master_print(f"compute score for : {text}")                                               
+                                        
                     similarity_threshold = self.config.run.similarity_threshold            
                     embp = self.sentence_transformer.encode(prediction)
                     embt = self.sentence_transformer.encode(text)                                        
