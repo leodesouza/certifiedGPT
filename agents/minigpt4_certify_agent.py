@@ -50,7 +50,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
         self.annotations_paths = None
         self.smoothed_decoder = Smooth(self._model, self.config.run.number_answers, self.config.run.noise_level)                
         self.sentence_transformer = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-        self.results = ["idx\answer\predicted\radius\correct\time"]
+        self.results = ["step\timageid\tquestion\tanswer\tpredicted\tradius\tcorrect\ttime"]
             
 
     def run(self):
@@ -95,7 +95,12 @@ class MiniGPT4CertifyAgent(BaseAgent):
                 break
             
             xm.master_print(f"Step {step} Started. {(test_utils.now())}")              
+              
+            image_id = batch_sample["image_id"]
+            question = batch_sample["instruction_input"]
             answers = batch_sample["answer"]                                             
+            
+            
             # certify prediction of smoothed decoder around images
             before_time = time()
             prediction, radius = self.smoothed_decoder.certify(
@@ -118,7 +123,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
                     if correct:
                         break
 
-            self.results.append(f"{step}\{answers}\{prediction}\{radius}\{correct}\,{time_elapsed}")                
+            self.results.append(f"{step}\t{image_id}\t{question}\t{answers}\t{prediction}\t{radius:.3}\t{correct}\t{time_elapsed}")                
 
             if xm.is_master_ordinal():
                 file_path = os.path.join(self.config.run.output_dir,"certify_output.txt")
@@ -126,7 +131,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
 
                 with open(file_path, 'a') as f:
                     if not file_exists:
-                        f.write("{step}\{answers}\{prediction}\{radius}\{correct}\,{time_elapsed}")
+                        f.write("step\timageid\tquestion\tanswer\tpredicted\tradius\tcorrect\ttime\n")
                     f.write("\n".join(self.results) + "\n")
 
             xm.master_print(f"Step {step} Ended. {(test_utils.now())}")  
