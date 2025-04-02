@@ -93,7 +93,7 @@ def main(rank):
         from agents import minigpt4_eval_agent
     elif args.mode == "smoothing_predict":
         print('Running training with agent: ??')
-        from agents import minigpt4_eval_agent
+        from agents import minigpt4_predict_agent
     elif args.mode == "certify":
         print('Running certifying with agent: minigpt4_certify_agent')
         from agents import minigpt4_certify_agent
