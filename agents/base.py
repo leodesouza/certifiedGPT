@@ -136,11 +136,7 @@ class BaseAgent:
         """
 
     def finalize(self):
-        """
-        Finalize all operations and dataloaders
-        :return:
-        """
-        raise NotImplementedError
+        pass
 
     @property
     def device(self):
