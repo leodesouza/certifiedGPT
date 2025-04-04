@@ -51,8 +51,10 @@ def open_json_file(path):
 
 
 def sample(build_info, split, new_file_name):
-    
-    
+    sample_path = "/home/leonardosouza/projects/datasets/vqav2/annotations/val/sample_v2_mscoco_val2014_annotations.json"
+    sample_file = open_json_file(sample_path)
+    images_id_from_sample = [q["image_id"] for q in sample_file["annotations"]]
+
     exist_annotation = []
     annotation_path = build_info.annotations[split].path[0]
     file_path = Path(annotation_path)
@@ -65,32 +67,63 @@ def sample(build_info, split, new_file_name):
 
     for annotation in json_file['annotations']:
         image_id = annotation["image_id"]
+        if image_id in images_id_from_sample:
+            continue
         file_name = f"COCO_{split}2014_{image_id:012d}.jpg"
         image_path = os.path.join(images_path, file_name)
         if os.path.exists(image_path):
             exist_annotation.append(annotation)
 
     annotations = exist_annotation
-    
-    # test_size=0.977 for training split
     questions_type = [ann['question_type'] for ann in annotations]
-    train_or_val_split, _ = train_test_split(
-        annotations,
-        test_size=0.977,
-        random_state=42,
-        shuffle=True,
-        stratify=questions_type)
 
-    for ann in train_or_val_split:
-        image_id = ann["image_id"]
-        file_name = f"COCO_{split}2014_{image_id:012d}.jpg"
-        image_path = os.path.join(images_path, file_name)
-        shutil.copy(image_path, new_images_path)
+    splits = []
+    remaining_annotations = annotations
+    for _ in range(4):
+        sp, remaining_annotations = train_test_split(
+            remaining_annotations,
+            train_size=5000,
+            random_state=42,
+            shuffle=True,
+            stratify=questions_type)
+        splits.append(sp)
+        questions_type = [ann['question_type'] for ann in remaining_annotations]
 
-    json_file['annotations'] = train_or_val_split
-    file_and_path = os.path.join(folder_path, new_file_name)
-    with open(file_and_path, "w") as file:
-        json.dump(json_file, file, indent=4)
+    # test_size=0.977 for training split
+    # questions_type = [ann['question_type'] for ann in annotations]
+    # train_or_val_split, _ = train_test_split(
+    #     annotations,
+    #     test_size=0.977,
+    #     random_state=42,
+    #     shuffle=True,
+    #     stratify=questions_type)
+
+    # for ann in train_or_val_split:
+    #     image_id = ann["image_id"]
+    #     file_name = f"COCO_{split}2014_{image_id:012d}.jpg"
+    #     image_path = os.path.join(images_path, file_name)
+    #     shutil.copy(image_path, new_images_path)
+
+    step = 1
+    for sp in splits:
+        new_images_path = os.path.join(data_dir, f"images/val_{step}")
+        if not os.path.exists(new_images_path):
+            os.makedirs(new_images_path)
+        for ann in sp:
+            image_id = ann["image_id"]
+            file_name = f"COCO_{split}2014_{image_id:012d}.jpg"
+            image_path = os.path.join(images_path, file_name)
+            shutil.copy(image_path, new_images_path)
+        json_file['annotations'] = sp
+        file_and_path = os.path.join(folder_path, f"sample_v2_mscoco_val2014_annotations__{step}.json")
+        with open(file_and_path, "w") as file:
+            json.dump(json_file, file, indent=4)
+        step += 1
+
+    # json_file['annotations'] = train_or_val_split
+    # # file_and_path = os.path.join(folder_path, new_file_name)
+    # # with open(file_and_path, "w") as file:
+    # #     json.dump(json_file, file, indent=4)
 
 
 def sample_test_dataset(build_info, split, new_file_name):
@@ -140,11 +173,11 @@ def generate_random_samples():
     config = load_dataset_config(config_file_path)
     build_info = config.build_info
 
-    #logging.info('generate training sample')
-    #sample(build_info, 'train', "sample_v2_mscoco_train2014_annotations.json")
+    logging.info('generate val sample')
+    sample(build_info, 'val', "sample_v2_mscoco_train2014_annotations.json")
 
-    logging.info('generate validation sample')
-    sample_test_dataset(build_info, 'test', "sample_v2_OpenEnded_mscoco_test2015_questions.json")
+    # logging.info('generate validation sample')
+    # sample_test_dataset(build_info, 'test', "sample_v2_OpenEnded_mscoco_test2015_questions.json")
 
     logging.info('process finished')
 
