@@ -184,11 +184,6 @@ class MiniGPT4EvalAgent(BaseAgent):
             "f1": f1.mean().item()
         }
 
-
-
-
-
-
     def finalize(self):
         pass
 
@@ -281,7 +276,7 @@ class MiniGPT4EvalAgent(BaseAgent):
         model.to(self.device)
         return model
 
-    def prepare_texts(texts, conv_temp):
+    def prepare_texts(self, texts, conv_temp):
         convs = [conv_temp.copy() for _ in range(len(texts))]
         [conv.append_message(
             conv.roles[0], text) for conv, text in zip(convs, texts)]
