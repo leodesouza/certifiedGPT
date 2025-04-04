@@ -104,8 +104,11 @@ class MiniGPT4EvalAgent(BaseAgent):
             xm.master_print("reading answers")
             for answer, question_id, question, img_id in zip(answers, question_ids, questions, img_ids):
                 result = dict()
+                xm.master_print(f"answer: {answer}")
                 answer = answer.lower().replace('<unk>','').strip()
                 result['answer'] = answer
+
+                xm.master_print(f"question_id: {question_id}")
                 result['question_id'] = int(question_id)
                 predictions.append(result)
             total_batches += 1
