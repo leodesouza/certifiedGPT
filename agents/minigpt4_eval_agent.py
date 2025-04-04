@@ -220,6 +220,7 @@ class MiniGPT4EvalAgent(BaseAgent):
             dataset = datasets[dataset_name]
 
             for split in dataset.values():                
+                xm.master_print(f"creating split: {split.split_name}")        
                 num_records = len(split)
                 if num_records >= 0:
                     self.logger.info(
@@ -233,8 +234,10 @@ class MiniGPT4EvalAgent(BaseAgent):
                     True if split.split_name in self.config.run.train_splits else False
                 )
 
+                xm.master_print("getattr collater")        
                 collate_fn = getattr(split, "collater", None)
 
+                xm.master_print("sampler")        
                 sampler = DistributedSampler(
                     split,
                     num_replicas=xr.world_size(),
@@ -242,6 +245,7 @@ class MiniGPT4EvalAgent(BaseAgent):
                     shuffle=True if is_train else False
                 ) if self.config.run.distributed and xr.world_size() > 1 else None
 
+                xm.master_print("creating loader")        
                 loader = DataLoader(
                     split,
                     batch_size=batch_size if batch_size > 0 else self.config.datasets[dataset_name].batch_size,
