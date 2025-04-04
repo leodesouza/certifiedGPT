@@ -105,8 +105,11 @@ class MiniGPT4EvalAgent(BaseAgent):
             for answer, question_id, question, img_id in zip(answers, question_ids, questions, img_ids):
                 result = dict()
                 xm.master_print(f"answer: {answer}")
-                answer = answer.lower().replace('<unk>','').strip()
-                result['answer'] = answer
+                answer = answer[0]
+                clean_answer = answer.replace('#','')
+                xm.master_print(f"clean_answer: {clean_answer}")
+                clean_answer = clean_answer.lower().replace('<unk>','').strip()
+                result['answer'] = clean_answer
 
                 xm.master_print(f"question_id: {question_id}")
                 result['question_id'] = int(question_id)
