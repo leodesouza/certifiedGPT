@@ -92,32 +92,25 @@ class MiniGPT4EvalAgent(BaseAgent):
             questions = batch_sample["instruction_input"]
             question_ids = batch_sample["question_id"]
             img_ids = batch_sample["image_id"]
-
-            xm.master_print("preparing texts")            
+            
             texts = self.prepare_texts(questions, conv_temp)
-
-            xm.master_print("generate")
+            
             answers = (self.model.
                        generate(image, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False))
             xm.mark_step()
-
-            xm.master_print("reading answers")
+            
             for answer, question_id, question, img_id in zip(answers, question_ids, questions, img_ids):
-                result = dict()
-                xm.master_print(f"answer: {answer}")
+                result = dict()                
+
                 answer = answer[0]
-                clean_answer = answer.replace('#','')
-                xm.master_print(f"clean_answer: {clean_answer}")
+                clean_answer = answer.replace('#','')                
                 clean_answer = clean_answer.lower().replace('<unk>','').strip()
                 result['answer'] = clean_answer
 
-                xm.master_print(f"question_id: {question_id}")
                 result['question_id'] = int(question_id)
                 predictions.append(result)
             total_batches += 1
-
-            xm.master_print(f"predictions: {predictions}")
-
+            
         annotation_file = Path(self.annotations_paths)
         question_file = Path(self.questions_paths)
 
@@ -138,7 +131,7 @@ class MiniGPT4EvalAgent(BaseAgent):
         vqaEval.evaluate()
 
         accuracy = vqaEval.accuracy['overall']
-        xm.master_print("accuracy")        
+        print(f"accuracy: {accuracy}")        
 
         global_eval_accuracy = xm.mesh_reduce("eval_accuracy", accuracy, sum)
         global_total_batches = xm.mesh_reduce("total_batches", total_batches.item(), sum)
