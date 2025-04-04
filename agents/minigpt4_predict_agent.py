@@ -78,7 +78,7 @@ class MiniGPT4PredictAgent(BaseAgent):
         if len(val_loader) == 0:
             return float("inf")
 
-        xm.master_print(f"Certification started: {(test_utils.now())}")
+        xm.master_print(f"Eval Smooth Prediction started: {(test_utils.now())}")
         
         self.model.eval()
         for step, batch_sample in enumerate(val_loader):
@@ -129,7 +129,7 @@ class MiniGPT4PredictAgent(BaseAgent):
 
             xm.master_print(f"Step {step} Ended. {(test_utils.now())}")  
 
-        xm.master_print(f"Certification ended: {(test_utils.now())}")
+        xm.master_print(f"Eval Smooth Prediction ended: {(test_utils.now())}")
     
     @classmethod
     def setup_agent(cls, **kwargs):

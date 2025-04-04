@@ -25,10 +25,10 @@ class VQAv2Builder(BaseDatasetBuilder):
 @registry.register_builder("evalvqav2")
 class VQAv2EvalBuilder(BaseDatasetBuilder):    
     eval_datasets_cls = VQAv2EvalDataset
-    
-
+        
     DATASET_CONFIG_DICT = {
-        "default": "configs/datasets/vqav2/defaults_vqa.yaml"
+        # "default": "configs/datasets/vqav2/defaults_vqa.yaml"
+        "default": "configs/datasets/vqav2/eval_vqa.yaml"        
     }
 
     def build(self):

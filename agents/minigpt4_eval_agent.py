@@ -29,7 +29,7 @@ from agents.base import BaseAgent
 from common.metrics import TPUMetrics
 from common.registry import registry
 import torch_xla.test.test_utils as test_utils
-from graphs.models.minigpt4.conversation.conversation import CONV_VISION_minigptv2
+from graphs.models.minigpt4.conversation.conversation import CONV_VISION_LLama2
 
 from bert_score import score 
 
@@ -77,7 +77,7 @@ class MiniGPT4EvalAgent(BaseAgent):
         if len(val_loader) == 0:
             return float("inf")
 
-        conv_temp = CONV_VISION_minigptv2.copy()
+        conv_temp = CONV_VISION_LLama2.copy()
         conv_temp.system = ""
 
         xm.master_print(f"Eval started: {(test_utils.now())}")
@@ -85,21 +85,22 @@ class MiniGPT4EvalAgent(BaseAgent):
         self.model.eval()
         for step, batch_sample in enumerate(val_loader):
 
-            xm.master_print(f"Eval step: {step} - {(test_utils.now())}")
+            xm.master_print(f"Eval step: {step} - {(test_utils.now())}")            
             self.maybe_add_noise(batch_sample, self.config.run.noise_level)
-
+            
             image = batch_sample["image"]
             questions = batch_sample["instruction_input"]
             question_ids = batch_sample["question_id"]
             img_ids = batch_sample["img_id"]
 
             texts = self.prepare_texts(questions, conv_temp)
+
             answers = (self.model.
                        generate(image, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False))
             xm.mark_step()
 
             for answer, question_id, question, img_id in zip(answers, question_ids, questions, img_ids):
-                result = ()
+                result = dict()
                 answer = answer.lower().replace('<unk>','').strip()
                 result['answer'] = answer
                 result['question_id'] = int(question_id)
