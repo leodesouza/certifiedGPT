@@ -111,8 +111,8 @@ class MiniGPT4EvalAgent(BaseAgent):
             total_batches += 1
             break
             
-        annotation_file = Path(self.annotations_paths)
-        question_file = Path(self.questions_paths)
+        annotation_file = self.annotations_paths[0]
+        question_file = self.questions_paths[0]
 
         xm.master_print(f"annotation_file: {annotation_file}")
         xm.master_print(f"question_file: {question_file}")
