@@ -101,12 +101,11 @@ class MiniGPT4EvalAgent(BaseAgent):
             
             for answer, question_id, question, img_id in zip(answers, question_ids, questions, img_ids):
                 result = dict()                
-
                 answer = answer[0]
-                clean_answer = answer.replace('#','')                
-                clean_answer = clean_answer.lower().replace('<unk>','').strip()
-                result['answer'] = clean_answer
-
+                if isinstance(answer, str):
+                    clean_answer = answer.replace('#','')
+                    answer = clean_answer.lower().replace('<unk>','').strip()
+                result['answer'] = answer
                 result['question_id'] = int(question_id)
                 predictions.append(result)
             total_batches += 1
