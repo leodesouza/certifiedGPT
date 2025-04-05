@@ -107,8 +107,9 @@ class MiniGPT4EvalAgent(BaseAgent):
                     answer = clean_answer.lower().replace('<unk>','').strip()
                 result['answer'] = answer
                 result['question_id'] = int(question_id)
-                predictions.append(result)
+                predictions.append(result)            
             total_batches += 1
+            break
             
         annotation_file = Path(self.annotations_paths)
         question_file = Path(self.questions_paths)
