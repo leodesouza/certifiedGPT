@@ -27,7 +27,7 @@ class VQAv2EvalBuilder(BaseDatasetBuilder):
     
     def __init__(self):
         train_config = registry.get_configuration_class("configuration")
-        dataset_config_name = train_config.dataset_config_name if train_config.dataset_config_name else "defaults_vqa.yaml"
+        dataset_config_name = train_config.datasets.dataset_config_name if train_config.datasets.dataset_config_name else "defaults_vqa.yaml"
         self.eval_datasets_cls = VQAv2Dataset if "eval" in dataset_config_name else VQAv2EvalForCertificationDataset         
         self.DATASET_CONFIG_DICT = {
             "default": f"configs/datasets/vqav2/{dataset_config_name}"        
