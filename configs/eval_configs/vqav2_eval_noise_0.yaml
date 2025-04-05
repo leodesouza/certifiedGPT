@@ -53,8 +53,7 @@ run:
   wandb: True
   wandb_api_key: ${env:WANDB_API_KEY}
   wandb_name: "vqav2_eval_batch52_noise_0.5" 
-  dataset_config_name: eval_vqa.yaml
-
+  dataset_config_name: eval_vqa.yaml  
 # DataLoader
   distributed: True  
   num_workers: 2 # n of workers to load data

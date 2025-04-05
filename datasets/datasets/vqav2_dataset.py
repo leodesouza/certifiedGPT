@@ -215,7 +215,7 @@ class VQAv2TestDataset(Dataset):
         return self.split
     
 
-class VQAv2EvalDataset(BaseDataset):
+class VQAv2EvalForCertificationDataset(BaseDataset):
     
     def __init__(
         self,
