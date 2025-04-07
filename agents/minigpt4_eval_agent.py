@@ -123,12 +123,23 @@ class MiniGPT4EvalAgent(BaseAgent):
                 if isinstance(g_answer, str):
                     clean_answer = g_answer.replace('#','')
                     g_answer = clean_answer.lower().replace('<unk>','').strip()
-                self.prepare_for_bertscore(p_answer, g_answer)   
-            break                                 
-                    
-        all_predictions = xm.all_gather_object(self._predicions)            
-        all_ground_truths = xm.all_gather_object(self._ground_truth_answers)                            
-    
+                self.prepare_for_bertscore(p_answer, g_answer)
+                break
+                             
+
+        precision, recall, f1, count = self.compute_bertscore(self._predicions, self._ground_truth_answers)
+
+        global_precision = xm.mesh_reduce("precision", precision, lambda x: sum) 
+        global_recall = xm.mesh_reduce("recall", recall, sum) 
+        global_f1 = xm.mesh_reduce("f1", f1, sum) 
+        count = xm.mesh_reduce("count", count, sum) 
+
+        safe_divisor = 1e-8  
+        precision = global_precision / (count + safe_divisor)
+        recall = global_recall / (count + safe_divisor)
+        f1 = global_f1 / (count + safe_divisor)
+
+            
         # annotation_file = self.annotations_paths[0]
         # question_file = self.questions_paths[0]
 
@@ -157,8 +168,7 @@ class MiniGPT4EvalAgent(BaseAgent):
         # eval_avg_accuracy = global_eval_accuracy / global_total_batches
         # xm.master_print(f"Eval ended: {(test_utils.now())}")
 
-        if xm.is_master_ordinal():                            
-            precision, recall, f1 = self.compute_bertscore(all_predictions, all_ground_truths)
+        if xm.is_master_ordinal():                                        
             print("{}\t{}\t{}\t{}".format(1, precision, recall, f1), file=f, flush=True)          
             f.close()                 
     
@@ -220,7 +230,7 @@ class MiniGPT4EvalAgent(BaseAgent):
     
     def compute_bertscore(self, predictions, ground_truths):                
         p, r, f1 = score(predictions, ground_truths, lang="en") 
-        return p, r, f1        
+        return p, r, f1, len(f1)        
 
     def finalize(self):
         pass
