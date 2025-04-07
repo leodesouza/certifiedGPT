@@ -102,12 +102,11 @@ class MiniGPT4EvalAgent(BaseAgent):
             texts = self.prepare_texts(questions, conv_temp)
             
             predicted_answers, _ = (self.model.
-                       generate(image, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False))
+                       generate(image, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False, calc_probs=False))
             xm.mark_step()
             
             for p_answer, g_answer, question_id, question, img_id in zip(predicted_answers, ground_truth_answers, question_ids, questions, img_ids):
-                result = dict()                
-                p_answer = p_answer[0]
+                result = dict()                                
                 if isinstance(p_answer, str):
                     clean_answer = p_answer.replace('#','')
                     p_answer = clean_answer.lower().replace('<unk>','').strip()

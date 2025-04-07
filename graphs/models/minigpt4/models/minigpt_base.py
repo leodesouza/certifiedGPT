@@ -379,6 +379,7 @@ class MiniGPTBase(BaseModel):
             temperature=1,
             do_sample=False,
             stop_words_ids=[2],
+            calc_probs=True
     ):
                 
         '''
@@ -426,11 +427,12 @@ class MiniGPTBase(BaseModel):
         generated_tokens_id = outputs.sequences        
         probs = [torch.nn.functional.softmax(logits, dim=-1) for logits in scores]        
                 
-        answer_probs = [] 
-        for i in range(generated_tokens_id.shape[0]):
-            chosen_probs = torch.stack([p[i, idx] for p, idx in zip(probs, generated_tokens_id[i])])
-            answer_prob = torch.prod(chosen_probs).item() 
-            answer_probs.append(answer_prob)
+        answer_probs = []
+        if calc_probs: 
+            for i in range(generated_tokens_id.shape[0]):
+                chosen_probs = torch.stack([p[i, idx] for p, idx in zip(probs, generated_tokens_id[i])])
+                answer_prob = torch.prod(chosen_probs).item() 
+                answer_probs.append(answer_prob)
                 
         answers = []
         for output_token in outputs.sequences:
