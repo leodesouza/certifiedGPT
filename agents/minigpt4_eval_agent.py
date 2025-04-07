@@ -118,7 +118,7 @@ class MiniGPT4EvalAgent(BaseAgent):
                 if isinstance(g_answer, str):
                     clean_answer = g_answer.replace('#','')
                     g_answer = clean_answer.lower().replace('<unk>','').strip()
-                # self.prepare_for_bertscore(p_answer, g_answer)            
+                self.prepare_for_bertscore(p_answer, g_answer)            
 
             total_batches += 1
             break
@@ -166,6 +166,8 @@ class MiniGPT4EvalAgent(BaseAgent):
 
         self.__predicions.append(prediction)
         self.__ground_truth_answers.append(groud_truth_answer)
+        xm.master_print(f"__predicions: {self.__predicions}")
+        xm.master_print(f"__ground_truth_answers: {self.__ground_truth_answers}")
 
     def load_bertscore(self):
         xm.master_print("Loading bertscore")
