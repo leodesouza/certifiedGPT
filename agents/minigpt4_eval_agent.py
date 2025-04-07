@@ -167,11 +167,14 @@ class MiniGPT4EvalAgent(BaseAgent):
         accuracy = vqaEval.accuracy['overall']
         per_answer_type = vqaEval.accuracy['perAnswerType']
         per_question_type = vqaEval.accuracy['perQuestionType']
-        print(f"accuracy: {accuracy}")        
-
+        
         global_eval_accuracy = xm.mesh_reduce("eval_accuracy", accuracy, lambda x: sum(x) / len(x))
         global_per_answer_type = xm.mesh_reduce("eval_accuracy", per_answer_type, lambda x: sum(x) / len(x))
         global_per_question_type = xm.mesh_reduce("eval_accuracy", per_question_type, lambda x: sum(x) / len(x))
+
+        xm.master_print(f"accuracy: {global_eval_accuracy}")        
+        xm.master_print(f"global_per_answer_type: {global_per_answer_type}")        
+        xm.master_print(f"global_per_question_type: {global_per_question_type}")        
 
         after_time = time()
         elapsed_time = str(datetime.timedelta(seconds=(after_time - before_time)))
