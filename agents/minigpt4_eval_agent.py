@@ -91,58 +91,80 @@ class MiniGPT4EvalAgent(BaseAgent):
             image = batch_sample["image"]
             questions = batch_sample["instruction_input"]
             question_ids = batch_sample["question_id"]
+            ground_truth_answers = batch_sample["answer"]
             img_ids = batch_sample["image_id"]
             
             texts = self.prepare_texts(questions, conv_temp)
             
-            answers = (self.model.
+            predicted_answers = (self.model.
                        generate(image, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False))
             xm.mark_step()
             
-            for answer, question_id, question, img_id in zip(answers, question_ids, questions, img_ids):
+            for p_answer, g_answer, question_id, question, img_id in zip(predicted_answers, ground_truth_answers, question_ids, questions, img_ids):
                 result = dict()                
-                answer = answer[0]
-                if isinstance(answer, str):
-                    clean_answer = answer.replace('#','')
-                    answer = clean_answer.lower().replace('<unk>','').strip()
-                result['answer'] = answer
+                p_answer = p_answer[0]
+                if isinstance(p_answer, str):
+                    clean_answer = p_answer.replace('#','')
+                    p_answer = clean_answer.lower().replace('<unk>','').strip()
+                result['answer'] = p_answer
                 result['question_id'] = int(question_id)
-                predictions.append(result)            
+                predictions.append(result)
+
+                if isinstance(g_answer, str):
+                    clean_answer = g_answer.replace('#','')
+                    g_answer = clean_answer.lower().replace('<unk>','').strip()
+                self.prepare_for_bertscore(p_answer, g_answer)            
+
             total_batches += 1
             break
-            
-        annotation_file = self.annotations_paths[0]
-        question_file = self.questions_paths[0]
 
-        xm.master_print(f"annotation_file: {annotation_file}")
-        xm.master_print(f"question_file: {question_file}")
+        scores = self.compute_bertscore()  
+        xm.master_print(f"stores: {scores}")        
+    
+        # annotation_file = self.annotations_paths[0]
+        # question_file = self.questions_paths[0]
 
-        xm.master_print("calling VQA(annotation_file, question_file)")
-        vqa = VQA(annotation_file, question_file)
+        # xm.master_print(f"annotation_file: {annotation_file}")
+        # xm.master_print(f"question_file: {question_file}")
 
-        xm.master_print("vqa.loadRes")
-        vqaRes = vqa.loadRes(predictions, question_file)
+        # xm.master_print("calling VQA(annotation_file, question_file)")
+        # vqa = VQA(annotation_file, question_file)
 
-        xm.master_print("VQAEval(vqa, vqaRes, n=2)")
+        # xm.master_print("vqa.loadRes")
+        # vqaRes = vqa.loadRes(predictions, question_file)
 
-        vqaEval = VQAEval(vqa, vqaRes, n=2)
+        # xm.master_print("VQAEval(vqa, vqaRes, n=2)")
 
-        xm.master_print("vqaEval.evaluate()")        
-        vqaEval.evaluate()
+        # vqaEval = VQAEval(vqa, vqaRes, n=2)
 
-        accuracy = vqaEval.accuracy['overall']
-        print(f"accuracy: {accuracy}")        
+        # xm.master_print("vqaEval.evaluate()")        
+        # vqaEval.evaluate()
 
-        global_eval_accuracy = xm.mesh_reduce("eval_accuracy", accuracy, sum)
-        global_total_batches = xm.mesh_reduce("total_batches", total_batches.item(), sum)
+        # accuracy = vqaEval.accuracy['overall']
+        # print(f"accuracy: {accuracy}")        
 
-        eval_avg_accuracy = global_eval_accuracy / global_total_batches
-        xm.master_print(f"Eval ended: {(test_utils.now())}")
+        # global_eval_accuracy = xm.mesh_reduce("eval_accuracy", accuracy, sum)
+        # global_total_batches = xm.mesh_reduce("total_batches", total_batches.item(), sum)
+
+        # eval_avg_accuracy = global_eval_accuracy / global_total_batches
+        # xm.master_print(f"Eval ended: {(test_utils.now())}")
+        eval_avg_accuracy = 1 
 
         return eval_avg_accuracy
     
+    def prepare_for_bertscore(self, prediction, groud_truth_answer):
+        if not hasattr(self, '__predicions'):
+            self.__predicions = []
+
+        if not hasattr(self, '__ground_truth_answers'):
+            self.__ground_truth_answers = []
+
+        self.__predicions.append(prediction)
+        self.__ground_truth_answers.append(groud_truth_answer)
+        
     def exact_match(pred, answers):
         return 1 if pred in answers else 0
+    
     
     def compute_f1score(pred, answers):        
         pred_tokens =  nlkt.word_tokenize(pred.lower()) # or llama tokenizer
@@ -174,8 +196,9 @@ class MiniGPT4EvalAgent(BaseAgent):
         for aws, freq in top_preds:
             print(f"{aws}: {freq}")
     
-    def compute_bertscore(predictions, answers, lang='en'):
-        p, r, f1 = score(predictions, answers, lang=lang, rescale_with_baseline=True) 
+    def compute_bertscore(self):        
+
+        p, r, f1 = score(self.__predicions, self.__ground_truth_answers, lang="en", return_hash=True) 
 
         return {
             "precision": p.mean().item(),
