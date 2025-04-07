@@ -129,19 +129,23 @@ class MiniGPT4EvalAgent(BaseAgent):
 
         xm.master_print("computing the best score")        
         precision, recall, f1, count = self.compute_bertscore(self._predicions, self._ground_truth_answers)
+        xm.master_print(f"local scores -> precision: {precision}, recall: {recall}, f1: {f1}, count: {count}") 
         xm.master_print("finished computing the best score")
-        xm.mark_step()
+        # xm.mark_step()
 
+        xm.master_print("mesh_reduce") 
         global_precision = xm.mesh_reduce("precision", precision, sum) 
         global_recall = xm.mesh_reduce("recall", recall, sum) 
         global_f1 = xm.mesh_reduce("f1", f1, sum) 
         count = xm.mesh_reduce("count", count, sum) 
 
+        xm.master_print("calc global scores") 
         safe_divisor = 1e-8  
         precision = global_precision / (count + safe_divisor)
         recall = global_recall / (count + safe_divisor)
         f1 = global_f1 / (count + safe_divisor)
 
+        xm.master_print("reading annotations for vqa accuracy") 
         annotation_file = self.annotations_paths[0]
         question_file = self.questions_paths[0]
 
