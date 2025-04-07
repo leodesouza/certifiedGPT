@@ -115,10 +115,10 @@ class MiniGPT4EvalAgent(BaseAgent):
                 result['question_id'] = int(question_id)
                 predictions.append(result)
 
-                if isinstance(g_answer, str):
-                    clean_answer = g_answer.replace('#','')
-                    g_answer = clean_answer.lower().replace('<unk>','').strip()
-                self.prepare_for_bertscore(p_answer, g_answer)            
+                # if isinstance(g_answer, str):
+                #     clean_answer = g_answer.replace('#','')
+                #     g_answer = clean_answer.lower().replace('<unk>','').strip()
+                # self.prepare_for_bertscore(p_answer, g_answer)            
 
             total_batches += 1
             break
