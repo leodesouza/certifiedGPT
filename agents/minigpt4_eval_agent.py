@@ -87,6 +87,13 @@ class MiniGPT4EvalAgent(BaseAgent):
 
         xm.master_print(f"Eval started: {(test_utils.now())}")
         predictions = []
+        
+        if xm.is_master_ordinal():
+                file_path = os.path.join(self.config.run.output_dir,"eval_output.txt")
+                file_exists = os.path.exists(file_path)
+                f = open(file_exists, 'w')
+                print("accuracy\tprecision\trecall\tf1", file=f, flush=True)
+
         self.model.eval()
         for step, batch_sample in enumerate(val_loader):
 
@@ -117,13 +124,13 @@ class MiniGPT4EvalAgent(BaseAgent):
                 if isinstance(g_answer, str):
                     clean_answer = g_answer.replace('#','')
                     g_answer = clean_answer.lower().replace('<unk>','').strip()
-                self.prepare_for_bertscore(p_answer, g_answer)            
+                self.prepare_for_bertscore(p_answer, g_answer)   
+                break                                 
 
             total_batches += 1
-            break
 
-        scores = self.compute_bertscore()  
-        xm.master_print(f"scores: {scores}")        
+        all_predictions = xm.all_gather_object(self._predicions)            
+        all_ground_truths = xm.all_gather_object(self._ground_truth_answers)                            
     
         # annotation_file = self.annotations_paths[0]
         # question_file = self.questions_paths[0]
@@ -152,21 +159,22 @@ class MiniGPT4EvalAgent(BaseAgent):
 
         # eval_avg_accuracy = global_eval_accuracy / global_total_batches
         # xm.master_print(f"Eval ended: {(test_utils.now())}")
-        eval_avg_accuracy = 1 
 
-        return eval_avg_accuracy
+        if xm.is_master_ordinal():                            
+            precision, recall, f1 = self.compute_bertscore(all_predictions, all_ground_truths)
+            print("{}\t{}\t{}\t{}".format(1, precision, recall, f1), file=f, flush=True)          
+            f.close()                 
     
     def prepare_for_bertscore(self, prediction, groud_truth_answer):
-
         
         if not hasattr(self, '__predicions'):
-            self.__predicions = []
+            self._predicions = []
 
         if not hasattr(self, '__ground_truth_answers'):
-            self.__ground_truth_answers = []
+            self._ground_truth_answers = []
         
-        self.__predicions.append(prediction)
-        self.__ground_truth_answers.append(groud_truth_answer)
+        self._predicions.append(prediction)
+        self._ground_truth_answers.append(groud_truth_answer)
 
         # question
         # xm.master_print(f"__questions: {self.__questions}")
@@ -213,16 +221,9 @@ class MiniGPT4EvalAgent(BaseAgent):
         for aws, freq in top_preds:
             print(f"{aws}: {freq}")
     
-    def compute_bertscore(self):        
-
-        # p, r, f1 = self.bertscore.compute(predictions=self.__predicions, references=self.__ground_truth_answers, model_type="distilbert-base-uncased") 
-        p, r, f1 = score(self.__predicions, self.__ground_truth_answers, lang="en") 
-
-        return {
-            "precision": p.mean().item(),
-            "recall": r.mean().item(),
-            "f1": f1.mean().item()
-        }
+    def compute_bertscore(self, predictions, ground_truths):                
+        p, r, f1 = score(predictions, ground_truths, lang="en") 
+        return p, r, f1        
 
     def finalize(self):
         pass
