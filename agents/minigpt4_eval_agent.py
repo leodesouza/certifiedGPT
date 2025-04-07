@@ -91,7 +91,7 @@ class MiniGPT4EvalAgent(BaseAgent):
         if xm.is_master_ordinal():
                 file_path = os.path.join(self.config.run.output_dir,"eval_output.txt")                
                 f = open(file_path, 'w')
-                print("accuracy\tprecision\trecall\tf1", file=f, flush=True)
+                print("overall_accuracy\tperAnswerType\tperQuestionType\tprecision\trecall\tf1", file=f, flush=True)
 
         self.model.eval()
         for step, batch_sample in enumerate(val_loader):
@@ -123,13 +123,13 @@ class MiniGPT4EvalAgent(BaseAgent):
                 if isinstance(g_answer, str):
                     clean_answer = g_answer.replace('#','')
                     g_answer = clean_answer.lower().replace('<unk>','').strip()
-                self.prepare_for_bertscore(p_answer, g_answer)
-                break
+                self.prepare_for_bertscore(p_answer, g_answer)                
                              
-
+        xm.master_print("computing the best score")        
         precision, recall, f1, count = self.compute_bertscore(self._predicions, self._ground_truth_answers)
+        xm.master_print("finished computing the best score")
 
-        global_precision = xm.mesh_reduce("precision", precision, lambda x: sum) 
+        global_precision = xm.mesh_reduce("precision", precision, sum) 
         global_recall = xm.mesh_reduce("recall", recall, sum) 
         global_f1 = xm.mesh_reduce("f1", f1, sum) 
         count = xm.mesh_reduce("count", count, sum) 
@@ -140,37 +140,36 @@ class MiniGPT4EvalAgent(BaseAgent):
         f1 = global_f1 / (count + safe_divisor)
 
             
-        # annotation_file = self.annotations_paths[0]
-        # question_file = self.questions_paths[0]
+        annotation_file = self.annotations_paths[0]
+        question_file = self.questions_paths[0]
 
-        # xm.master_print(f"annotation_file: {annotation_file}")
-        # xm.master_print(f"question_file: {question_file}")
+        xm.master_print(f"annotation_file: {annotation_file}")
+        xm.master_print(f"question_file: {question_file}")
 
-        # xm.master_print("calling VQA(annotation_file, question_file)")
-        # vqa = VQA(annotation_file, question_file)
+        xm.master_print("calling VQA(annotation_file, question_file)")
+        vqa = VQA(annotation_file, question_file)
 
-        # xm.master_print("vqa.loadRes")
-        # vqaRes = vqa.loadRes(predictions, question_file)
+        xm.master_print("vqa.loadRes")
+        vqaRes = vqa.loadRes(predictions, question_file)
 
-        # xm.master_print("VQAEval(vqa, vqaRes, n=2)")
+        xm.master_print("VQAEval(vqa, vqaRes, n=2)")
+        vqaEval = VQAEval(vqa, vqaRes, n=2)
 
-        # vqaEval = VQAEval(vqa, vqaRes, n=2)
+        xm.master_print("vqaEval.evaluate()")        
+        vqaEval.evaluate()
 
-        # xm.master_print("vqaEval.evaluate()")        
-        # vqaEval.evaluate()
+        accuracy = vqaEval.accuracy['overall']
+        per_answer_type = vqaEval.accuracy['perAnswerType']
+        per_question_type = vqaEval.accuracy['perQuestionType']
+        print(f"accuracy: {accuracy}")        
 
-        # accuracy = vqaEval.accuracy['overall']
-        # print(f"accuracy: {accuracy}")        
-
-        # global_eval_accuracy = xm.mesh_reduce("eval_accuracy", accuracy, sum)
-        # global_total_batches = xm.mesh_reduce("total_batches", total_batches.item(), sum)
-
-        # eval_avg_accuracy = global_eval_accuracy / global_total_batches
-        # xm.master_print(f"Eval ended: {(test_utils.now())}")
-
+        global_eval_accuracy = xm.mesh_reduce("eval_accuracy", accuracy, lambda x: sum(x) / len(x))
+                        
         if xm.is_master_ordinal():                                        
-            print("{}\t{}\t{}\t{}".format(1, precision, recall, f1), file=f, flush=True)          
+            print("{}\t{}\t{}\t{}\t{}\t{}".format(global_eval_accuracy,per_answer_type, per_question_type, precision, recall, f1), file=f, flush=True)          
             f.close()                 
+
+        xm.master_print(f"Eval ended: {(test_utils.now())}")
     
     def prepare_for_bertscore(self, prediction, groud_truth_answer):
         
