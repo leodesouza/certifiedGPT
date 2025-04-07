@@ -5,6 +5,9 @@
 # https://github.com/Vision-CAIR/MiniGPT-4
 #
 
+import transformers
+transformers.logging.set_verbosity_error()
+
 import os
 import time
 from datetime import datetime
@@ -31,8 +34,8 @@ from common.registry import registry
 import torch_xla.test.test_utils as test_utils
 from graphs.models.minigpt4.conversation.conversation import CONV_VISION_LLama2
 
-#from bert_score import score 
-from evaluate import load
+from bert_score import score 
+#from evaluate import load
 
 # rank and world size are inferred from XLA Device
 # source: https://github.com/pytorch/xla/
@@ -49,7 +52,7 @@ class MiniGPT4EvalAgent(BaseAgent):
         self._tpu_metrics = TPUMetrics()
         self.questions_paths = None
         self.annotations_paths = None
-        self.bertscore = self.load_bertscore()
+        # self.bertscore = self.load_bertscore()
 
     def run(self):
         try:
@@ -112,16 +115,16 @@ class MiniGPT4EvalAgent(BaseAgent):
                 result['question_id'] = int(question_id)
                 predictions.append(result)
 
-                # if isinstance(g_answer, str):
-                #     clean_answer = g_answer.replace('#','')
-                #     g_answer = clean_answer.lower().replace('<unk>','').strip()
-                # self.prepare_for_bertscore(p_answer, g_answer)            
+                if isinstance(g_answer, str):
+                    clean_answer = g_answer.replace('#','')
+                    g_answer = clean_answer.lower().replace('<unk>','').strip()
+                self.prepare_for_bertscore(p_answer, g_answer)            
 
             total_batches += 1
             break
 
-        # scores = self.compute_bertscore()  
-        # xm.master_print(f"stores: {scores}")        
+        scores = self.compute_bertscore()  
+        xm.master_print(f"scores: {scores}")        
     
         # annotation_file = self.annotations_paths[0]
         # question_file = self.questions_paths[0]
@@ -205,7 +208,8 @@ class MiniGPT4EvalAgent(BaseAgent):
     
     def compute_bertscore(self):        
 
-        p, r, f1 = self.bertscore.compute(predictions=self.__predicions, references=self.__ground_truth_answers, model_type="distilbert-base-uncased") 
+        # p, r, f1 = self.bertscore.compute(predictions=self.__predicions, references=self.__ground_truth_answers, model_type="distilbert-base-uncased") 
+        p, r, f1 = score(self.__predicions, self.__ground_truth_answers, lang="en") 
 
         return {
             "precision": p.mean().item(),
