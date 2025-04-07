@@ -35,7 +35,8 @@ import torch_xla.test.test_utils as test_utils
 from graphs.models.minigpt4.conversation.conversation import CONV_VISION_LLama2
 
 from bert_score import score 
-# from evaluate import load
+import datetime
+from time import time
 
 # rank and world size are inferred from XLA Device
 # source: https://github.com/pytorch/xla/
@@ -91,8 +92,9 @@ class MiniGPT4EvalAgent(BaseAgent):
         if xm.is_master_ordinal():
             file_path = os.path.join(self.config.run.output_dir,"eval_output.txt")                
             f = open(file_path, 'w')
-            print("overall_accuracy\tperAnswerType\tperQuestionType\tprecision\trecall\tf1", file=f, flush=True)
-
+            print("overall_accuracy\tperAnswerType\tperQuestionType\tprecision\trecall\tf1\ttime", file=f, flush=True)
+        
+        before_time = time()
         self.model.eval()
         for step, batch_sample in enumerate(val_loader):
 
@@ -165,16 +167,18 @@ class MiniGPT4EvalAgent(BaseAgent):
         global_eval_accuracy = xm.mesh_reduce("eval_accuracy", accuracy, lambda x: sum(x) / len(x))
         global_per_answer_type = xm.mesh_reduce("eval_accuracy", per_answer_type, lambda x: sum(x) / len(x))
         global_per_question_type = xm.mesh_reduce("eval_accuracy", per_question_type, lambda x: sum(x) / len(x))
-
+        after_time = time()
+        elapsed_time = str(datetime.timedelta(seconds=(after_time - before_time)))
         if xm.is_master_ordinal():
             print(
-                "{}\t{}\t{}\t{}\t{}\t{}".format(
+                "{}\t{}\t{}\t{}\t{}\t{}\{}".format(
                     global_eval_accuracy,
                     global_per_answer_type,
                     global_per_question_type,
                     precision,
                     recall,
                     f1,
+                    elapsed_time
                 ),
                 file=f,
                 flush=True,
