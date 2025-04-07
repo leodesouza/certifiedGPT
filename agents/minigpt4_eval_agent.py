@@ -125,11 +125,12 @@ class MiniGPT4EvalAgent(BaseAgent):
                 if isinstance(g_answer, str):
                     clean_answer = g_answer.replace('#','')
                     g_answer = clean_answer.lower().replace('<unk>','').strip()
-                self.prepare_for_bertscore(p_answer, g_answer)                
+                self.prepare_for_bertscore(p_answer, g_answer)                            
 
         xm.master_print("computing the best score")        
         precision, recall, f1, count = self.compute_bertscore(self._predicions, self._ground_truth_answers)
         xm.master_print("finished computing the best score")
+        xm.mark_step()
 
         global_precision = xm.mesh_reduce("precision", precision, sum) 
         global_recall = xm.mesh_reduce("recall", recall, sum) 
@@ -167,8 +168,10 @@ class MiniGPT4EvalAgent(BaseAgent):
         global_eval_accuracy = xm.mesh_reduce("eval_accuracy", accuracy, lambda x: sum(x) / len(x))
         global_per_answer_type = xm.mesh_reduce("eval_accuracy", per_answer_type, lambda x: sum(x) / len(x))
         global_per_question_type = xm.mesh_reduce("eval_accuracy", per_question_type, lambda x: sum(x) / len(x))
+
         after_time = time()
         elapsed_time = str(datetime.timedelta(seconds=(after_time - before_time)))
+
         if xm.is_master_ordinal():
             print(
                 "{}\t{}\t{}\t{}\t{}\t{}\{}".format(
