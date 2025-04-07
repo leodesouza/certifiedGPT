@@ -32,7 +32,7 @@ import torch_xla.test.test_utils as test_utils
 from graphs.models.minigpt4.conversation.conversation import CONV_VISION_LLama2
 
 #from bert_score import score 
-# from evaluate import load
+from evaluate import load
 
 # rank and world size are inferred from XLA Device
 # source: https://github.com/pytorch/xla/
@@ -49,7 +49,7 @@ class MiniGPT4EvalAgent(BaseAgent):
         self._tpu_metrics = TPUMetrics()
         self.questions_paths = None
         self.annotations_paths = None
-        self.bertscore = None        
+        self.bertscore = self.load_bertscore()
 
     def run(self):
         try:
@@ -167,6 +167,7 @@ class MiniGPT4EvalAgent(BaseAgent):
     def load_bertscore(self):
         xm.master_print("Loading bertscore")
         self.bertscore = load("bertscore")
+        xm.master_print("Loading bertscore Done !")
         
     def exact_match(pred, answers):
         return 1 if pred in answers else 0
