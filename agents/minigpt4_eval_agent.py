@@ -89,9 +89,8 @@ class MiniGPT4EvalAgent(BaseAgent):
         predictions = []
         
         if xm.is_master_ordinal():
-                file_path = os.path.join(self.config.run.output_dir,"eval_output.txt")
-                file_exists = os.path.exists(file_path)
-                f = open(file_exists, 'w')
+                file_path = os.path.join(self.config.run.output_dir,"eval_output.txt")                
+                f = open(file_path, 'w')
                 print("accuracy\tprecision\trecall\tf1", file=f, flush=True)
 
         self.model.eval()
@@ -125,10 +124,8 @@ class MiniGPT4EvalAgent(BaseAgent):
                     clean_answer = g_answer.replace('#','')
                     g_answer = clean_answer.lower().replace('<unk>','').strip()
                 self.prepare_for_bertscore(p_answer, g_answer)   
-                break                                 
-
-            total_batches += 1
-
+            break                                 
+                    
         all_predictions = xm.all_gather_object(self._predicions)            
         all_ground_truths = xm.all_gather_object(self._ground_truth_answers)                            
     
