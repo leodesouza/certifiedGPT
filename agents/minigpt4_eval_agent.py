@@ -125,8 +125,8 @@ class MiniGPT4EvalAgent(BaseAgent):
                 if isinstance(g_answer, str):
                     clean_answer = g_answer.replace('#','')
                     g_answer = clean_answer.lower().replace('<unk>','').strip()
-                self.prepare_for_bertscore(p_answer, g_answer)  
-            break                          
+                self.prepare_for_bertscore(p_answer, g_answer)                                        
+            break
 
         xm.master_print("computing the best score")        
         precision, recall, f1, count = self.compute_bertscore(self._predictions, self._ground_truth_answers)
@@ -197,7 +197,7 @@ class MiniGPT4EvalAgent(BaseAgent):
         if not hasattr(self, '_predictions'):
             self._predictions = []
 
-        if not hasattr(self, '__ground_truth_answers'):
+        if not hasattr(self, '_ground_truth_answers'):
             self._ground_truth_answers = []
 
         self._predictions.append(prediction)
