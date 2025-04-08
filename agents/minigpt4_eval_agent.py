@@ -136,9 +136,9 @@ class MiniGPT4EvalAgent(BaseAgent):
         xm.master_print("finished computing the best score")
         
         xm.master_print("mesh_reduce") 
-        global_precision = xm.mesh_reduce("precision", precision, lambda x: sum(x) / len(x)) 
-        global_recall = xm.mesh_reduce("recall", recall, lambda x: sum(x) / len(x)) 
-        global_f1 = xm.mesh_reduce("f1", f1, lambda x: sum(x) / len(x))         
+        global_precision = xm.mesh_reduce("precision", precision.item(), lambda x: sum(x) / len(x)) 
+        global_recall = xm.mesh_reduce("recall", recall.item(), lambda x: sum(x) / len(x)) 
+        global_f1 = xm.mesh_reduce("f1", f1.item(), lambda x: sum(x) / len(x))         
         
         xm.master_print("reading annotations for vqa accuracy") 
         annotation_file = self.annotations_paths[0]
