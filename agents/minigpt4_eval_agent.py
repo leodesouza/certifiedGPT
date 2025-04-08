@@ -132,8 +132,8 @@ class MiniGPT4EvalAgent(BaseAgent):
         precision, recall, f1, count = self.compute_bertscore(self._predictions, self._ground_truth_answers)
         xm.master_print(f"local scores -> precision: {precision}, recall: {recall}, f1: {f1}, count: {count}") 
         xm.master_print("finished computing the best score")
-        # xm.mark_step()
-
+        
+        xm.mark_step()
         xm.master_print("mesh_reduce") 
         global_precision = xm.mesh_reduce("precision", precision, sum) 
         global_recall = xm.mesh_reduce("recall", recall, sum) 
