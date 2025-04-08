@@ -130,23 +130,16 @@ class MiniGPT4EvalAgent(BaseAgent):
             break
 
         xm.master_print("computing the best score")        
-        precision, recall, f1, count = self.compute_bertscore(self._predictions, self._ground_truth_answers)
+        precision, recall, f1 = self.compute_bertscore(self._predictions, self._ground_truth_answers)
         
         xm.master_print(f"local scores -> precision: {precision}, recall: {recall}, f1: {f1}, count: {count}") 
         xm.master_print("finished computing the best score")
         
         xm.master_print("mesh_reduce") 
-        global_precision = xm.mesh_reduce("precision", precision.item(), sum) 
-        global_recall = xm.mesh_reduce("recall", recall.item(), sum) 
-        global_f1 = xm.mesh_reduce("f1", f1.item(), sum) 
-        count = xm.mesh_reduce("count", count.item(), sum) 
-
-        xm.master_print("calc global scores") 
-        safe_divisor = 1e-8  
-        precision = global_precision / (count + safe_divisor)
-        recall = global_recall / (count + safe_divisor)
-        f1 = global_f1 / (count + safe_divisor)
-
+        global_precision = xm.mesh_reduce("precision", precision, lambda x: sum(x) / len(x)) 
+        global_recall = xm.mesh_reduce("recall", recall, lambda x: sum(x) / len(x)) 
+        global_f1 = xm.mesh_reduce("f1", f1, lambda x: sum(x) / len(x))         
+        
         xm.master_print("reading annotations for vqa accuracy") 
         annotation_file = self.annotations_paths[0]
         question_file = self.questions_paths[0]
@@ -255,13 +248,12 @@ class MiniGPT4EvalAgent(BaseAgent):
 
     def compute_bertscore(self, predictions, ground_truths):                
         p, r, f1 = score(predictions, ground_truths, lang="en")                
-        count = torch.tensor(len(f1), device=self.device)
-
+        
         p = p.to(self.device)
         r = r.to(self.device)
         f1 = f1.to(self.device)
-        
-        return p, r, f1, count        
+                
+        return p.mean(), r.mean(), f1.mean()
 
     def finalize(self):
         pass
