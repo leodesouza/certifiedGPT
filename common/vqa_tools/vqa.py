@@ -46,6 +46,11 @@ class VQA:
             time_t = datetime.datetime.utcnow()
             dataset = json.load(open(annotation_file, "r"))
             questions = json.load(open(question_file, "r"))
+            # forced becaused in the experimentation the annotation_file is just 
+            # a fraction of original vqa annotation
+            valid_question_ids = set([ann["question_id"] for ann in dataset["annotations"]])
+            filtered_questions = [q for q in questions["questions"] if q["question_id"] in valid_question_ids]
+            questions["questions"] = filtered_questions
             self.dataset = dataset
             self.questions = questions
             self.createIndex()
