@@ -99,6 +99,9 @@ class MiniGPT4EvalAgent(BaseAgent):
         self.model.eval()
         for step, batch_sample in enumerate(val_loader):
 
+            if step > 0:
+                continue
+
             xm.master_print(f"Eval step: {step} - {(test_utils.now())}")            
             self.maybe_add_noise(batch_sample, self.config.run.noise_level)
 
@@ -127,14 +130,14 @@ class MiniGPT4EvalAgent(BaseAgent):
                     clean_answer = g_answer.replace('#','')
                     g_answer = clean_answer.lower().replace('<unk>','').strip()
                 self.prepare_for_bertscore(p_answer, g_answer)                                        
-            break
+            
 
         xm.master_print("computing the best score")        
         precision, recall, f1 = self.compute_bertscore(self._predictions, self._ground_truth_answers)
         
         xm.master_print(f"local scores -> precision: {precision}, recall: {recall}, f1: {f1}") 
         xm.master_print("finished computing the best score")
-        
+                
         xm.master_print("mesh_reduce") 
         global_precision = xm.mesh_reduce("precision", precision.item(), lambda x: sum(x) / len(x)) 
         global_recall = xm.mesh_reduce("recall", recall.item(), lambda x: sum(x) / len(x)) 
@@ -248,6 +251,7 @@ class MiniGPT4EvalAgent(BaseAgent):
 
     def compute_bertscore(self, predictions, ground_truths):                
         p, r, f1 = score(predictions, ground_truths, lang="en")                
+        xm.mark_step()
         
         p = p.to(self.device)
         r = r.to(self.device)
