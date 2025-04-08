@@ -95,6 +95,7 @@ class MiniGPT4EvalAgent(BaseAgent):
         f.close()
         
         before_time = time()
+        total_batches = torch.tensor(0, device=self.device)
         self.model.eval()
         for step, batch_sample in enumerate(val_loader):
 
@@ -130,15 +131,15 @@ class MiniGPT4EvalAgent(BaseAgent):
 
         xm.master_print("computing the best score")        
         precision, recall, f1, count = self.compute_bertscore(self._predictions, self._ground_truth_answers)
+        
         xm.master_print(f"local scores -> precision: {precision}, recall: {recall}, f1: {f1}, count: {count}") 
         xm.master_print("finished computing the best score")
         
-        xm.mark_step()
         xm.master_print("mesh_reduce") 
-        global_precision = xm.mesh_reduce("precision", precision, sum) 
-        global_recall = xm.mesh_reduce("recall", recall, sum) 
-        global_f1 = xm.mesh_reduce("f1", f1, sum) 
-        count = xm.mesh_reduce("count", count, sum) 
+        global_precision = xm.mesh_reduce("precision", precision.item(), sum) 
+        global_recall = xm.mesh_reduce("recall", recall.item(), sum) 
+        global_f1 = xm.mesh_reduce("f1", f1.item(), sum) 
+        count = xm.mesh_reduce("count", count.item(), sum) 
 
         xm.master_print("calc global scores") 
         safe_divisor = 1e-8  
@@ -166,12 +167,17 @@ class MiniGPT4EvalAgent(BaseAgent):
         vqaEval.evaluate()
 
         accuracy = vqaEval.accuracy['overall']
+        accuracy = torch.tensor(accuracy, device=self.device
+                                )
         per_answer_type = vqaEval.accuracy['perAnswerType']
+        per_answer_type = torch.tensor(per_answer_type, device=self.device)
+
         per_question_type = vqaEval.accuracy['perQuestionType']
+        per_question_type = torch.tensor(per_question_type, device=self.device)
         
-        global_eval_accuracy = xm.mesh_reduce("eval_accuracy", accuracy, lambda x: sum(x) / len(x))
-        global_per_answer_type = xm.mesh_reduce("eval_accuracy", per_answer_type, lambda x: sum(x) / len(x))
-        global_per_question_type = xm.mesh_reduce("eval_accuracy", per_question_type, lambda x: sum(x) / len(x))
+        global_eval_accuracy = xm.mesh_reduce("eval_accuracy", accuracy.item(), lambda x: sum(x) / len(x))
+        global_per_answer_type = xm.mesh_reduce("eval_accuracy", per_answer_type.item(), lambda x: sum(x) / len(x))
+        global_per_question_type = xm.mesh_reduce("eval_accuracy", per_question_type.item(), lambda x: sum(x) / len(x))
 
         xm.master_print(f"accuracy: {global_eval_accuracy}")        
         xm.master_print(f"global_per_answer_type: {global_per_answer_type}")        
@@ -248,8 +254,15 @@ class MiniGPT4EvalAgent(BaseAgent):
             print(f"{aws}: {freq}")
 
     def compute_bertscore(self, predictions, ground_truths):                
-        p, r, f1 = score(predictions, ground_truths, lang="en") 
-        return p, r, f1, len(f1)        
+        p, r, f1 = score(predictions, ground_truths, lang="en")        
+        count += len(f1)         
+
+        p = torch.tensor(p, device=self.device)
+        r = torch.tensor(r, device=self.device)
+        f1 = torch.tensor(f1, device=self.device)
+        count = torch.tensor(count, device=self.device)
+
+        return p, r, f1, count        
 
     def finalize(self):
         pass
