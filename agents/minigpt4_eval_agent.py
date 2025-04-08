@@ -54,6 +54,7 @@ class MiniGPT4EvalAgent(BaseAgent):
         self.questions_paths = None
         self.annotations_paths = None
         # self.bertscore = self.load_bertscore()
+        self.log = []
 
     def run(self):
         try:
@@ -68,15 +69,13 @@ class MiniGPT4EvalAgent(BaseAgent):
                     xm.master_print("No noise will be applied to the image inputs")
 
             self.load_finetuned_model(self._model)
-            accuracy = self.eval(self._dataloaders)
-            xm.master_print("Overall VQAv2 Accuracy is: %.02f\n" % accuracy, flush=True)
+            self.eval(self._dataloaders)            
 
         except Exception as e:
             xm.master_print(f"Error on agent run: {test_utils.now()}. Details: {e}")
 
     @torch.no_grad()
-    def eval(self, dataloader):
-        total_batches = torch.tensor(0, device=self.device)
+    def eval(self, dataloader):        
         val_loader = dataloader["val"]
         val_loader = pl.MpDeviceLoader(val_loader, self.device)
 
@@ -93,6 +92,7 @@ class MiniGPT4EvalAgent(BaseAgent):
             file_path = os.path.join(self.config.run.output_dir,"eval_output.txt")                
             f = open(file_path, 'w')
             print("overall_accuracy\tperAnswerType\tperQuestionType\tprecision\trecall\tf1\ttime", file=f, flush=True)
+        f.close()
         
         before_time = time()
         self.model.eval()
@@ -125,10 +125,11 @@ class MiniGPT4EvalAgent(BaseAgent):
                 if isinstance(g_answer, str):
                     clean_answer = g_answer.replace('#','')
                     g_answer = clean_answer.lower().replace('<unk>','').strip()
-                self.prepare_for_bertscore(p_answer, g_answer)                            
+                self.prepare_for_bertscore(p_answer, g_answer)  
+            break                          
 
         xm.master_print("computing the best score")        
-        precision, recall, f1, count = self.compute_bertscore(self._predicions, self._ground_truth_answers)
+        precision, recall, f1, count = self.compute_bertscore(self._predictions, self._ground_truth_answers)
         xm.master_print(f"local scores -> precision: {precision}, recall: {recall}, f1: {f1}, count: {count}") 
         xm.master_print("finished computing the best score")
         # xm.mark_step()
@@ -180,38 +181,32 @@ class MiniGPT4EvalAgent(BaseAgent):
         elapsed_time = str(datetime.timedelta(seconds=(after_time - before_time)))
 
         if xm.is_master_ordinal():
-            print(
-                "{}\t{}\t{}\t{}\t{}\t{}\{}".format(
-                    global_eval_accuracy,
-                    global_per_answer_type,
-                    global_per_question_type,
-                    precision,
-                    recall,
-                    f1,
-                    elapsed_time
-                ),
-                file=f,
-                flush=True,
-            )
-            f.close()
+            self.log.append(f"{global_eval_accuracy}\t{global_per_answer_type}\t{global_per_question_type}\t{global_precision}\t{global_recall}\t{global_f1}\t{elapsed_time}")
+            file_path = os.path.join(self.config.run.output_dir,"eval_output.txt")
+            file_exists = os.path.exists(file_path)
+
+            with open(file_path, 'a') as f:
+                if not file_exists:
+                    f.write("overall_accuracy\tperAnswerType\tperQuestionType\tprecision\trecall\tf1\ttime")
+                f.write("\n".join(self.log) + "\n")          
 
         xm.master_print(f"Eval ended: {(test_utils.now())}")
 
     def prepare_for_bertscore(self, prediction, groud_truth_answer):
 
-        if not hasattr(self, '__predicions'):
-            self._predicions = []
+        if not hasattr(self, '_predictions'):
+            self._predictions = []
 
         if not hasattr(self, '__ground_truth_answers'):
             self._ground_truth_answers = []
 
-        self._predicions.append(prediction)
+        self._predictions.append(prediction)
         self._ground_truth_answers.append(groud_truth_answer)
 
         # question
         # xm.master_print(f"__questions: {self.__questions}")
         # xm.master_print(f"__imageId: {self.__imageIds}")
-        # xm.master_print(f"__predicions: {self.__predicions}")
+        # xm.master_print(f"_predictions: {self._predictions}")
         # xm.master_print(f"__ground_truth_answers: {self.__ground_truth_answers}")
 
     def load_bertscore(self):
