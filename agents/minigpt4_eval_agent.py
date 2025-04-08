@@ -255,13 +255,12 @@ class MiniGPT4EvalAgent(BaseAgent):
 
     def compute_bertscore(self, predictions, ground_truths):                
         p, r, f1 = score(predictions, ground_truths, lang="en")                
-        count = len(f1)         
+        count = torch.tensor(len(f1), device=self.device)
 
-        p = torch.tensor(p, device=self.device)
-        r = torch.tensor(r, device=self.device)
-        f1 = torch.tensor(f1, device=self.device)
-        count = torch.tensor(count, device=self.device)
-
+        p = p.to(self.device)
+        r = r.to(self.device)
+        f1 = f1.to(self.device)
+        
         return p, r, f1, count        
 
     def finalize(self):
