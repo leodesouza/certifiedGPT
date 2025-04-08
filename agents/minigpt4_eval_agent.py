@@ -86,16 +86,8 @@ class MiniGPT4EvalAgent(BaseAgent):
         conv_temp.system = ""
 
         xm.master_print(f"Eval started: {(test_utils.now())}")
-        predictions = []
-
-        if xm.is_master_ordinal():
-            file_path = os.path.join(self.config.run.output_dir,"eval_output.txt")                
-            f = open(file_path, 'w')
-            print("overall_accuracy\tperAnswerType\tperQuestionType\tprecision\trecall\tf1\ttime", file=f, flush=True)
-        f.close()
-        
-        before_time = time()
-        total_batches = torch.tensor(0, device=self.device)
+        predictions = []        
+        before_time = time()        
         self.model.eval()
         for step, batch_sample in enumerate(val_loader):
 
