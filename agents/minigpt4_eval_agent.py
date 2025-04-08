@@ -189,7 +189,7 @@ class MiniGPT4EvalAgent(BaseAgent):
     def prepare_for_bertscore(self, prediction, groud_truth_answer):
         
         if prediction.strip() == "":
-            raise ValueError("empty prediction")
+            xm.master_print("empty prediction detected")
                 
         if not hasattr(self, '_predictions'):
             self._predictions = []
@@ -203,8 +203,8 @@ class MiniGPT4EvalAgent(BaseAgent):
         # question
         # xm.master_print(f"__questions: {self.__questions}")
         # xm.master_print(f"__imageId: {self.__imageIds}")
-        xm.master_print(f"_predictions: {self._predictions}")
-        xm.master_print(f"_ground_truth_answers: {self._ground_truth_answers}")
+        # xm.master_print(f"_predictions: {self._predictions}")
+        # xm.master_print(f"_ground_truth_answers: {self._ground_truth_answers}")
 
     def load_bertscore(self):
         xm.master_print("Loading bertscore")
