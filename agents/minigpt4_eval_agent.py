@@ -254,8 +254,8 @@ class MiniGPT4EvalAgent(BaseAgent):
             print(f"{aws}: {freq}")
 
     def compute_bertscore(self, predictions, ground_truths):                
-        p, r, f1 = score(predictions, ground_truths, lang="en")        
-        count += len(f1)         
+        p, r, f1 = score(predictions, ground_truths, lang="en")                
+        count = len(f1)         
 
         p = torch.tensor(p, device=self.device)
         r = torch.tensor(r, device=self.device)
