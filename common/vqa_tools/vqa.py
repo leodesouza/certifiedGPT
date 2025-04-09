@@ -183,6 +183,7 @@ class VQA:
         """
         res = VQA()
         res.questions = json.load(open(quesFile))
+        res.questions = self.questions
         res.dataset["info"] = copy.deepcopy(self.questions["info"])
         res.dataset["task_type"] = copy.deepcopy(self.questions["task_type"])
         res.dataset["data_type"] = copy.deepcopy(self.questions["data_type"])
