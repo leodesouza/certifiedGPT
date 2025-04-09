@@ -187,6 +187,7 @@ class MiniGPT4EvalAgent(BaseAgent):
         
         if prediction.strip() == "":
             xm.master_print("empty prediction detected")
+            prediction = "[EMPTY]"
                 
         if not hasattr(self, '_predictions'):
             self._predictions = []
