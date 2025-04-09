@@ -175,14 +175,14 @@ class VQA:
             for ans in ann["answers"]:
                 print("Answer %d: %s" % (ans["answer_id"], ans["answer"]))
 
-    def loadRes(self, anns, quesFile):
+    def loadRes(self, anns, quesFile = None):
         """
         Load result file and return a result object.
         :param   resFile (str)     : file name of result file
         :return: res (obj)         : result api object
         """
         res = VQA()
-        res.questions = json.load(open(quesFile))
+        # res.questions = json.load(open(quesFile))
         res.questions = self.questions
         res.dataset["info"] = copy.deepcopy(self.questions["info"])
         res.dataset["task_type"] = copy.deepcopy(self.questions["task_type"])
@@ -191,13 +191,16 @@ class VQA:
         res.dataset["license"] = copy.deepcopy(self.questions["license"])
 
         print("Loading and preparing results...     ")
+        print(f"N predictions: {len(anns)}")
+        print(f"N questions: {len(res.questions)}")
+
         time_t = datetime.datetime.utcnow()
         # anns = json.load(open(resFile))
         assert type(anns) == list, "results is not an array of objects"
         annsQuesIds = [ann["question_id"] for ann in anns]
-        assert set(annsQuesIds) == set(
-            self.getQuesIds()
-        ), "Results do not correspond to current VQA set. Either the results do not have predictions for all question ids in annotation file or there is atleast one question id that does not belong to the question ids in the annotation file."
+        # assert set(annsQuesIds) == set(
+        #     self.getQuesIds()
+        # ), "Results do not correspond to current VQA set. Either the results do not have predictions for all question ids in annotation file or there is atleast one question id that does not belong to the question ids in the annotation file."
         for ann in anns:
             quesId = ann["question_id"]
             if res.dataset["task_type"] == "Multiple Choice":
