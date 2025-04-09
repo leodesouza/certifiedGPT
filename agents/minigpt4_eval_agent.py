@@ -106,39 +106,20 @@ class MiniGPT4EvalAgent(BaseAgent):
                        generate(image, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False, calc_probs=False))
             xm.mark_step()
 
-            # for p_answer, g_answer, question_id, question, img_id in zip(predicted_answers, ground_truth_answers, question_ids, questions, img_ids):
-            #     result = dict()                                
-            #     if isinstance(p_answer, str):
-            #         clean_answer = p_answer.replace('#','')
-            #         p_answer = clean_answer.lower().replace('<unk>','').strip()
-            #     result['answer'] = p_answer
-            #     result['question_id'] = int(question_id)
-            #     predictions.append(result)
-
-            #     if isinstance(g_answer, str):
-            #         clean_answer = g_answer.replace('#','')
-            #         g_answer = clean_answer.lower().replace('<unk>','').strip()
-            #     self.prepare_for_bertscore(p_answer, g_answer)                                        
-
-            for p_answer, g_answer, in zip(predicted_answers, ground_truth_answers):
-                
-                if isinstance(p_answer, str):
-                    clean_answer = p_answer.replace('#','')
-                    p_answer = clean_answer.lower().replace('<unk>','').strip()
-
-                if isinstance(g_answer, str):
-                    clean_answer = g_answer.replace('#','')
-                    g_answer = clean_answer.lower().replace('<unk>','').strip()
-                self.prepare_for_bertscore(p_answer, g_answer)                                        
-
-            for p_answer, question_id, question, img_id in zip(predicted_answers, question_ids, questions, img_ids):
+            for p_answer, g_answer, question_id, question, img_id in zip(predicted_answers, ground_truth_answers, question_ids, questions, img_ids):
                 result = dict()                                
                 if isinstance(p_answer, str):
                     clean_answer = p_answer.replace('#','')
                     p_answer = clean_answer.lower().replace('<unk>','').strip()
                 result['answer'] = p_answer
                 result['question_id'] = int(question_id)
-                predictions.append(result)                
+                predictions.append(result)
+
+                if isinstance(g_answer, str):
+                    clean_answer = g_answer.replace('#','')
+                    g_answer = clean_answer.lower().replace('<unk>','').strip()
+                self.prepare_for_bertscore(p_answer, g_answer)                                        
+         
 
         xm.master_print("computing the best score")        
         precision, recall, f1 = self.compute_bertscore(self._predictions, self._ground_truth_answers)
@@ -149,49 +130,44 @@ class MiniGPT4EvalAgent(BaseAgent):
         xm.master_print("mesh_reduce") 
         global_precision = xm.mesh_reduce("precision", precision.item(), lambda x: sum(x) / len(x)) 
         global_recall = xm.mesh_reduce("recall", recall.item(), lambda x: sum(x) / len(x)) 
-        global_f1 = xm.mesh_reduce("f1", f1.item(), lambda x: sum(x) / len(x))         
+        global_f1 = xm.mesh_reduce("f1", f1.item(), lambda x: sum(x) / len(x))
         
-        xm.master_print("reading annotations for vqa accuracy") 
-        annotation_file = self.annotations_paths[0]
-        question_file = self.questions_paths[0]
-
-        xm.master_print(f"annotation_file: {annotation_file}")
-        xm.master_print(f"question_file: {question_file}")
-
-        xm.master_print("calling VQA(annotation_file, question_file)")
-        vqa = VQA(annotation_file, question_file)
-
-        xm.master_print("vqa.loadRes")
-        vqaRes = vqa.loadRes(predictions, question_file)
-
-        xm.master_print("VQAEval(vqa, vqaRes, n=2)")
-        vqaEval = VQAEval(vqa, vqaRes, n=2)
-
-        xm.master_print("vqaEval.evaluate()")        
-        vqaEval.evaluate()
-
-        accuracy = vqaEval.accuracy['overall']
-        accuracy = torch.tensor(accuracy, device=self.device
-                                )
-        per_answer_type = vqaEval.accuracy['perAnswerType']
-        per_answer_type = torch.tensor(per_answer_type, device=self.device)
-
-        per_question_type = vqaEval.accuracy['perQuestionType']
-        per_question_type = torch.tensor(per_question_type, device=self.device)
+        def merge_predictions(predictions):
+            return [item for sublist in predictions for item in sublist]
         
-        global_eval_accuracy = xm.mesh_reduce("eval_accuracy", accuracy.item(), lambda x: sum(x) / len(x))
-        global_per_answer_type = xm.mesh_reduce("eval_accuracy", per_answer_type.item(), lambda x: sum(x) / len(x))
-        global_per_question_type = xm.mesh_reduce("eval_accuracy", per_question_type.item(), lambda x: sum(x) / len(x))
+        predictions = xm.mesh_reduce("predictions", predictions, merge_predictions)
 
-        xm.master_print(f"accuracy: {global_eval_accuracy}")        
-        xm.master_print(f"global_per_answer_type: {global_per_answer_type}")        
-        xm.master_print(f"global_per_question_type: {global_per_question_type}")        
-
-        after_time = time()
-        elapsed_time = str(datetime.timedelta(seconds=(after_time - before_time)))
-
+        xm.master_print(f"N merged predictions: {len(predictions)}")
+                                                
         if xm.is_master_ordinal():
-            self.log.append(f"{global_eval_accuracy}\t{global_per_answer_type}\t{global_per_question_type}\t{global_precision}\t{global_recall}\t{global_f1}\t{elapsed_time}")
+
+            xm.master_print("reading annotations for vqa accuracy") 
+            annotation_file = self.annotations_paths[0]
+            question_file = self.questions_paths[0]
+
+            xm.master_print(f"annotation_file: {annotation_file}")
+            xm.master_print(f"question_file: {question_file}")
+
+            xm.master_print("calling VQA(annotation_file, question_file)")
+            vqa = VQA(annotation_file, question_file)
+
+            xm.master_print("vqa.loadRes")
+            vqaRes = vqa.loadRes(predictions, question_file)
+
+            xm.master_print("VQAEval(vqa, vqaRes, n=2)")
+            vqaEval = VQAEval(vqa, vqaRes, n=2)
+
+            xm.master_print("vqaEval.evaluate()")        
+            vqaEval.evaluate()
+
+            accuracy = vqaEval.accuracy['overall']                                    
+            per_answer_type = vqaEval.accuracy['perAnswerType']            
+            per_question_type = vqaEval.accuracy['perQuestionType']            
+
+            after_time = time()
+            elapsed_time = str(datetime.timedelta(seconds=(after_time - before_time)))
+        
+            self.log.append(f"{accuracy}\t{per_answer_type}\t{per_question_type}\t{global_precision}\t{global_recall}\t{global_f1}\t{elapsed_time}")
             file_path = os.path.join(self.config.run.output_dir,"eval_output.txt")
             file_exists = os.path.exists(file_path)
 
