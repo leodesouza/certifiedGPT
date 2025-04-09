@@ -106,20 +106,39 @@ class MiniGPT4EvalAgent(BaseAgent):
                        generate(image, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False, calc_probs=False))
             xm.mark_step()
 
-            for p_answer, g_answer, question_id, question, img_id in zip(predicted_answers, ground_truth_answers, question_ids, questions, img_ids):
+            # for p_answer, g_answer, question_id, question, img_id in zip(predicted_answers, ground_truth_answers, question_ids, questions, img_ids):
+            #     result = dict()                                
+            #     if isinstance(p_answer, str):
+            #         clean_answer = p_answer.replace('#','')
+            #         p_answer = clean_answer.lower().replace('<unk>','').strip()
+            #     result['answer'] = p_answer
+            #     result['question_id'] = int(question_id)
+            #     predictions.append(result)
+
+            #     if isinstance(g_answer, str):
+            #         clean_answer = g_answer.replace('#','')
+            #         g_answer = clean_answer.lower().replace('<unk>','').strip()
+            #     self.prepare_for_bertscore(p_answer, g_answer)                                        
+
+            for p_answer, g_answer, in zip(predicted_answers, ground_truth_answers):
+                
+                if isinstance(p_answer, str):
+                    clean_answer = p_answer.replace('#','')
+                    p_answer = clean_answer.lower().replace('<unk>','').strip()
+
+                if isinstance(g_answer, str):
+                    clean_answer = g_answer.replace('#','')
+                    g_answer = clean_answer.lower().replace('<unk>','').strip()
+                self.prepare_for_bertscore(p_answer, g_answer)                                        
+
+            for p_answer, question_id, question, img_id in zip(predicted_answers, question_ids, questions, img_ids):
                 result = dict()                                
                 if isinstance(p_answer, str):
                     clean_answer = p_answer.replace('#','')
                     p_answer = clean_answer.lower().replace('<unk>','').strip()
                 result['answer'] = p_answer
                 result['question_id'] = int(question_id)
-                predictions.append(result)
-
-                if isinstance(g_answer, str):
-                    clean_answer = g_answer.replace('#','')
-                    g_answer = clean_answer.lower().replace('<unk>','').strip()
-                self.prepare_for_bertscore(p_answer, g_answer)                                        
-            
+                predictions.append(result)                
 
         xm.master_print("computing the best score")        
         precision, recall, f1 = self.compute_bertscore(self._predictions, self._ground_truth_answers)
