@@ -213,7 +213,7 @@ class MiniGPT4EvalAgent(BaseAgent):
         tokens_ground_truths = [[word_tokenize(g)] for g in ground_truths]
         weights_blue1 = (1,0,0,0)        
         score = corpus_bleu(tokens_ground_truths, tokens_predictions, weights=weights_blue1, smoothing_function=self.smooth_fn)        
-        score.to(self.device)
+        score = torch.tensor(score, device=self.device)        
         return score
 
     def finalize(self):
