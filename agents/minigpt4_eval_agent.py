@@ -126,28 +126,28 @@ class MiniGPT4EvalAgent(BaseAgent):
         precision, recall, f1 = self.compute_bertscore(self._predictions, self._ground_truth_answers)
 
         xm.master_print("computing blue score")        
-        blue = self.compute_bluescore(self._predictions, self._ground_truth_answers)
+        bleu = self.compute_bleuscore(self._predictions, self._ground_truth_answers)
         
-        xm.master_print(f"local scores -> precision: {precision}, recall: {recall}, f1: {f1}") 
+        xm.master_print(f"local scores -> precision: {precision}, recall: {recall}, f1: {f1}, bleu: {bleu}") 
         xm.master_print("finished computing bert score")
                 
         xm.master_print("mesh_reduce") 
         global_precision = xm.mesh_reduce("precision", precision.item(), lambda x: sum(x) / len(x)) 
         global_recall = xm.mesh_reduce("recall", recall.item(), lambda x: sum(x) / len(x)) 
         global_f1 = xm.mesh_reduce("f1", f1.item(), lambda x: sum(x) / len(x))
-        global_blue_score = xm.mesh_reduce("blue", blue.item(), lambda x: sum(x) / len(x))                        
+        global_bleu_score = xm.mesh_reduce("blue", bleu.item(), lambda x: sum(x) / len(x))                        
                                                 
         if xm.is_master_ordinal():               
             after_time = time()
             elapsed_time = str(datetime.timedelta(seconds=(after_time - before_time)))
         
-            self.log.append(f"{global_precision}\t{global_recall}\t{global_f1}\t{global_blue_score}\t{elapsed_time}")
+            self.log.append(f"{global_precision}\t{global_recall}\t{global_f1}\t{global_bleu_score}\t{elapsed_time}")
             file_path = os.path.join(self.config.run.output_dir,"eval_output.txt")
             file_exists = os.path.exists(file_path)
 
             with open(file_path, 'a') as f:
                 if not file_exists:
-                    f.write("precision\trecall\tf1\tblue\ttime")
+                    f.write("precision\trecall\tf1\tbleu\ttime\n")
                 f.write("\n".join(self.log) + "\n")          
 
         xm.master_print(f"Eval ended: {(test_utils.now())}")
@@ -208,11 +208,11 @@ class MiniGPT4EvalAgent(BaseAgent):
                 
         return p.mean(), r.mean(), f1.mean()
     
-    def compute_bluescore(self, predictions, ground_truths):                
+    def compute_bleuscore(self, predictions, ground_truths):                
         tokens_predictions = [word_tokenize(p) for p in predictions]
         tokens_ground_truths = [[word_tokenize(g)] for g in ground_truths]
-        weights_blue1 = (1,0,0,0)        
-        score = corpus_bleu(tokens_ground_truths, tokens_predictions, weights=weights_blue1, smoothing_function=self.smooth_fn)        
+        weights_bleu_1 = (1,0,0,0)        
+        score = corpus_bleu(tokens_ground_truths, tokens_predictions, weights=weights_bleu_1, smoothing_function=self.smooth_fn)        
         score = torch.tensor(score, device=self.device)        
         return score
 
