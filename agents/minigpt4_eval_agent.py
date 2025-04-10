@@ -37,6 +37,10 @@ from graphs.models.minigpt4.conversation.conversation import CONV_VISION_LLama2
 from bert_score import score 
 import datetime
 from time import time
+
+import nltk
+nltk.download('punkt_tab')
+
 from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction 
 from nltk.tokenize import word_tokenize
 
@@ -86,12 +90,14 @@ class MiniGPT4EvalAgent(BaseAgent):
         conv_temp = CONV_VISION_LLama2.copy()
         conv_temp.system = ""
 
-        xm.master_print(f"Eval started: {(test_utils.now())}")
-        predictions = []        
+        xm.master_print(f"Eval started: {(test_utils.now())}")        
         before_time = time()        
         self.model.eval()        
         for step, batch_sample in enumerate(val_loader):
-                        
+            
+            if step > 0:
+                continue
+
             xm.master_print(f"Eval step: {step} - {(test_utils.now())}")            
             self.maybe_add_noise(batch_sample, self.config.run.noise_level)
 
