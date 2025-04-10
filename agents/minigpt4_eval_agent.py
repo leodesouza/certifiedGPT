@@ -37,11 +37,12 @@ from graphs.models.minigpt4.conversation.conversation import CONV_VISION_LLama2
 from bert_score import score 
 import datetime
 from time import time
+from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction 
+from nltk.tokenize import word_tokenize
 
 # rank and world size are inferred from XLA Device
 # source: https://github.com/pytorch/xla/
 dist.init_process_group(backend='xla', init_method='xla://')
-
 
 @registry.register_agent("image_text_eval")
 class MiniGPT4EvalAgent(BaseAgent):
@@ -52,9 +53,9 @@ class MiniGPT4EvalAgent(BaseAgent):
         self._model = self.build_model()
         self._tpu_metrics = TPUMetrics()
         self.questions_paths = None
-        self.annotations_paths = None
-        # self.bertscore = self.load_bertscore()
-        self.log = []
+        self.annotations_paths = None        
+        self.log = []        
+        self.smooth_fn = SmoothingFunction().method1
 
     def run(self):
         try:
@@ -88,7 +89,7 @@ class MiniGPT4EvalAgent(BaseAgent):
         xm.master_print(f"Eval started: {(test_utils.now())}")
         predictions = []        
         before_time = time()        
-        self.model.eval()
+        self.model.eval()        
         for step, batch_sample in enumerate(val_loader):
                         
             xm.master_print(f"Eval step: {step} - {(test_utils.now())}")            
@@ -106,23 +107,22 @@ class MiniGPT4EvalAgent(BaseAgent):
                        generate(image, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False, calc_probs=False))
             xm.mark_step()
 
-            for p_answer, g_answer, question_id, question, img_id in zip(predicted_answers, ground_truth_answers, question_ids, questions, img_ids):
-                result = dict()                                
+            for p_answer, g_answer in zip(predicted_answers, ground_truth_answers):                
                 if isinstance(p_answer, str):
                     clean_answer = p_answer.replace('#','')
                     p_answer = clean_answer.lower().replace('<unk>','').strip()
-                result['answer'] = p_answer
-                result['question_id'] = int(question_id)
-                predictions.append(result)
-
+                
                 if isinstance(g_answer, str):
                     clean_answer = g_answer.replace('#','')
                     g_answer = clean_answer.lower().replace('<unk>','').strip()
-                self.prepare_for_bertscore(p_answer, g_answer)                                        
+                self.prepare_for_compute_scores(p_answer, g_answer)                                        
          
 
-        xm.master_print("computing the best score")        
+        xm.master_print("computing bert score")        
         precision, recall, f1 = self.compute_bertscore(self._predictions, self._ground_truth_answers)
+
+        xm.master_print("computing blue score")        
+        blue = self.compute_bluescore(self._predictions, self._ground_truth_answers)
         
         xm.master_print(f"local scores -> precision: {precision}, recall: {recall}, f1: {f1}") 
         xm.master_print("finished computing the best score")
@@ -131,54 +131,24 @@ class MiniGPT4EvalAgent(BaseAgent):
         global_precision = xm.mesh_reduce("precision", precision.item(), lambda x: sum(x) / len(x)) 
         global_recall = xm.mesh_reduce("recall", recall.item(), lambda x: sum(x) / len(x)) 
         global_f1 = xm.mesh_reduce("f1", f1.item(), lambda x: sum(x) / len(x))
-        
-        def merge_predictions(predictions):
-            return [item for sublist in predictions for item in sublist]
-        
-        predictions = xm.mesh_reduce("predictions", predictions, merge_predictions)
-
-        xm.master_print(f"N merged predictions: {len(predictions)}")
+        global_blue_score = xm.mesh_reduce("blue", blue.item(), lambda x: sum(x) / len(x))                        
                                                 
-        if xm.is_master_ordinal():
-
-            xm.master_print("reading annotations for vqa accuracy") 
-            annotation_file = self.annotations_paths[0]
-            question_file = self.questions_paths[0]
-
-            xm.master_print(f"annotation_file: {annotation_file}")
-            xm.master_print(f"question_file: {question_file}")
-
-            xm.master_print("calling VQA(annotation_file, question_file)")
-            vqa = VQA(annotation_file, question_file)
-
-            xm.master_print("vqa.loadRes")
-            vqaRes = vqa.loadRes(predictions, question_file)
-
-            xm.master_print("VQAEval(vqa, vqaRes, n=2)")
-            vqaEval = VQAEval(vqa, vqaRes, n=2)
-
-            xm.master_print("vqaEval.evaluate()")        
-            vqaEval.evaluate()
-
-            accuracy = vqaEval.accuracy['overall']                                    
-            per_answer_type = vqaEval.accuracy['perAnswerType']            
-            per_question_type = vqaEval.accuracy['perQuestionType']            
-
+        if xm.is_master_ordinal():               
             after_time = time()
             elapsed_time = str(datetime.timedelta(seconds=(after_time - before_time)))
         
-            self.log.append(f"{accuracy}\t{per_answer_type}\t{per_question_type}\t{global_precision}\t{global_recall}\t{global_f1}\t{elapsed_time}")
+            self.log.append(f"{global_precision}\t{global_recall}\t{global_f1}\t{global_blue_score}\t{elapsed_time}")
             file_path = os.path.join(self.config.run.output_dir,"eval_output.txt")
             file_exists = os.path.exists(file_path)
 
             with open(file_path, 'a') as f:
                 if not file_exists:
-                    f.write("overall_accuracy\tperAnswerType\tperQuestionType\tprecision\trecall\tf1\ttime")
+                    f.write("precision\trecall\tf1\tblue\ttime")
                 f.write("\n".join(self.log) + "\n")          
 
         xm.master_print(f"Eval ended: {(test_utils.now())}")
 
-    def prepare_for_bertscore(self, prediction, groud_truth_answer):
+    def prepare_for_compute_scores(self, prediction, groud_truth_answer):
         
         if prediction.strip() == "":
             xm.master_print("empty prediction detected")
@@ -192,20 +162,7 @@ class MiniGPT4EvalAgent(BaseAgent):
 
         self._predictions.append(prediction)
         self._ground_truth_answers.append(groud_truth_answer)
-
-        # question
-        # xm.master_print(f"__questions: {self.__questions}")
-        # xm.master_print(f"__imageId: {self.__imageIds}")
-        # xm.master_print(f"_predictions: {self._predictions}")
-        # xm.master_print(f"_ground_truth_answers: {self._ground_truth_answers}")
-
-    def load_bertscore(self):
-        xm.master_print("Loading bertscore")
-        self.bertscore = load("bertscore")
-        xm.master_print("Loading bertscore Done !")
-
-    def exact_match(pred, answers):
-        return 1 if pred in answers else 0
+            
 
     def compute_f1score(pred, answers):        
         pred_tokens =  nlkt.word_tokenize(pred.lower()) # or llama tokenizer
@@ -246,6 +203,14 @@ class MiniGPT4EvalAgent(BaseAgent):
         f1 = f1.to(self.device)
                 
         return p.mean(), r.mean(), f1.mean()
+    
+    def compute_bluescore(self, predictions, ground_truths):                
+        tokens_predictions = [word_tokenize(p) for p in predictions]
+        tokens_ground_truths = [[word_tokenize(g)] for g in ground_truths]
+        weights_blue1 = (1,0,0,0)
+        # weights_blue2 = (0.5, 0.5, 0, 0)
+        score = corpus_bleu(tokens_ground_truths, tokens_predictions, weights=weights_blue1, smoothing_function=self.smooth_fn)        
+        return score
 
     def finalize(self):
         pass
