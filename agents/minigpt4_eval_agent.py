@@ -94,7 +94,10 @@ class MiniGPT4EvalAgent(BaseAgent):
         before_time = time()        
         self.model.eval()        
         for step, batch_sample in enumerate(val_loader):
-                        
+
+            if step > 0:
+                continue
+                                    
             xm.master_print(f"Eval step: {step} - {(test_utils.now())}")            
             self.maybe_add_noise(batch_sample, self.config.run.noise_level)
 
