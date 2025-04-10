@@ -97,7 +97,7 @@ class MiniGPT4EvalAgent(BaseAgent):
 
             if step > 0:
                 continue
-                                    
+
             xm.master_print(f"Eval step: {step} - {(test_utils.now())}")            
             self.maybe_add_noise(batch_sample, self.config.run.noise_level)
 
@@ -218,6 +218,12 @@ class MiniGPT4EvalAgent(BaseAgent):
         score = corpus_bleu(tokens_ground_truths, tokens_predictions, weights=weights_bleu_1, smoothing_function=self.smooth_fn)        
         score = torch.tensor(score, device=self.device)        
         return score
+    
+    def compute_chairi_score(self, predictions, ground_truths):
+        with open("json_file_name") as f:
+            image_objects = json.load(f)
+            
+
 
     def finalize(self):
         pass
