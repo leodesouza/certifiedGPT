@@ -28,7 +28,7 @@ model:
 
 datasets:  
   evalvqav2:    
-    batch_size: 128
+    batch_size: 100
     vis_processor:
       val:
         name: "blip2_image_val"

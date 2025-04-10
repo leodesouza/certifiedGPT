@@ -94,10 +94,7 @@ class MiniGPT4EvalAgent(BaseAgent):
         before_time = time()        
         self.model.eval()        
         for step, batch_sample in enumerate(val_loader):
-            
-            if step > 0:
-                continue
-
+                        
             xm.master_print(f"Eval step: {step} - {(test_utils.now())}")            
             self.maybe_add_noise(batch_sample, self.config.run.noise_level)
 
@@ -190,6 +187,9 @@ class MiniGPT4EvalAgent(BaseAgent):
 
         return max(f1_scores)
 
+    def clean_text(self, text):
+        return text.replace("#", "").lower().replace("<unk>","").strip()
+    
     def compute_bias(predictions):
         pred_counter = Counter(predictions)
         top_preds = pred_counter.most_common(10)
