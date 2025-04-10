@@ -102,10 +102,8 @@ class MiniGPT4EvalAgent(BaseAgent):
             self.maybe_add_noise(batch_sample, self.config.run.noise_level)
 
             image = batch_sample["image"]
-            questions = batch_sample["instruction_input"]
-            question_ids = batch_sample["question_id"]
-            ground_truth_answers = batch_sample["answer"]
-            img_ids = batch_sample["image_id"]
+            questions = batch_sample["instruction_input"]            
+            ground_truth_answers = batch_sample["answer"]            
 
             texts = self.prepare_texts(questions, conv_temp)
 
@@ -131,7 +129,7 @@ class MiniGPT4EvalAgent(BaseAgent):
         blue = self.compute_bluescore(self._predictions, self._ground_truth_answers)
         
         xm.master_print(f"local scores -> precision: {precision}, recall: {recall}, f1: {f1}") 
-        xm.master_print("finished computing the best score")
+        xm.master_print("finished computing bert score")
                 
         xm.master_print("mesh_reduce") 
         global_precision = xm.mesh_reduce("precision", precision.item(), lambda x: sum(x) / len(x)) 
@@ -213,9 +211,9 @@ class MiniGPT4EvalAgent(BaseAgent):
     def compute_bluescore(self, predictions, ground_truths):                
         tokens_predictions = [word_tokenize(p) for p in predictions]
         tokens_ground_truths = [[word_tokenize(g)] for g in ground_truths]
-        weights_blue1 = (1,0,0,0)
-        # weights_blue2 = (0.5, 0.5, 0, 0)
+        weights_blue1 = (1,0,0,0)        
         score = corpus_bleu(tokens_ground_truths, tokens_predictions, weights=weights_blue1, smoothing_function=self.smooth_fn)        
+        score.to(self.device)
         return score
 
     def finalize(self):
