@@ -61,6 +61,7 @@ class VQAEval:
         for idx, (gt, pred, ans_type) in enumerate(zip(self.gts, self.preds, self.answers_type)):
             print(f"ans_type: {ans_type}")
             if ans_type in ["yes/no", "number"]:
+                print("calc accur...")
                 norm_gt = self.normalize_answer(gt)
                 norm_pred = self.normalize_answer(pred)
                 acc = 1.0 if norm_gt == norm_pred else 0.0
