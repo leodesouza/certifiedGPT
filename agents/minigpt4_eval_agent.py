@@ -60,8 +60,7 @@ class MiniGPT4EvalAgent(BaseAgent):
         self._questions_paths = None
         self._annotations_paths = None
         self._log = []
-        self._smooth_fn = SmoothingFunction().method1
-        self._coco_val2014_annotations = load_coco_val2014_annotations()        
+        self._smooth_fn = SmoothingFunction().method1        
         self._ground_truth_answers = []
         self._predictions = []
 
