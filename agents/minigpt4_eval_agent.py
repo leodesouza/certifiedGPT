@@ -128,7 +128,7 @@ class MiniGPT4EvalAgent(BaseAgent):
                     g_answer = str(g_answer)
                 clean_answer = g_answer.replace('#','')
                 g_answer = clean_answer.lower().replace('<unk>','').strip()                
-                self.prepare_for_compute_scores(p_answer, g_answer)   
+                self.prepare_for_compute_scores(p_answer, g_answer, answer_type)   
                                     
         accuracy = self.compute_vqa_accuracy()  
 
