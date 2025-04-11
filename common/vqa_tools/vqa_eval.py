@@ -5,7 +5,7 @@ class VQAEval:
         """
         gts: dict mapping question_id to a list of ground truth answers
         preds: dict mapping question_id to predicted answer
-        """
+        """        
         self.gts = gts or {}
         self.preds = preds or {}
         self.accuracy = {}
