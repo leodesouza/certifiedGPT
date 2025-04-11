@@ -60,9 +60,9 @@ class MiniGPT4EvalAgent(BaseAgent):
         self._questions_paths = None
         self._annotations_paths = None
         self._log = []
-        self._smooth_fn = SmoothingFunction().method1        
-        self._ground_truth_answers = []
-        self._predictions = []
+        self._smooth_fn = SmoothingFunction().method1                
+        self._prediction_dict  = {}
+        self._groud_truth_answer_dict = {}
 
     def run(self):
         try:
@@ -105,14 +105,10 @@ class MiniGPT4EvalAgent(BaseAgent):
             self.maybe_add_noise(batch_sample, self.config.run.noise_level)
             
             image = batch_sample["image"]
-            questions = batch_sample["instruction_input"]
-            question_ids = batch_sample["question_id"]
-            image_ids = batch_sample["image_id"]
+            question_ids = batch_sample["question_id"]            
+            questions = batch_sample["instruction_input"]            
             ground_truth_answers = batch_sample["answer"]
-            batch_sample["answer_type"]
-
-            print(f"batch_sample: {batch_sample}")
-            raise ValueError("batch_sample test")
+            answers_type = batch_sample["answer_type"]
             
             texts = self.prepare_texts(questions, conv_temp)
 
@@ -120,7 +116,7 @@ class MiniGPT4EvalAgent(BaseAgent):
                        generate(image, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False, calc_probs=False))
             xm.mark_step()
 
-            for p_answer, g_answer, question_id, image_id, qquestions in zip(predicted_answers, ground_truth_answers, question_ids, image_ids, questions):
+            for question_id, p_answer, g_answer, ans_type in zip(question_ids, predicted_answers, ground_truth_answers, answers_type):
                 if isinstance(p_answer, str):
                     clean_answer = p_answer.replace('#','')
                     p_answer = clean_answer.lower().replace('<unk>','').strip()
@@ -128,13 +124,18 @@ class MiniGPT4EvalAgent(BaseAgent):
                 if isinstance(g_answer, str):
                     clean_answer = g_answer.replace('#','')
                     g_answer = clean_answer.lower().replace('<unk>','').strip()
-                self.prepare_for_compute_scores(p_answer, g_answer)                
+                self.prepare_for_compute_scores(question_id, p_answer, g_answer)   
+
+        xm.master_print("computing vqa accuracy")        
+        overall, per_question = self.compute_vqa_accuracy()
+        xm.master_print(f"overall: {overall}")
+        xm.master_print(f"per_question: {per_question}")
 
         xm.master_print("computing bert score")        
-        precision, recall, f1 = self.compute_bertscore(self._predictions, self._ground_truth_answers)
+        precision, recall, f1 = self.compute_bertscore()
 
         xm.master_print("computing blue score")        
-        bleu = self.compute_bleuscore(self._predictions, self._ground_truth_answers)
+        bleu = self.compute_bleuscore()
         
         xm.master_print("mesh_reduce") 
         global_precision = xm.mesh_reduce("precision", precision.item(), lambda x: sum(x) / len(x)) 
@@ -142,7 +143,8 @@ class MiniGPT4EvalAgent(BaseAgent):
         global_f1 = xm.mesh_reduce("f1", f1.item(), lambda x: sum(x) / len(x))
         global_bleu_score = xm.mesh_reduce("blue", bleu.item(), lambda x: sum(x) / len(x))        
                                                 
-        if xm.is_master_ordinal():               
+        if xm.is_master_ordinal():
+                       
             after_time = time()
             elapsed_time = str(datetime.timedelta(seconds=(after_time - before_time)))
         
@@ -156,20 +158,33 @@ class MiniGPT4EvalAgent(BaseAgent):
                 f.write("\n".join(self._log) + "\n")
 
         xm.master_print(f"Eval ended: {(test_utils.now())}")
-
-    def prepare_for_compute_scores(self, prediction, groud_truth_answer):
+    
+    def prepare_for_compute_scores(self, question_id, prediction, groud_truth_answer):
         
         if prediction.strip() == "":
             xm.master_print("empty prediction detected")
             prediction = "[EMPTY]"
 
-        self._predictions.append(prediction)
-        self._ground_truth_answers.append(groud_truth_answer)
+        self._prediction_dict = {question_id: [prediction]}                                        
+        self._groud_truth_answer_dict = {question_id: [groud_truth_answer]}                
 
+    def compute_vqa_accuracy(self):
+        evaluator = VQAEval(self._groud_truth_answer_dict, self._prediction_dict)
+        evaluator.evaluate()
+        overall_acuracy = evaluator.get_accuracy()
+        overall_acuracy = torch.tensor(overall_acuracy, device=self.device)
+        per_question_accuracy = evaluator.get_per_question_accuracy()
+        per_question_accuracy = torch.tensor(per_question_accuracy, device=self.device)
+
+        return overall_acuracy, per_question_accuracy 
+        
     def clean_text(self, text):
         return text.replace("#", "").lower().replace("<unk>","").strip()
     
-    def compute_bertscore(self, predictions, ground_truths):                
+    def compute_bertscore(self):                
+        predictions = [p for p in self._prediction_dict.values()]
+        ground_truths = [g for g in self._groud_truth_answer_dict.values()]
+
         p, r, f1 = score(predictions, ground_truths, lang="en")                
         xm.mark_step()
         
@@ -179,7 +194,11 @@ class MiniGPT4EvalAgent(BaseAgent):
                 
         return p.mean(), r.mean(), f1.mean()
     
-    def compute_bleuscore(self, predictions, ground_truths):                
+    def compute_bleuscore(self):               
+
+        predictions = [p for p in self._prediction_dict.values()]
+        ground_truths = [g for g in self._groud_truth_answer_dict.values()]
+
         tokens_predictions = [word_tokenize(p) for p in predictions]
         tokens_ground_truths = [[word_tokenize(g)] for g in ground_truths]
         weights_bleu_1 = (1,0,0,0)        
