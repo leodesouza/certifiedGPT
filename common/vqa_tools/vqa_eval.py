@@ -6,7 +6,7 @@ class VQAEval:
         gts: list of ground truth answers (strings)
         preds: list of predicted answers (strings)
         """
-        if gts is None or preds is None or self.answers_type is None:
+        if gts is None or preds is None or answers_type is None:
             raise ValueError("Both gts, preds and answers_type must be provided")
         if len(gts) != len(preds):
             raise ValueError("Length of ground truth list and prediction list must match")
