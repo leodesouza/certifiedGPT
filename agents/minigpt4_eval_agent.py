@@ -130,9 +130,9 @@ class MiniGPT4EvalAgent(BaseAgent):
                 self.prepare_for_compute_scores(p_answer, g_answer)   
                             
         xm.master_print("computing vqa accuracy")        
-        overall, per_question = self.compute_vqa_accuracy()
+        overall = self.compute_vqa_accuracy()
         xm.master_print(f"overall: {overall}")
-        xm.master_print(f"per_question: {per_question}")
+        
 
         xm.master_print("computing bert score")        
         precision, recall, f1 = self.compute_bertscore()
@@ -177,13 +177,10 @@ class MiniGPT4EvalAgent(BaseAgent):
 
         evaluator = VQAEval(self._ground_truths, self._predictions)
         evaluator.evaluate()
-        overall_acuracy = evaluator.get_accuracy()
-        print(overall_acuracy)
-        overall_acuracy = torch.tensor(overall_acuracy, device=self.device)
-        per_question_accuracy = evaluator.get_per_question_accuracy()
-        per_question_accuracy = torch.tensor(per_question_accuracy, device=self.device)
+        overall_acuracy = evaluator.get_accuracy()        
+        overall_acuracy = torch.tensor(overall_acuracy, device=self.device)        
 
-        return overall_acuracy, per_question_accuracy 
+        return overall_acuracy
         
     def clean_text(self, text):
         return text.replace("#", "").lower().replace("<unk>","").strip()
