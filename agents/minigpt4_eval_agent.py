@@ -63,8 +63,7 @@ class MiniGPT4EvalAgent(BaseAgent):
         self._annotations_paths = None
         self._log = []
         self._smooth_fn = SmoothingFunction().method1
-        self._coco_val2014_annotations = load_coco_val2014_annotations()
-        self._predictions_for_charii = []
+        self._coco_val2014_annotations = load_coco_val2014_annotations()        
         self._ground_truth_answers = []
         self._predictions = []
 
@@ -107,13 +106,16 @@ class MiniGPT4EvalAgent(BaseAgent):
 
             xm.master_print(f"Eval step: {step} - {(test_utils.now())}")            
             self.maybe_add_noise(batch_sample, self.config.run.noise_level)
-
+            
             image = batch_sample["image"]
             questions = batch_sample["instruction_input"]
             question_ids = batch_sample["question_id"]
             image_ids = batch_sample["image_id"]
             ground_truth_answers = batch_sample["answer"]
+            batch_sample["answer_type"]
 
+            print(f"batch_sample: {batch_sample}")
+            
             texts = self.prepare_texts(questions, conv_temp)
 
             predicted_answers, _ = (self.model.
@@ -128,36 +130,31 @@ class MiniGPT4EvalAgent(BaseAgent):
                 if isinstance(g_answer, str):
                     clean_answer = g_answer.replace('#','')
                     g_answer = clean_answer.lower().replace('<unk>','').strip()
-                self.prepare_for_compute_scores(p_answer, g_answer)
-                self.prepare_for_compute_charii(qquestions, p_answer,image_id)
+                self.prepare_for_compute_scores(p_answer, g_answer)                
 
-        # xm.master_print("computing bert score")        
-        # precision, recall, f1 = self.compute_bertscore(self._predictions, self._ground_truth_answers)
+        xm.master_print("computing bert score")        
+        precision, recall, f1 = self.compute_bertscore(self._predictions, self._ground_truth_answers)
 
-        # xm.master_print("computing blue score")        
-        # bleu = self.compute_bleuscore(self._predictions, self._ground_truth_answers)
-
-        xm.master_print("computing charii score")
-        charii = self.compute_chairi_score(self._predictions_for_charii)
-
+        xm.master_print("computing blue score")        
+        bleu = self.compute_bleuscore(self._predictions, self._ground_truth_answers)
+        
         xm.master_print("mesh_reduce") 
         global_precision = xm.mesh_reduce("precision", precision.item(), lambda x: sum(x) / len(x)) 
         global_recall = xm.mesh_reduce("recall", recall.item(), lambda x: sum(x) / len(x)) 
         global_f1 = xm.mesh_reduce("f1", f1.item(), lambda x: sum(x) / len(x))
-        global_bleu_score = xm.mesh_reduce("blue", bleu.item(), lambda x: sum(x) / len(x))
-        global_charii_score = xm.mesh_reduce("charii", charii.item(), lambda x: sum(x) / len(x))
+        global_bleu_score = xm.mesh_reduce("blue", bleu.item(), lambda x: sum(x) / len(x))        
                                                 
         if xm.is_master_ordinal():               
             after_time = time()
             elapsed_time = str(datetime.timedelta(seconds=(after_time - before_time)))
         
-            self._log.append(f"{global_precision}\t{global_recall}\t{global_f1}\t{global_bleu_score}\t{global_charii_score}\t{elapsed_time}")
+            self._log.append(f"{global_precision}\t{global_recall}\t{global_f1}\t{global_bleu_score}\t{elapsed_time}")
             file_path = os.path.join(self.config.run.output_dir,"eval_output.txt")
             file_exists = os.path.exists(file_path)
 
             with open(file_path, 'a') as f:
                 if not file_exists:
-                    f.write("precision\trecall\tf1\tbleu\tcharii\time\n")
+                    f.write("precision\trecall\tf1\tbleu\ttime\n")
                 f.write("\n".join(self._log) + "\n")
 
         xm.master_print(f"Eval ended: {(test_utils.now())}")
@@ -170,9 +167,6 @@ class MiniGPT4EvalAgent(BaseAgent):
 
         self._predictions.append(prediction)
         self._ground_truth_answers.append(groud_truth_answer)
-
-    def prepare_for_compute_charii(self, question, prediction, image_id):
-        self._predictions_for_charii.append({"question": question, "prediction": prediction, "image_id": image_id})
 
     def clean_text(self, text):
         return text.replace("#", "").lower().replace("<unk>","").strip()
@@ -194,34 +188,6 @@ class MiniGPT4EvalAgent(BaseAgent):
         score = corpus_bleu(tokens_ground_truths, tokens_predictions, weights=weights_bleu_1, smoothing_function=self._smooth_fn)
         score = torch.tensor(score, device=self.device)        
         return score
-
-    def compute_chairi_score(self, predictions):
-        image_objects = self._coco_val2014_annotations
-        hallucinated = 0
-        total = 0
-        for pred in predictions:
-            p = pred["prediction"]
-            words = p.lower().replace(".", "").split()
-            print(f"words: {words}")            
-            image_id = pred["image_id"]
-            category_ids = {item["category_id"] for item in image_objects["annotations"] if item["image_id"] == image_id}
-            objects_in_images = [g["name"] for g in image_objects["categories"] if g["id"] in category_ids]
-            question = pred["question"]
-            print(f"question: {question}")
-            print(f"objects: {objects_in_images}")            
-            print(f"image_id: {image_id}")            
-
-            if any(w not in objects_in_images for w in words):
-                hallucinated += 1
-            total += 1
-            print(f"hallucinated?: {(hallucinated > 0)}")            
-            raise ValueError("teste")
-        chairii = hallucinated / total
-        chairii = torch.tensor(chairii, device=self._device)
-        # print(f"CHAIRi: {chairi:.4f}")
-        return chairii
-
-
 
 
     def finalize(self):

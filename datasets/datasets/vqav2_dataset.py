@@ -99,6 +99,8 @@ class VQAv2Dataset(BaseDataset):
                 raise ValueError(
                     f"Invalid or missing question for question_id {question_id}"
                 )
+            
+            answer_type = annotation.get("answer_type")
                         
             image_id = annotation.get("image_id")                                
             file_name = f"COCO_{self.split}2014_{image_id:012d}.jpg"
@@ -146,7 +148,8 @@ class VQAv2Dataset(BaseDataset):
                 "question": question,
                 "question_id": question_id,
                 "answer": answer,
-                "image_id": image_id
+                "image_id": image_id,
+                "answer_type": answer_type
             }
         except Exception as e:
             print(f"Error at index:{index}{e}")
@@ -162,7 +165,8 @@ class VQAv2Dataset(BaseDataset):
             "question_id": data["question_id"],
             "instruction_input": instruction,
             "answer": data["answer"],
-            "image_id": data["image_id"]
+            "image_id": data["image_id"],
+            "answer_type": data["answer_type"]
         }       
 
     @property
