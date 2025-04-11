@@ -120,7 +120,7 @@ class MiniGPT4EvalAgent(BaseAgent):
                        generate(image, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False, calc_probs=False))
             xm.mark_step()
 
-            for p_answer, g_answer, question_id, image_id in zip(predicted_answers, ground_truth_answers, question_ids, image_ids):
+            for p_answer, g_answer, question_id, image_id, qquestions in zip(predicted_answers, ground_truth_answers, question_ids, image_ids, questions):
                 if isinstance(p_answer, str):
                     clean_answer = p_answer.replace('#','')
                     p_answer = clean_answer.lower().replace('<unk>','').strip()
@@ -129,7 +129,7 @@ class MiniGPT4EvalAgent(BaseAgent):
                     clean_answer = g_answer.replace('#','')
                     g_answer = clean_answer.lower().replace('<unk>','').strip()
                 self.prepare_for_compute_scores(p_answer, g_answer)
-                self.prepare_for_compute_charii(p_answer, p_answer,image_id)
+                self.prepare_for_compute_charii(qquestions, p_answer,image_id)
 
         # xm.master_print("computing bert score")        
         # precision, recall, f1 = self.compute_bertscore(self._predictions, self._ground_truth_answers)
