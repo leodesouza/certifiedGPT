@@ -32,7 +32,8 @@ class VQAEval:
         self.commaStrip = re.compile("(\d)(,)(\d)")
         self.punct = r";/[]\"{}()=+\\_-<>@`?,!"
 
-    def normalize_answer(self, ans):
+    def normalize_answer(self, ans):        
+        ans = ''.join(ans)
         """Apply string normalization: lowercase, punctuation, articles, etc."""
         ans = ans.replace('\n', ' ').replace('\t', ' ').strip().lower()
 
@@ -55,9 +56,8 @@ class VQAEval:
         acc_per_question = {}
 
         for qid, gt_answers in self.gts.items():
-            pred_ans = self.preds.get(qid, "")
+            pred_ans = self.preds.get(qid, "")            
             norm_pred = self.normalize_answer(pred_ans)
-
             norm_gt = [self.normalize_answer(gt) for gt in gt_answers]
             matching = sum([norm_pred == gt for gt in norm_gt])
             acc = min(1.0, matching / 3.0)

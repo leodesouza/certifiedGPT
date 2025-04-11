@@ -118,16 +118,17 @@ class MiniGPT4EvalAgent(BaseAgent):
             xm.mark_step()
 
             for question_id, p_answer, g_answer, ans_type in zip(question_ids, predicted_answers, ground_truth_answers, answers_type):
-                if isinstance(p_answer, str):
-                    clean_answer = p_answer.replace('#','')
-                    p_answer = clean_answer.lower().replace('<unk>','').strip()
-                
-                if isinstance(g_answer, str):
-                    clean_answer = g_answer.replace('#','')
-                    g_answer = clean_answer.lower().replace('<unk>','').strip()
-                xm.master_print("prepare_for_compute_scores") 
+                if not isinstance(p_answer, str):
+                    p_answer = str(p_answer)                
+                clean_answer = p_answer.replace('#','')
+                p_answer = clean_answer.lower().replace('<unk>','').strip()
+                                
+                if not isinstance(g_answer, str):
+                    g_answer = str(g_answer)
+                clean_answer = g_answer.replace('#','')
+                g_answer = clean_answer.lower().replace('<unk>','').strip()                
                 self.prepare_for_compute_scores(question_id, p_answer, g_answer)   
-                xm.master_print("prepare_for_compute_scores 2") 
+                
             
 
         xm.master_print("computing vqa accuracy")        
