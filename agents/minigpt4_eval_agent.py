@@ -175,7 +175,7 @@ class MiniGPT4EvalAgent(BaseAgent):
         xm.master_print(f"self._groud_truth_answer_dict:{self._predictions}")
         xm.master_print(f"self._prediction_dict:{self._ground_truths}")
 
-        evaluator = VQAEval(self._ground_truths, self._predictions)
+        evaluator = VQAEval(self._ground_truths, self._predictions, self._anwers_type)
         evaluator.evaluate()
         overall_acuracy = evaluator.get_accuracy()        
         overall_acuracy = torch.tensor(overall_acuracy, device=self.device)        
