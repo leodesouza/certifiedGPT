@@ -206,7 +206,8 @@ class MiniGPT4EvalAgent(BaseAgent):
             image_id = pred["image_id"]
             category_ids = {item["category_id"] for item in image_objects["annotations"] if item["image_id"] == image_id}
             objects_in_images = [g["name"] for g in image_objects["categories"] if g["id"] in category_ids]
-            print(f"question: {pred["question"]}")
+            question = pred["question"]
+            print(f"question: {question}")
             print(f"objects: {objects_in_images}")            
             print(f"image_id: {image_id}")            
 
