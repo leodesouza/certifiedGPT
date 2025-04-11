@@ -7,8 +7,6 @@
 
 import transformers
 
-from common.utils import load_coco_val2014_annotations
-
 transformers.logging.set_verbosity_error()
 
 import os
