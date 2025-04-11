@@ -71,8 +71,10 @@ class VQAEval:
             "overall": 100.0 * sum(acc_per_question.values()) / len(acc_per_question)
         }
 
+        print('evaluate finished')
+
     def get_accuracy(self):
-        return self.accuracy
+        return self.accuracy["overall"]
 
     def get_per_question_accuracy(self):
         return self.evalQA
