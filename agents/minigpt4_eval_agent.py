@@ -165,13 +165,13 @@ class MiniGPT4EvalAgent(BaseAgent):
             xm.master_print("empty prediction detected")
             prediction = "[EMPTY]"
 
-        self._prediction_dict = {question_id: [prediction]}                                        
-        self._groud_truth_answer_dict = {question_id: [groud_truth_answer]}                
+        self._prediction_dict = {question_id.item(): prediction}                                        
+        self._groud_truth_answer_dict = {question_id.item(): groud_truth_answer}                
 
     def compute_vqa_accuracy(self):
         xm.master_print(f"self._groud_truth_answer_dict:{self._groud_truth_answer_dict}")
         xm.master_print(f"self._prediction_dict:{self._prediction_dict}")
-        
+
         evaluator = VQAEval(self._groud_truth_answer_dict, self._prediction_dict)
         evaluator.evaluate()
         overall_acuracy = evaluator.get_accuracy()
