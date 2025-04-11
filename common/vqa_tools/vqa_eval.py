@@ -1,18 +1,19 @@
 import re
 
 class VQAEval:
-    def __init__(self, gts=None, preds=None):
+    def __init__(self, gts=None, preds=None, answers_type=None):
         """
         gts: list of ground truth answers (strings)
         preds: list of predicted answers (strings)
         """
-        if gts is None or preds is None:
-            raise ValueError("Both gts and preds must be provided")
+        if gts is None or preds is None or self.answers_type is None:
+            raise ValueError("Both gts, preds and answers_type must be provided")
         if len(gts) != len(preds):
             raise ValueError("Length of ground truth list and prediction list must match")
 
         self.gts = gts
         self.preds = preds
+        self.answers_type = answers_type
         self.accuracy = {}
         self.evalQA = {}
 
@@ -54,25 +55,22 @@ class VQAEval:
                 cleaned.append(self.contractions.get(word, word))
         return " ".join(cleaned)
 
-    def evaluate(self):
-        print('evaluate')        
+    def evaluate(self):        
         acc_per_question = {}
 
-        for idx, (gt, pred) in enumerate(zip(self.gts, self.preds)):
-            norm_gt = self.normalize_answer(gt)
-            norm_pred = self.normalize_answer(pred)
-            acc = 1.0 if norm_gt == norm_pred else 0.0
-            acc_per_question[idx] = acc
-        
-        print(f'acc_per_question: {acc_per_question}')
-
+        for idx, (gt, pred, ans_type) in enumerate(zip(self.gts, self.preds, self.answers_type)):
+            print(f"ans_type: {ans_type}")
+            if ans_type in ["yes/no", "number"]:
+                norm_gt = self.normalize_answer(gt)
+                norm_pred = self.normalize_answer(pred)
+                acc = 1.0 if norm_gt == norm_pred else 0.0
+                acc_per_question[idx] = acc
+                
         self.evalQA = acc_per_question
         self.accuracy = {
             "overall": 100.0 * sum(acc_per_question.values()) / len(acc_per_question)
         }
-
-        print('evaluate finished')
-
+        
     def get_accuracy(self):
         return self.accuracy["overall"]
 

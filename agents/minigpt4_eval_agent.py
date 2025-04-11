@@ -63,6 +63,7 @@ class MiniGPT4EvalAgent(BaseAgent):
         self._smooth_fn = SmoothingFunction().method1                
         self._predictions = []
         self._ground_truths = []
+        self._anwers_type = []
 
     def run(self):
         try:
@@ -117,7 +118,7 @@ class MiniGPT4EvalAgent(BaseAgent):
                        generate(image, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False, calc_probs=False))
             xm.mark_step()
 
-            for p_answer, g_answer  in zip(predicted_answers, ground_truth_answers):
+            for p_answer, g_answer, answer_type  in zip(predicted_answers, ground_truth_answers, answers_type):
                 if not isinstance(p_answer, str):
                     p_answer = str(p_answer)                
                 clean_answer = p_answer.replace('#','')
@@ -160,7 +161,7 @@ class MiniGPT4EvalAgent(BaseAgent):
 
         xm.master_print(f"Eval ended: {(test_utils.now())}")
     
-    def prepare_for_compute_scores(self, prediction, groud_truth_answer):
+    def prepare_for_compute_scores(self, prediction, groud_truth_answer, answer_type):
         
         if prediction.strip() == "":
             xm.master_print("empty prediction detected")
@@ -168,6 +169,7 @@ class MiniGPT4EvalAgent(BaseAgent):
         
         self._predictions.append(prediction)
         self._ground_truths.append(groud_truth_answer)
+        self._anwers_type.append(answer_type)
 
     def compute_vqa_accuracy(self):
         xm.master_print(f"self._groud_truth_answer_dict:{self._predictions}")
