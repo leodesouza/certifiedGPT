@@ -55,6 +55,7 @@ class VQAEval:
         return " ".join(cleaned)
 
     def evaluate(self):
+        print('evaluate')        
         acc_per_question = {}
 
         for idx, (gt, pred) in enumerate(zip(self.gts, self.preds)):
@@ -62,6 +63,8 @@ class VQAEval:
             norm_pred = self.normalize_answer(pred)
             acc = 1.0 if norm_gt == norm_pred else 0.0
             acc_per_question[idx] = acc
+        
+        print(f'acc_per_question: {acc_per_question}')
 
         self.evalQA = acc_per_question
         self.accuracy = {
