@@ -128,36 +128,34 @@ class MiniGPT4EvalAgent(BaseAgent):
                 clean_answer = g_answer.replace('#','')
                 g_answer = clean_answer.lower().replace('<unk>','').strip()                
                 self.prepare_for_compute_scores(p_answer, g_answer)   
-                            
-        xm.master_print("computing vqa accuracy")        
-        overall = self.compute_vqa_accuracy()
-        xm.master_print(f"overall: {overall}")
-        
+                                    
+        accuracy = self.compute_vqa_accuracy()  
 
         xm.master_print("computing bert score")        
         precision, recall, f1 = self.compute_bertscore()
 
-        xm.master_print("computing blue score")        
+        xm.master_print(f"accuracy: {accuracy}. precision: {precision}. recall: {recall}. f1: {f1}")        
         bleu = self.compute_bleuscore()
-        
+                
         xm.master_print("mesh_reduce") 
         global_precision = xm.mesh_reduce("precision", precision.item(), lambda x: sum(x) / len(x)) 
         global_recall = xm.mesh_reduce("recall", recall.item(), lambda x: sum(x) / len(x)) 
         global_f1 = xm.mesh_reduce("f1", f1.item(), lambda x: sum(x) / len(x))
         global_bleu_score = xm.mesh_reduce("blue", bleu.item(), lambda x: sum(x) / len(x))        
+        global_accuracy = xm.mesh_reduce("accuracy", accuracy.item(), lambda x: sum(x) / len(x))        
                                                 
         if xm.is_master_ordinal():
                        
             after_time = time()
             elapsed_time = str(datetime.timedelta(seconds=(after_time - before_time)))
         
-            self._log.append(f"{global_precision}\t{global_recall}\t{global_f1}\t{global_bleu_score}\t{elapsed_time}")
+            self._log.append(f"{global_precision}\t{global_recall}\t{global_f1}\t{global_bleu_score}\t{global_accuracy}\t{elapsed_time}")
             file_path = os.path.join(self.config.run.output_dir,"eval_output.txt")
             file_exists = os.path.exists(file_path)
 
             with open(file_path, 'a') as f:
                 if not file_exists:
-                    f.write("precision\trecall\tf1\tbleu\ttime\n")
+                    f.write("precision\trecall\tf1\tbleu\taccuracy\ttime\n")
                 f.write("\n".join(self._log) + "\n")
 
         xm.master_print(f"Eval ended: {(test_utils.now())}")
