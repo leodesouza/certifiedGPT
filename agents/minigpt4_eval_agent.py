@@ -266,8 +266,8 @@ class MiniGPT4EvalAgent(BaseAgent):
                         "Loaded {} records for split {}".format(num_records, split.split_name)
                     )
 
-                self._questions_paths = split._questions_paths
-                self._annotations_paths = split._annotations_paths
+                self._questions_paths = split.questions_paths
+                self._annotations_paths = split.annotations_paths
 
                 is_train = (
                     True if split.split_name in self.config.run.train_splits else False
