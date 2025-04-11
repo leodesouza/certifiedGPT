@@ -172,7 +172,7 @@ class MiniGPT4EvalAgent(BaseAgent):
         self._ground_truth_answers.append(groud_truth_answer)
 
     def prepare_for_compute_charii(self, question_id, prediction, image_id):
-        self._predictions_for_charii.append({"question_id": question_id, "prediction": prediction, "image": image_id})
+        self._predictions_for_charii.append({"question_id": question_id, "prediction": prediction, "image_id": image_id})
 
     def clean_text(self, text):
         return text.replace("#", "").lower().replace("<unk>","").strip()

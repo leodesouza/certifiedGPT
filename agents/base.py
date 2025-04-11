@@ -93,10 +93,8 @@ class BaseAgent:
         xm.master_print("Loading model state")
         model.load_state_dict(checkpoint['model_state_dict'], strict=False)
         xm.master_print("Loading model state. Done!")
-
-        if xm.is_master_ordinal():            
-            num_param = sum(p.numel() for p in model.parameters() if p.requires_grad)
-            print(f"Numbers of treinable parameters: {num_param}")
+        
+        xm.master_print(f"Numbers of treinable parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
 
     def save_checkpoint(self, model, optimizer, epoch, loss, file_name="checkpoint.pth.bar", is_best=False):
         """
