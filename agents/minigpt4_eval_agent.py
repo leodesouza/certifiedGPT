@@ -115,6 +115,7 @@ class MiniGPT4EvalAgent(BaseAgent):
             batch_sample["answer_type"]
 
             print(f"batch_sample: {batch_sample}")
+            raise ValueError("batch_sample test")
             
             texts = self.prepare_texts(questions, conv_temp)
 
