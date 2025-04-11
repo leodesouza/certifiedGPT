@@ -171,7 +171,7 @@ class MiniGPT4EvalAgent(BaseAgent):
 
         qid = question_id.item()
         if qid not in self._prediction_dict:
-            self._prediction_dict = []
+            self._prediction_dict[qid] = []
         
         if qid not in self._groud_truth_answer_dict:
             self._groud_truth_answer_dict[qid] = [] 
