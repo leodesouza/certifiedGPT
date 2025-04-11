@@ -125,7 +125,10 @@ class MiniGPT4EvalAgent(BaseAgent):
                 if isinstance(g_answer, str):
                     clean_answer = g_answer.replace('#','')
                     g_answer = clean_answer.lower().replace('<unk>','').strip()
+                xm.master_print("prepare_for_compute_scores") 
                 self.prepare_for_compute_scores(question_id, p_answer, g_answer)   
+                xm.master_print("prepare_for_compute_scores 2") 
+            
 
         xm.master_print("computing vqa accuracy")        
         overall, per_question = self.compute_vqa_accuracy()
