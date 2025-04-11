@@ -61,8 +61,8 @@ class MiniGPT4EvalAgent(BaseAgent):
         self._annotations_paths = None
         self._log = []
         self._smooth_fn = SmoothingFunction().method1                
-        self._prediction_dict  = {}
-        self._groud_truth_answer_dict = {}
+        self._predictions = []
+        self._ground_truths = []
 
     def run(self):
         try:
@@ -117,7 +117,7 @@ class MiniGPT4EvalAgent(BaseAgent):
                        generate(image, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False, calc_probs=False))
             xm.mark_step()
 
-            for question_id, p_answer, g_answer, ans_type in zip(question_ids, predicted_answers, ground_truth_answers, answers_type):
+            for p_answer, g_answer  in zip(predicted_answers, ground_truth_answers):
                 if not isinstance(p_answer, str):
                     p_answer = str(p_answer)                
                 clean_answer = p_answer.replace('#','')
@@ -127,10 +127,8 @@ class MiniGPT4EvalAgent(BaseAgent):
                     g_answer = str(g_answer)
                 clean_answer = g_answer.replace('#','')
                 g_answer = clean_answer.lower().replace('<unk>','').strip()                
-                self.prepare_for_compute_scores(question_id, p_answer, g_answer)   
-                
-            
-
+                self.prepare_for_compute_scores(p_answer, g_answer)   
+                            
         xm.master_print("computing vqa accuracy")        
         overall, per_question = self.compute_vqa_accuracy()
         xm.master_print(f"overall: {overall}")
@@ -164,27 +162,20 @@ class MiniGPT4EvalAgent(BaseAgent):
 
         xm.master_print(f"Eval ended: {(test_utils.now())}")
     
-    def prepare_for_compute_scores(self, question_id, prediction, groud_truth_answer):
+    def prepare_for_compute_scores(self, prediction, groud_truth_answer):
         
         if prediction.strip() == "":
             xm.master_print("empty prediction detected")
             prediction = "[EMPTY]"
-
-        qid = question_id.item()
-        if qid not in self._prediction_dict:
-            self._prediction_dict[qid] = []
         
-        if qid not in self._groud_truth_answer_dict:
-            self._groud_truth_answer_dict[qid] = [] 
-
-        self._prediction_dict[qid].append(prediction)                                        
-        self._groud_truth_answer_dict[qid].append(groud_truth_answer)                
+        self._predictions.append(prediction)
+        self._ground_truths.append(groud_truth_answer)
 
     def compute_vqa_accuracy(self):
-        xm.master_print(f"self._groud_truth_answer_dict:{self._groud_truth_answer_dict}")
-        xm.master_print(f"self._prediction_dict:{self._prediction_dict}")
+        xm.master_print(f"self._groud_truth_answer_dict:{self._predictions}")
+        xm.master_print(f"self._prediction_dict:{self._ground_truths}")
 
-        evaluator = VQAEval(self._groud_truth_answer_dict, self._prediction_dict)
+        evaluator = VQAEval(self._ground_truths, self._predictions)
         evaluator.evaluate()
         overall_acuracy = evaluator.get_accuracy()
         overall_acuracy = torch.tensor(overall_acuracy, device=self.device)
@@ -197,10 +188,8 @@ class MiniGPT4EvalAgent(BaseAgent):
         return text.replace("#", "").lower().replace("<unk>","").strip()
     
     def compute_bertscore(self):                
-        predictions = [p for p in self._prediction_dict.values()]
-        ground_truths = [g for g in self._groud_truth_answer_dict.values()]
-
-        p, r, f1 = score(predictions, ground_truths, lang="en")                
+        
+        p, r, f1 = score(self._predictions, self._ground_truths, lang="en")                
         xm.mark_step()
         
         p = p.to(self.device)
@@ -209,13 +198,9 @@ class MiniGPT4EvalAgent(BaseAgent):
                 
         return p.mean(), r.mean(), f1.mean()
     
-    def compute_bleuscore(self):               
-
-        predictions = [p for p in self._prediction_dict.values()]
-        ground_truths = [g for g in self._groud_truth_answer_dict.values()]
-
-        tokens_predictions = [word_tokenize(p) for p in predictions]
-        tokens_ground_truths = [[word_tokenize(g)] for g in ground_truths]
+    def compute_bleuscore(self):                       
+        tokens_predictions = [word_tokenize(p) for p in self._predictions]
+        tokens_ground_truths = [[word_tokenize(g)] for g in self._ground_truths]
         weights_bleu_1 = (1,0,0,0)        
         score = corpus_bleu(tokens_ground_truths, tokens_predictions, weights=weights_bleu_1, smoothing_function=self._smooth_fn)
         score = torch.tensor(score, device=self.device)        

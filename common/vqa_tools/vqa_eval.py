@@ -3,11 +3,16 @@ import re
 class VQAEval:
     def __init__(self, gts=None, preds=None):
         """
-        gts: dict mapping question_id to a list of ground truth answers
-        preds: dict mapping question_id to predicted answer
-        """        
-        self.gts = gts or {}
-        self.preds = preds or {}
+        gts: list of ground truth answers (strings)
+        preds: list of predicted answers (strings)
+        """
+        if gts is None or preds is None:
+            raise ValueError("Both gts and preds must be provided")
+        if len(gts) != len(preds):
+            raise ValueError("Length of ground truth list and prediction list must match")
+
+        self.gts = gts
+        self.preds = preds
         self.accuracy = {}
         self.evalQA = {}
 
@@ -28,19 +33,16 @@ class VQAEval:
             "wouldve": "would've", "wouldnt": "wouldn't", "youd": "you'd", "youre": "you're",
             "youve": "you've"
         }
-        self.periodStrip = re.compile("(?!<=\d)(\.)(?!\d)")
-        self.commaStrip = re.compile("(\d)(,)(\d)")
+        self.periodStrip = re.compile(r"(?!<=\d)(\.)(?!\d)")
+        self.commaStrip = re.compile(r"(\d)(,)(\d)")
         self.punct = r";/[]\"{}()=+\\_-<>@`?,!"
 
-    def normalize_answer(self, ans):        
+    def normalize_answer(self, ans):
         ans = ''.join(ans)
-        """Apply string normalization: lowercase, punctuation, articles, etc."""
         ans = ans.replace('\n', ' ').replace('\t', ' ').strip().lower()
 
-        # Remove punctuations
         for p in self.punct:
             ans = ans.replace(p, '' if p != '.' else ' ')
-
         ans = self.periodStrip.sub("", ans)
         ans = self.commaStrip.sub(r"\1\3", ans)
 
@@ -55,16 +57,16 @@ class VQAEval:
     def evaluate(self):
         acc_per_question = {}
 
-        for qid, gt_answers in self.gts.items():
-            pred_ans = self.preds.get(qid, "")            
-            norm_pred = self.normalize_answer(pred_ans)
-            norm_gt = [self.normalize_answer(gt) for gt in gt_answers]
-            matching = sum([norm_pred == gt for gt in norm_gt])
-            acc = min(1.0, matching / 3.0)
-            acc_per_question[qid] = acc
+        for idx, (gt, pred) in enumerate(zip(self.gts, self.preds)):
+            norm_gt = self.normalize_answer(gt)
+            norm_pred = self.normalize_answer(pred)
+            acc = 1.0 if norm_gt == norm_pred else 0.0
+            acc_per_question[idx] = acc
 
         self.evalQA = acc_per_question
-        self.accuracy = {"overall": 100.0 * sum(acc_per_question.values()) / len(acc_per_question)}
+        self.accuracy = {
+            "overall": 100.0 * sum(acc_per_question.values()) / len(acc_per_question)
+        }
 
     def get_accuracy(self):
         return self.accuracy
