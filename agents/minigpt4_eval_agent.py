@@ -99,7 +99,7 @@ class MiniGPT4EvalAgent(BaseAgent):
         self.model.eval()        
         for step, batch_sample in enumerate(val_loader):
 
-            if step > 0:
+            if step > 2:
                 continue
 
             xm.master_print(f"Eval step: {step} - {(test_utils.now())}")            
