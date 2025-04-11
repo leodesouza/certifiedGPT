@@ -26,7 +26,7 @@ model:
 # featue dimension should be a multiple of 128
 # https://cloud.google.com/tpu/docs/performance-guide
 
-datasets:  
+datasets:
   evalvqav2:    
     batch_size: 1 #90
     vis_processor:
@@ -54,7 +54,8 @@ run:
   wandb_api_key: ${env:WANDB_API_KEY}
   wandb_name: "vqav2_eval_batch52_noise_0.5" 
   dataset_config_name: eval_vqa.yaml
-    
+  coco_annotation_path_file: ${env:COCO_ANN_PATH_FILE}
+
 # DataLoader
   distributed: True  
   num_workers: 2 # n of workers to load data

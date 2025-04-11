@@ -13,3 +13,9 @@ def get_abs_path(rel_path):
     return os.path.join(registry.get_path("library_root"), rel_path)
 
 
+def load_coco_val2014_annotations():
+    import json
+    config = registry.get_configuration_class("configuration")
+    with open(config.run.coco_annotation_path_file) as f:
+        image_objects = json.load(f)
+    return image_objects
