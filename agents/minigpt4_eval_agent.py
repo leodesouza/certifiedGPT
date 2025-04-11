@@ -110,6 +110,7 @@ class MiniGPT4EvalAgent(BaseAgent):
             ground_truth_answers = batch_sample["answer"]
             answers_type = batch_sample["answer_type"]
             
+            xm.master_print("batch read") 
             texts = self.prepare_texts(questions, conv_temp)
 
             predicted_answers, _ = (self.model.
