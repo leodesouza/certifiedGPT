@@ -131,11 +131,11 @@ class MiniGPT4EvalAgent(BaseAgent):
                 self.prepare_for_compute_scores(p_answer, g_answer)
                 self.prepare_for_compute_charii(question_id, p_answer,image_id)
 
-        xm.master_print("computing bert score")        
-        precision, recall, f1 = self.compute_bertscore(self._predictions, self._ground_truth_answers)
+        # xm.master_print("computing bert score")        
+        # precision, recall, f1 = self.compute_bertscore(self._predictions, self._ground_truth_answers)
 
-        xm.master_print("computing blue score")        
-        bleu = self.compute_bleuscore(self._predictions, self._ground_truth_answers)
+        # xm.master_print("computing blue score")        
+        # bleu = self.compute_bleuscore(self._predictions, self._ground_truth_answers)
 
         xm.master_print("computing charii score")
         charii = self.compute_chairi_score(self._predictions_for_charii)
@@ -173,8 +173,10 @@ class MiniGPT4EvalAgent(BaseAgent):
 
     def prepare_for_compute_charii(self, question_id, prediction, image_id):
         self._predictions_for_charii.append({"question_id": question_id, "prediction": prediction, "image": image_id})
+
     def clean_text(self, text):
         return text.replace("#", "").lower().replace("<unk>","").strip()
+    
     def compute_bertscore(self, predictions, ground_truths):                
         p, r, f1 = score(predictions, ground_truths, lang="en")                
         xm.mark_step()
@@ -200,13 +202,18 @@ class MiniGPT4EvalAgent(BaseAgent):
         for pred in predictions:
             p = pred["prediction"]
             words = p.lower().replace(".", "").split()
+            print(f"words: {words}")            
             image_id = pred["image_id"]
             category_ids = {item["category_id"] for item in image_objects["annotations"] if item["image_id"] == image_id}
             objects_in_images = [g["name"] for g in image_objects["categories"] if g["id"] in category_ids]
+            print(f"objects: {objects_in_images}")            
+            print(f"image_id: {image_id}")            
 
             if any(w not in objects_in_images for w in words):
                 hallucinated += 1
             total += 1
+            print(f"hallucinated?: {(hallucinated > 0)}")            
+            raise ValueError("teste")
         chairii = hallucinated / total
         chairii = torch.tensor(chairii, device=self._device)
         # print(f"CHAIRi: {chairi:.4f}")

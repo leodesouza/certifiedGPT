@@ -54,6 +54,7 @@ run:
   wandb_api_key: ${env:WANDB_API_KEY}
   wandb_name: "vqav2_eval_batch52_noise_0.5" 
   dataset_config_name: eval_vqa.yaml 
+  coco_annotation_path_file: ${env:COCO_ANN_PATH_FILE}
 
 # DataLoader
   distributed: True  
