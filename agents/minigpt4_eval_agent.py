@@ -81,7 +81,8 @@ class MiniGPT4EvalAgent(BaseAgent):
             self.eval(self._dataloaders)            
 
         except Exception as e:
-            xm.master_print(f"Error on agent run: {test_utils.now()}. Details: {e}")
+            xm.master_print(f"Error on agent run: {test_utils.now()}. Details: {e}")            
+            self.logger.info(f"Error on agent run: {test_utils.now()}. Details: {e}")
 
     @torch.no_grad()
     def eval(self, dataloader):        
@@ -105,13 +106,11 @@ class MiniGPT4EvalAgent(BaseAgent):
             xm.master_print(f"Eval step: {step} - {(test_utils.now())}")            
             self.maybe_add_noise(batch_sample, self.config.run.noise_level)
             
-            image = batch_sample["image"]
-            question_ids = batch_sample["question_id"]            
+            image = batch_sample["image"]            
             questions = batch_sample["instruction_input"]            
             ground_truth_answers = batch_sample["answer"]
             answers_type = batch_sample["answer_type"]
-            
-            xm.master_print("batch read") 
+                        
             texts = self.prepare_texts(questions, conv_temp)
 
             predicted_answers, _ = (self.model.
@@ -130,15 +129,12 @@ class MiniGPT4EvalAgent(BaseAgent):
                 g_answer = clean_answer.lower().replace('<unk>','').strip()                
                 self.prepare_for_compute_scores(p_answer, g_answer, answer_type)   
                                     
-        accuracy = self.compute_vqa_accuracy()  
-
-        xm.master_print("computing bert score")        
+        accuracy = self.compute_vqa_accuracy()          
         precision, recall, f1 = self.compute_bertscore()
-
-        xm.master_print(f"accuracy: {accuracy}. precision: {precision}. recall: {recall}. f1: {f1}")        
         bleu = self.compute_bleuscore()
-                
-        xm.master_print("mesh_reduce") 
+
+        xm.master_print(f"accuracy: {accuracy}. precision: {precision}. recall: {recall}. f1: {f1}, bleu: {bleu}")        
+                                
         global_precision = xm.mesh_reduce("precision", precision.item(), lambda x: sum(x) / len(x)) 
         global_recall = xm.mesh_reduce("recall", recall.item(), lambda x: sum(x) / len(x)) 
         global_f1 = xm.mesh_reduce("f1", f1.item(), lambda x: sum(x) / len(x))
@@ -163,18 +159,14 @@ class MiniGPT4EvalAgent(BaseAgent):
     
     def prepare_for_compute_scores(self, prediction, groud_truth_answer, answer_type):
         
-        if prediction.strip() == "":
-            xm.master_print("empty prediction detected")
+        if prediction.strip() == "":            
             prediction = "[EMPTY]"
         
         self._predictions.append(prediction)
         self._ground_truths.append(groud_truth_answer)
         self._anwers_type.append(answer_type)
 
-    def compute_vqa_accuracy(self):
-        xm.master_print(f"self._groud_truth_answer_dict:{self._predictions}")
-        xm.master_print(f"self._prediction_dict:{self._ground_truths}")
-
+    def compute_vqa_accuracy(self):        
         evaluator = VQAEval(self._ground_truths, self._predictions, self._anwers_type)
         evaluator.evaluate()
         overall_acuracy = evaluator.get_accuracy()        
@@ -241,8 +233,7 @@ class MiniGPT4EvalAgent(BaseAgent):
 
             dataset = datasets[dataset_name]
 
-            for split in dataset.values():                
-                xm.master_print(f"creating split: {split.split_name}")        
+            for split in dataset.values():                                
                 num_records = len(split)
                 if num_records >= 0:
                     self.logger.info(
@@ -255,19 +246,15 @@ class MiniGPT4EvalAgent(BaseAgent):
                 is_train = (
                     True if split.split_name in self.config.run.train_splits else False
                 )
-
-                xm.master_print("getattr collater")        
-                collate_fn = getattr(split, "collater", None)
-
-                xm.master_print("sampler")        
+                
+                collate_fn = getattr(split, "collater", None)                
                 sampler = DistributedSampler(
                     split,
                     num_replicas=xr.world_size(),
                     rank=xm.runtime.global_ordinal(),
                     shuffle=True if is_train else False
                 ) if self.config.run.distributed and xr.world_size() > 1 else None
-
-                xm.master_print("creating loader")        
+                
                 loader = DataLoader(
                     split,
                     batch_size=batch_size if batch_size > 0 else self.config.datasets[dataset_name].batch_size,
