@@ -100,9 +100,10 @@ class MiniGPT4EvalAgent(BaseAgent):
         xm.master_print(f"Eval started: {(test_utils.now())}")        
         before_time = time()        
         self.model.eval() 
-        # state = self.load_eval_state()       
+        #state = self.load_eval_state()       
         # saved_step = step["step"]
         # self.pre = step["step"]
+        # raise ValueError("teste...")
         for step, batch_sample in enumerate(val_loader):
             
             xm.master_print(f"Eval step: {step} - {(test_utils.now())}")            
@@ -300,20 +301,23 @@ class MiniGPT4EvalAgent(BaseAgent):
         texts = [conv.get_prompt() for conv in convs]
         return texts
     
-    def save_eval_state(self, step, predictions, ground_truths, anwers_type):
-        state = dict()
-        state["step"] = step
-        state["predictions"] = predictions
-        state["ground_truths"] = ground_truths
-        state["answer_type"] = anwers_type
-        file_path = os.path.join(self.config.run.output_dir,"eval_output.pkl")
-        with open(file_path, 'wb') as f:
-            pickle.dump(state, f)
+    def save_eval_state(self, step, predictions, ground_truths, answers_type):
+        if xm.is_master_ordinal():            
+            state = dict()
+            state["step"] = step
+            state["predictions"] = predictions
+            state["ground_truths"] = ground_truths
+            state["answer_type"] = answers_type
+            file_path = os.path.join(self.config.run.output_dir,"eval_output.pkl")
+            with open(file_path, 'wb') as f:
+                pickle.dump(state, f)
+            xm.rendezvous("eval_state_saved")   
 
     def load_eval_state(self):
         file_path = os.path.join(self.config.run.output_dir,"eval_output.pkl")
         with open(file_path, 'rb') as f:
             state = pickle.load(f)
+        xm.rendezvous("eval_state_loaded")
         return state
 
 
