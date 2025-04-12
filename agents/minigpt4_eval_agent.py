@@ -317,6 +317,7 @@ class MiniGPT4EvalAgent(BaseAgent):
         file_path = os.path.join(self.config.run.output_dir,"eval_output.pkl")
         with open(file_path, 'rb') as f:
             state = pickle.load(f)
+        xm.master_print("eval_state_loaded")   
         xm.rendezvous("eval_state_loaded")
         return state
 
