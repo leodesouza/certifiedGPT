@@ -45,6 +45,8 @@ nltk.download('punkt_tab')
 from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction 
 from nltk.tokenize import word_tokenize
 
+import pickle
+
 # rank and world size are inferred from XLA Device
 # source: https://github.com/pytorch/xla/
 dist.init_process_group(backend='xla', init_method='xla://')
@@ -97,12 +99,12 @@ class MiniGPT4EvalAgent(BaseAgent):
 
         xm.master_print(f"Eval started: {(test_utils.now())}")        
         before_time = time()        
-        self.model.eval()        
+        self.model.eval() 
+        # state = self.load_eval_state()       
+        # saved_step = step["step"]
+        # self.pre = step["step"]
         for step, batch_sample in enumerate(val_loader):
-
-            if step > 2:
-                continue
-
+            
             xm.master_print(f"Eval step: {step} - {(test_utils.now())}")            
             self.maybe_add_noise(batch_sample, self.config.run.noise_level)
             
@@ -128,6 +130,8 @@ class MiniGPT4EvalAgent(BaseAgent):
                 clean_answer = g_answer.replace('#','')
                 g_answer = clean_answer.lower().replace('<unk>','').strip()                
                 self.prepare_for_compute_scores(p_answer, g_answer, answer_type)   
+
+            self.save_eval_state(step, self._predictions, self._ground_truths, self._anwers_type)            
                                     
         accuracy = self.compute_vqa_accuracy()          
         precision, recall, f1 = self.compute_bertscore()
@@ -164,8 +168,8 @@ class MiniGPT4EvalAgent(BaseAgent):
         
         self._predictions.append(prediction)
         self._ground_truths.append(groud_truth_answer)
-        self._anwers_type.append(answer_type)
-
+        self._anwers_type.append(answer_type)        
+        
     def compute_vqa_accuracy(self):        
         evaluator = VQAEval(self._ground_truths, self._predictions, self._anwers_type)
         evaluator.evaluate()
@@ -295,3 +299,23 @@ class MiniGPT4EvalAgent(BaseAgent):
         [conv.append_message(conv.roles[1], None) for conv in convs]
         texts = [conv.get_prompt() for conv in convs]
         return texts
+    
+    def save_eval_state(self, step, predictions, ground_truths, anwers_type):
+        state = dict()
+        state["step"] = step
+        state["predictions"] = predictions
+        state["ground_truths"] = ground_truths
+        state["answer_type"] = anwers_type
+        file_path = os.path.join(self.config.run.output_dir,"eval_output.pkl")
+        with open(file_path, 'wb') as f:
+            pickle.dump(state, f)
+
+    def load_eval_state(self):
+        file_path = os.path.join(self.config.run.output_dir,"eval_output.pkl")
+        with open(file_path, 'rb') as f:
+            state = pickle.load(f)
+        return state
+
+
+
+
