@@ -100,12 +100,8 @@ class MiniGPT4EvalAgent(BaseAgent):
         xm.master_print(f"Eval started: {(test_utils.now())}")        
         before_time = time()        
         self.model.eval() 
-        state = self.load_eval_state()       
-        saved_step = state["step"]
-        pre = state["predictions"]
-        g = state["ground_truths"]
-        
-        raise ValueError(f"teste... saved_step {saved_step}. p: {pre}. g: {g}")
+        # state = self.load_eval_state()       
+                
         for step, batch_sample in enumerate(val_loader):
             
             xm.master_print(f"Eval step: {step} - {(test_utils.now())}")            
