@@ -132,7 +132,7 @@ class MiniGPT4EvalAgent(BaseAgent):
                 g_answer = clean_answer.lower().replace('<unk>','').strip()                
                 self.prepare_for_compute_scores(p_answer, g_answer, answer_type)   
 
-            # self.save_eval_state(step, self._predictions, self._ground_truths, self._anwers_type)            
+            self.save_eval_state(step, self._predictions, self._ground_truths, self._anwers_type)            
                                     
         accuracy = self.compute_vqa_accuracy()          
         precision, recall, f1 = self.compute_bertscore()
@@ -302,7 +302,8 @@ class MiniGPT4EvalAgent(BaseAgent):
         return texts
     
     def save_eval_state(self, step, predictions, ground_truths, answers_type):
-        if xm.is_master_ordinal():            
+        if xm.is_master_ordinal():
+            xm.master_print("saving state..")   
             state = dict()
             state["step"] = step
             state["predictions"] = predictions
@@ -311,7 +312,11 @@ class MiniGPT4EvalAgent(BaseAgent):
             file_path = os.path.join(self.config.run.output_dir,"eval_output.pkl")
             with open(file_path, 'wb') as f:
                 pickle.dump(state, f)
-            xm.rendezvous("eval_state_saved")   
+            xm.master_print("state saved!")   
+        
+        xm.master_print("Syncronizing in all tpus...")   
+        xm.rendezvous("eval_state_saved")   
+        xm.master_print("Syncronizing completed")   
 
     def load_eval_state(self):
         file_path = os.path.join(self.config.run.output_dir,"eval_output.pkl")
