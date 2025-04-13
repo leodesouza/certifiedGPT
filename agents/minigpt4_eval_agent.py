@@ -130,7 +130,7 @@ class MiniGPT4EvalAgent(BaseAgent):
                 g_answer = clean_answer.lower().replace('<unk>','').strip()                
                 self.prepare_for_compute_scores(p_answer, g_answer, answer_type)   
 
-            # self.save_eval_state(step, self._predictions, self._ground_truths, self._anwers_type)            
+            self.save_eval_state(step, self._predictions, self._ground_truths, self._anwers_type)            
                                     
         accuracy = self.compute_vqa_accuracy()          
         precision, recall, f1 = self.compute_bertscore()
@@ -299,25 +299,27 @@ class MiniGPT4EvalAgent(BaseAgent):
         texts = [conv.get_prompt() for conv in convs]
         return texts
     
-    def save_eval_state(self, step, predictions, ground_truths, answers_type):
-        if xm.is_master_ordinal():
-            xm.master_print("saving state..")   
-            state = dict()
-            state["step"] = step
-            state["predictions"] = predictions
-            state["ground_truths"] = ground_truths
-            state["answer_type"] = answers_type
-            file_path = os.path.join(self.config.run.output_dir,"eval_output.pkl")
-            with open(file_path, 'wb') as f:
-                pickle.dump(state, f)
-            xm.master_print("state saved!")   
-        
-        xm.master_print("Syncronizing in all tpus...")   
+    def save_eval_state(self, step, predictions, ground_truths, answers_type):        
+        xm.master_print("saving state..")   
+        state = dict()
+        state["step"] = step
+        state["predictions"] = predictions
+        state["ground_truths"] = ground_truths
+        state["answer_type"] = answers_type
+        rank = xm.runtime.global_ordinal()
+        file_path = os.path.join(self.config.run.output_dir,f"eval_output_{rank}.pkl")
+        with open(file_path, 'wb') as f:
+            pickle.dump(state, f)
+        xm.master_print("state saved!")   
         xm.rendezvous("eval_state_saved")   
-        xm.master_print("Syncronizing completed")   
+        
+        # xm.master_print("Syncronizing in all tpus...")   
+        # xm.rendezvous("eval_state_saved")   
+        # xm.master_print("Syncronizing completed")   
 
     def load_eval_state(self):
-        file_path = os.path.join(self.config.run.output_dir,"eval_output.pkl")
+        rank = xm.runtime.global_ordinal()
+        file_path = os.path.join(self.config.run.output_dir, f"eval_output_{rank}.pkl")
         with open(file_path, 'rb') as f:
             state = pickle.load(f)
         xm.master_print("eval_state_loaded")   
