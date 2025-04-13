@@ -130,7 +130,7 @@ class MiniGPT4EvalAgent(BaseAgent):
                 g_answer = clean_answer.lower().replace('<unk>','').strip()                
                 self.prepare_for_compute_scores(p_answer, g_answer, answer_type)   
 
-            self.save_eval_state(step, self._predictions, self._ground_truths, self._anwers_type)            
+            # self.save_eval_state(step, self._predictions, self._ground_truths, self._anwers_type)            
                                     
         accuracy = self.compute_vqa_accuracy()          
         precision, recall, f1 = self.compute_bertscore()
