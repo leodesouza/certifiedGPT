@@ -120,8 +120,7 @@ class MiniGPT4EvalAgent(BaseAgent):
 
             predicted_answers, _ = (self.model.
                        generate(image, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False, calc_probs=False))
-            xm.mark_step()
-
+            
             for p_answer, g_answer, answer_type  in zip(predicted_answers, ground_truth_answers, answers_type):
                 if not isinstance(p_answer, str):
                     p_answer = str(p_answer)                
