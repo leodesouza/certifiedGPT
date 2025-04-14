@@ -107,6 +107,7 @@ class MiniGPT4EvalAgent(BaseAgent):
             saved_step = state.get("step", 0)
             self._predictions = state.get("predictions", [])
             self._ground_truths = state.get("ground_truths", [])                
+            saved_step += 1 
             xm.master_print(f"Eval will be resumed from step: {saved_step}")
                         
         for step, batch_sample in enumerate(val_loader):
