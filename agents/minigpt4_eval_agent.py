@@ -101,24 +101,20 @@ class MiniGPT4EvalAgent(BaseAgent):
         before_time = time()        
         self.model.eval() 
 
-        # state["step"] = step
-        # state["predictions"] = predictions
-        # state["ground_truths"] = ground_truths
-        # state["answer_type"] = answers_type
+        saved_step = 0
         state = self.load_eval_state()
-        saved_step = state["step"]
-        self._predictions = state["predictions"]
-        self._ground_truths = state["ground_truths"]
-
-        xm.master_print(f"saved step: {saved_step}")    
-        xm.master_print(f"predictions: {self._predictions}")    
-        xm.master_print(f"ground truths: {self._ground_truths}")    
-
-        raise ValueError("[teste] terminou")
-                
+        if state is not None:            
+            saved_step = state.get("step", 0)
+            self._predictions = state.get("predictions", [])
+            self._ground_truths = state.get("ground_truths", [])                
+            xm.master_print(f"Eval will be resumed from step: {saved_step}")
+                        
         for step, batch_sample in enumerate(val_loader):
-
+                        
             if step % 10 !=  0:
+                continue
+
+            if step <= saved_step:
                 continue
 
             xm.master_print(f"Eval step: {step} - {(test_utils.now())}")  
@@ -338,6 +334,11 @@ class MiniGPT4EvalAgent(BaseAgent):
     def load_eval_state(self):
         rank = xm.runtime.global_ordinal()
         file_path = os.path.join(self.config.run.output_dir, f"eval_output_{rank}.pkl")
+
+        if not os.path.exists(file_path):
+            xm.master_print(f'file not found: {file_path}')
+            return None
+        
         with open(file_path, 'rb') as f:
             state = pickle.load(f)
         xm.master_print("eval_state_loaded")   
