@@ -103,11 +103,12 @@ class MiniGPT4EvalAgent(BaseAgent):
         # state = self.load_eval_state()       
                 
         for step, batch_sample in enumerate(val_loader):
-            
-            if step % 5 !=  0:
+
+            if step % 10 !=  0:
                 continue
 
-            xm.master_print(f"Eval step: {step} - {(test_utils.now())}")            
+            xm.master_print(f"Eval step: {step} - {(test_utils.now())}")  
+            self.logger.info(f"Eval step {step} started - {(test_utils.now())}")          
             self.maybe_add_noise(batch_sample, self.config.run.noise_level)
             
             image = batch_sample["image"]            
@@ -133,7 +134,8 @@ class MiniGPT4EvalAgent(BaseAgent):
                 g_answer = clean_answer.lower().replace('<unk>','').strip()                
                 self.prepare_for_compute_scores(p_answer, g_answer, answer_type)   
 
-            self.save_eval_state(step, self._predictions, self._ground_truths, self._anwers_type)            
+            self.save_eval_state(step, self._predictions, self._ground_truths, self._anwers_type)
+            self.logger.info(f"Eval step ended: {step} - {(test_utils.now())}")                      
                                     
         accuracy = self.compute_vqa_accuracy()          
         precision, recall, f1 = self.compute_bertscore()
