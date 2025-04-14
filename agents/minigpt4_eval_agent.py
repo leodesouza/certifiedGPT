@@ -115,7 +115,7 @@ class MiniGPT4EvalAgent(BaseAgent):
             if step % 10 !=  0:
                 continue
 
-            if step <= saved_step:
+            if step < saved_step:
                 continue
 
             xm.master_print(f"Eval step: {step} - {(test_utils.now())}")  
