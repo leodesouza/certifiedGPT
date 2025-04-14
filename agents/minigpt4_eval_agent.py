@@ -100,7 +100,21 @@ class MiniGPT4EvalAgent(BaseAgent):
         xm.master_print(f"Eval started: {(test_utils.now())}")        
         before_time = time()        
         self.model.eval() 
-        # state = self.load_eval_state()       
+
+        # state["step"] = step
+        # state["predictions"] = predictions
+        # state["ground_truths"] = ground_truths
+        # state["answer_type"] = answers_type
+        state = self.load_eval_state()
+        saved_step = state["step"]
+        self._predictions = state["predictions"]
+        self._ground_truths = state["ground_truths"]
+
+        xm.master_print(f"saved step: {saved_step}")    
+        xm.master_print(f"predictions: {self._predictions}")    
+        xm.master_print(f"ground truths: {self._ground_truths}")    
+
+        raise ValueError("[teste] terminou")
                 
         for step, batch_sample in enumerate(val_loader):
 
