@@ -11,9 +11,8 @@ class VQAEval:
             raise ValueError("annotation must be provided ")
                 
         self.preds = preds        
-        self.question_ids = question_ids        
-        print(f"annotation_path: {annotation_path}")
-        self.annotations = json.load(open(annotation_path, 'r'))
+        self.question_ids = question_ids                
+        self.annotations = json.load(open(annotation_path[0], 'r'))
         self.accuracy = {}
         self.evalQA = {}
 
