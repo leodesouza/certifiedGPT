@@ -193,6 +193,7 @@ class MiniGPT4EvalAgent(BaseAgent):
           
         evaluator = VQAEval(self._ground_truths, self._predictions, self._anwers_type)
         overall_acc, yes_no_acc, number_acc, other_acc = evaluator.evaluate()
+        print(f"evaluator.evaluate()")
         
         overall_acc = torch.tensor(overall_acc, device=self.device)        
         yes_no_acc = torch.tensor(yes_no_acc, device=self.device)        
