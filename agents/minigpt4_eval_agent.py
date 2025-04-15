@@ -79,7 +79,7 @@ class MiniGPT4EvalAgent(BaseAgent):
                 else:
                     xm.master_print("No noise will be applied to the image inputs")
 
-            self.load_finetuned_model(self._model)
+            # self.load_finetuned_model(self._model)
             self.eval(self._dataloaders)            
 
         except Exception as e:
