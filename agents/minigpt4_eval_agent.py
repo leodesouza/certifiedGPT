@@ -148,7 +148,8 @@ class MiniGPT4EvalAgent(BaseAgent):
         #     self.save_eval_state(step, self._predictions, self._ground_truths, self._anwers_type)
         #     self.logger.info(f"Eval step ended: {step} - {(test_utils.now())}")                      
                                                   
-        overall_acc, yes_no_acc, number_acc, other_acc = self.compute_vqa_accuracy()          
+        overall_acc, yes_no_acc, number_acc, other_acc = self.compute_vqa_accuracy()         
+        xm.master_print(f"{overall_acc} - {yes_no_acc} - {number_acc} - {other_acc}") 
         precision, recall, f1 = self.compute_bertscore()
         bleu = self.compute_bleuscore()
         
