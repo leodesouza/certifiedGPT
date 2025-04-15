@@ -135,14 +135,15 @@ class MiniGPT4EvalAgent(BaseAgent):
                        generate(image, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False, calc_probs=False))
             xm.mark_step()
 
-            for p_answer, question, question_id, image_id  in zip(predicted_answers, questions, question_ids, image_ids):
+            for p_answer, question, question_id  in zip(predicted_answers, questions, question_ids):
                 if not isinstance(p_answer, str):
                     p_answer = str(p_answer)                
                 clean_answer = p_answer.replace('#','')
                 p_answer = clean_answer.lower().replace('<unk>','').strip()
                                                 
-                self.prepare_for_compute_scores(p_answer, question, question_id, image_id)   
+                self.prepare_for_compute_scores(p_answer, question, question_id, None)   
 
+            xm.master_print(f"predicted_answers: {predicted_answers}") 
             xm.master_print(f"_predictions: {self._predictions}")            
             xm.master_print(f"_question: {self._questions}")            
             xm.master_print(f"_question_ids: {self._question_ids}")
