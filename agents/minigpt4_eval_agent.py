@@ -63,9 +63,8 @@ class MiniGPT4EvalAgent(BaseAgent):
         self._annotations_paths = None
         self._log = []
         self._smooth_fn = SmoothingFunction().method1                
-        self._predictions = []
-        self._ground_truths = []
-        self._anwers_type = []
+        self._predictions = []        
+        self._questions = []
         self._question_ids = []
         self._image_ids = []
 
@@ -128,33 +127,24 @@ class MiniGPT4EvalAgent(BaseAgent):
             image = batch_sample["image"]            
             image_ids = batch_sample["image_id"]                        
             question_ids = batch_sample["question_id"]            ,
-            questions = batch_sample["instruction_input"]            
-            ground_truth_answers = batch_sample["answer"]
-            answers_type = batch_sample["answer_type"]
-            
-                        
+            questions = batch_sample["instruction_input"]                        
+                                    
             texts = self.prepare_texts(questions, conv_temp)
 
             predicted_answers, _ = (self.model.
                        generate(image, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False, calc_probs=False))
             xm.mark_step()
-            
-            for p_answer, g_answer, answer_type, question_id, image_id  in zip(predicted_answers, ground_truth_answers, answers_type, question_ids, image_ids):
+
+            for p_answer, question, question_id, image_id  in zip(predicted_answers, questions, question_ids, image_ids):
                 if not isinstance(p_answer, str):
                     p_answer = str(p_answer)                
                 clean_answer = p_answer.replace('#','')
                 p_answer = clean_answer.lower().replace('<unk>','').strip()
-                                
-                if not isinstance(g_answer, str):
-                    g_answer = str(g_answer)
-                clean_answer = g_answer.replace('#','')
-                g_answer = clean_answer.lower().replace('<unk>','').strip()                
-                self.prepare_for_compute_scores(p_answer, g_answer, answer_type, question_id, image_id)   
+                                                
+                self.prepare_for_compute_scores(p_answer, question, question_id, image_id)   
 
-            xm.master_print(f"_predictions: {self._predictions}")
-            xm.master_print(f"_ground_truths: {self._ground_truths}")
-            xm.master_print(f"ground_truth_answers: {ground_truth_answers}")
-            xm.master_print(f"_anwers_type: {self._anwers_type}")
+            xm.master_print(f"_predictions: {self._predictions}")            
+            xm.master_print(f"_question: {self._questions}")            
             xm.master_print(f"_question_ids: {self._question_ids}")
             xm.master_print(f"_image_ids: {self._image_ids}")
             xm.master_print(f"texts: {texts}")
@@ -194,21 +184,20 @@ class MiniGPT4EvalAgent(BaseAgent):
 
         xm.master_print(f"Eval ended: {(test_utils.now())}")
     
-    def prepare_for_compute_scores(self, prediction, groud_truth_answer, answer_type, question_id, image_id):
+    def prepare_for_compute_scores(self, prediction, question, question_id, image_id):
         
         if prediction.strip() == "":            
             prediction = "[EMPTY]"
             xm.master_print("empty detected")
         
         self._predictions.append(prediction)
-        self._ground_truths.append(groud_truth_answer)
-        self._anwers_type.append(answer_type)        
+        self._questions.append(question)        
         self._question_ids.append(question_id)        
         self._image_ids.append(image_id)        
         
     def compute_vqa_accuracy(self):        
           
-        evaluator = VQAEval(self._ground_truths, self._predictions, self._anwers_type, self._question_ids, self._questions_paths)
+        evaluator = VQAEval(self._predictions, self._question_ids, self._questions_paths)
         accuracy = evaluator.evaluate()   
     
         overall_acc = accuracy["overall"]
