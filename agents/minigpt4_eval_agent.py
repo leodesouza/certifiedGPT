@@ -153,6 +153,7 @@ class MiniGPT4EvalAgent(BaseAgent):
 
             xm.master_print(f"_predictions: {self._predictions}")
             xm.master_print(f"_ground_truths: {self._ground_truths}")
+            xm.master_print(f"ground_truth_answers: {ground_truth_answers}")
             xm.master_print(f"_anwers_type: {self._anwers_type}")
             xm.master_print(f"_question_ids: {self._question_ids}")
             xm.master_print(f"_image_ids: {self._image_ids}")
