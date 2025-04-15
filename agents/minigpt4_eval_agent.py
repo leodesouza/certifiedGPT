@@ -156,6 +156,8 @@ class MiniGPT4EvalAgent(BaseAgent):
             xm.master_print(f"_anwers_type: {self._anwers_type}")
             xm.master_print(f"_question_ids: {self._question_ids}")
             xm.master_print(f"_image_ids: {self._image_ids}")
+            xm.master_print(f"texts: {texts}")
+            
             raise ValueError("teste")            
 
             self.save_eval_state(step, self._predictions, self._ground_truths, self._anwers_type, self._question_ids, self._image_ids)
