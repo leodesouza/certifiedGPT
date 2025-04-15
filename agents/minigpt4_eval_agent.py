@@ -111,12 +111,15 @@ class MiniGPT4EvalAgent(BaseAgent):
             xm.master_print(f"Eval will be resumed from step: {saved_step}")
                         
         for step, batch_sample in enumerate(val_loader):
-                        
+                    
             # if step % 10 !=  0:
             #     continue
 
             # if step < saved_step:
             #     continue
+
+            if step > 0:
+                continue
 
             xm.master_print(f"Eval step: {step} - {(test_utils.now())}")  
             self.logger.info(f"Eval step {step} started - {(test_utils.now())}")          
@@ -141,10 +144,7 @@ class MiniGPT4EvalAgent(BaseAgent):
                 clean_answer = p_answer.replace('#','')
                 p_answer = clean_answer.lower().replace('<unk>','').strip()                
                 self.prepare_for_compute_scores(p_answer, question_id)                           
-            
-            xm.master_print(f"predictions: {self._predictions}")
-            xm.master_print(f"questions: {self._question_ids}")
-            raise ValueError("teste")
+                                    
             self.save_eval_state(step, self._predictions, self._question_ids)
             self.logger.info(f"Eval step ended: {step} - {(test_utils.now())}")                      
                                                   
@@ -189,7 +189,7 @@ class MiniGPT4EvalAgent(BaseAgent):
         
     def compute_vqa_accuracy(self):        
           
-        evaluator = VQAEval(self._predictions, self._question_ids, self._questions_paths)
+        evaluator = VQAEval(self._predictions, self._question_ids, self._annotations_paths)
         accuracy = evaluator.evaluate()   
     
         overall_acc = accuracy["overall"]
@@ -330,8 +330,7 @@ class MiniGPT4EvalAgent(BaseAgent):
     
     def save_eval_state(self, step, predictions, question_ids):        
         xm.master_print("saving state..")   
-        state = dict()        
-        
+        state = dict()                
         state["step"] = step
         state["predictions"] = predictions
         state["question_ids"] = question_ids        

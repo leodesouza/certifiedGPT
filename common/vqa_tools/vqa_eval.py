@@ -2,15 +2,18 @@ import re
 import json
 
 class VQAEval:
-    def __init__(self, preds=None, question_ids=None, question_path=None):
+    def __init__(self, preds=None, question_ids=None, annotation_path=None):
                 
         if preds is None or question_ids is None:
             raise ValueError("Both preds, question_ids must be provided")
+        
+        if annotation_path is None:
+            raise ValueError("annotation must be provided ")
                 
         self.preds = preds        
-        self.question_ids = question_ids
-        self.question_path = question_path
-        self.questions = json.load(open(question_path, 'r'))
+        self.question_ids = question_ids        
+        
+        self.annotations = json.load(open(annotation_path, 'r'))
         self.accuracy = {}
         self.evalQA = {}
 
@@ -52,18 +55,20 @@ class VQAEval:
                 cleaned.append(self.contractions.get(word, word))
         return " ".join(cleaned)
     
-    # def _reduce_repeats(self, ans):
-    #     tokens = ans.strip().split()
-    #     if all(token == tokens[0] for token in tokens):
-    #         return tokens[0]
-    #     return ans
+    def compute_accuracy(self, pred, gts):
+        matchs = sum([1 for gt in gts if pred == gt])
+        return min(1.0, matchs /3)
+    
 
     def evaluate(self):        
         acc_per_question = {}
-        for idx, (gt, pred, ans_type) in enumerate(zip(self.gts, self.preds, self.answers_type)):                        
-            norm_gt = self.normalize_answer(gt)
+        for idx, (pred, question_id) in enumerate(zip(self.question_ids, self.preds)):                        
+            ann = self.annotations["annotations"].get(question_id)            
+            print(f"ann: {ann}")
+            gt_answers = [self.normalize_answer(ann) for ann in ann["answer"]]            
+            print(f"gt_answers: {gt_answers}")
             norm_pred = self.normalize_answer(pred)
-            acc = 1.0 if norm_gt == norm_pred else 0.0
+            acc = self.compute_accuracy(norm_pred, gt_answers)
             acc_per_question[idx] = acc
                         
         return {
