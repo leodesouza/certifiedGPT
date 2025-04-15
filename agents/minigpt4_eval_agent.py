@@ -197,6 +197,7 @@ class MiniGPT4EvalAgent(BaseAgent):
         
         if prediction.strip() == "":            
             prediction = "[EMPTY]"
+            xm.master_print("empty detected")
         
         self._predictions.append(prediction)
         self._ground_truths.append(groud_truth_answer)
