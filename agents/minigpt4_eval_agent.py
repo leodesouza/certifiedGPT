@@ -107,6 +107,7 @@ class MiniGPT4EvalAgent(BaseAgent):
             saved_step = state.get("step", 0)
             self._predictions = state.get("predictions", [])
             self._ground_truths = state.get("ground_truths", [])                
+            self._anwers_type = state.get("answer_type", [])
             saved_step += 1 
             xm.master_print(f"Eval will be resumed from step: {saved_step}")
                         
