@@ -63,10 +63,8 @@ class MiniGPT4EvalAgent(BaseAgent):
         self._annotations_paths = None
         self._log = []
         self._smooth_fn = SmoothingFunction().method1                
-        self._predictions = []        
-        self._questions = []
-        self._question_ids = []
-        self._image_ids = []
+        self._predictions = []                
+        self._question_ids = []        
 
     def run(self):
         try:
@@ -137,22 +135,17 @@ class MiniGPT4EvalAgent(BaseAgent):
                        generate(image, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False, calc_probs=False))
             xm.mark_step()
 
-            for p_answer, question, question_id, image_id  in zip(predicted_answers, questions, question_ids, image_ids):
+            for p_answer, question_id in zip(predicted_answers, question_ids):
                 if not isinstance(p_answer, str):
                     p_answer = str(p_answer)                
                 clean_answer = p_answer.replace('#','')
                 p_answer = clean_answer.lower().replace('<unk>','').strip()                
-                self.prepare_for_compute_scores(p_answer, question, question_id, image_id)   
+                self.prepare_for_compute_scores(p_answer, question_id)                           
             
-            xm.master_print(f"_predictions: {self._predictions}")            
-            xm.master_print(f"_question: {self._questions}")            
-            xm.master_print(f"_question_ids: {self._question_ids}")
-            xm.master_print(f"_image_ids: {self._image_ids}")
-            xm.master_print(f"texts: {texts}")
-            
-            raise ValueError("teste")            
-
-            self.save_eval_state(step, self._predictions, self._ground_truths, self._anwers_type, self._question_ids, self._image_ids)
+            xm.master_print(f"predictions: {self._predictions}")
+            xm.master_print(f"questions: {self._question_ids}")
+            raise ValueError("teste")
+            self.save_eval_state(step, self._predictions, self._question_ids)
             self.logger.info(f"Eval step ended: {step} - {(test_utils.now())}")                      
                                                   
         overall_acc, yes_no_acc, number_acc, other_acc = self.compute_vqa_accuracy()                 
@@ -185,16 +178,14 @@ class MiniGPT4EvalAgent(BaseAgent):
 
         xm.master_print(f"Eval ended: {(test_utils.now())}")
     
-    def prepare_for_compute_scores(self, prediction, question, question_id, image_id):
+    def prepare_for_compute_scores(self, prediction, question_id):
         
         if prediction.strip() == "":            
             prediction = "[EMPTY]"
             xm.master_print("empty detected")
         
-        self._predictions.append(prediction)
-        self._questions.append(question)        
-        self._question_ids.append(question_id)        
-        self._image_ids.append(image_id)        
+        self._predictions.append(prediction)        
+        self._question_ids.append(question_id)                
         
     def compute_vqa_accuracy(self):        
           
@@ -337,15 +328,13 @@ class MiniGPT4EvalAgent(BaseAgent):
         texts = [conv.get_prompt() for conv in convs]
         return texts
     
-    def save_eval_state(self, step, predictions, ground_truths, answers_type, question_ids, image_ids):        
+    def save_eval_state(self, step, predictions, question_ids):        
         xm.master_print("saving state..")   
-        state = dict()
+        state = dict()        
+        
         state["step"] = step
         state["predictions"] = predictions
-        state["ground_truths"] = ground_truths
-        state["answer_type"] = answers_type
-        state["question_ids"] = question_ids
-        state["image_ids"] = image_ids
+        state["question_ids"] = question_ids        
 
         rank = xm.runtime.global_ordinal()
         file_path = os.path.join(self.config.run.output_dir,f"eval_output_r{rank}.pkl")
