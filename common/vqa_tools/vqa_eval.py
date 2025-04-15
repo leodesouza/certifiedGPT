@@ -55,25 +55,20 @@ class VQAEval:
                 cleaned.append(self.contractions.get(word, word))
         return " ".join(cleaned)
     
-    def _reduce_repeats(self, ans):
-        tokens = ans.strip().split()
-        if all(token == tokens[0] for token in tokens):
-            return tokens[0]
-        return ans
+    # def _reduce_repeats(self, ans):
+    #     tokens = ans.strip().split()
+    #     if all(token == tokens[0] for token in tokens):
+    #         return tokens[0]
+    #     return ans
 
     def evaluate(self):        
         acc_per_question = {}
-        for idx, (gt, pred, ans_type) in enumerate(zip(self.gts, self.preds, self.answers_type)):                                                
+        for idx, (gt, pred, ans_type) in enumerate(zip(self.gts, self.preds, self.answers_type)):                        
             norm_gt = self.normalize_answer(gt)
-            norm_pred = self.normalize_answer(pred)            
-
-            if ans_type in ["yes/no", "number"]:
-                if ans_type == "yes/no":
-                    norm_pred = self._reduce_repeats(pred)                
-                    norm_gt = self._reduce_repeats(gt)                                    
-                acc = 1.0 if norm_gt == norm_pred else 0.0            
-                acc_per_question[idx] = acc
-                
+            norm_pred = self.normalize_answer(pred)
+            acc = 1.0 if norm_gt == norm_pred else 0.0
+            acc_per_question[idx] = acc
+                        
         return {
             "overall": 100.0 * sum(acc_per_question.values()) / len(acc_per_question),
             "yes/no": 100.0 * sum(acc_per_question[idx] for idx in range(len(self.answers_type)) if self.answers_type[idx] == "yes/no") / self.answers_type.count("yes/no"),
