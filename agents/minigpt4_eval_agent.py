@@ -144,7 +144,11 @@ class MiniGPT4EvalAgent(BaseAgent):
                     p_answer = str(p_answer)                
                 clean_answer = p_answer.replace('#','')
                 p_answer = clean_answer.lower().replace('<unk>','').strip()
-                                                
+
+                print(f'p_answer: {p_answer}')
+                print(f'question: {question}')
+                print(f'question_id: {question_id}')
+                                                                
                 self.prepare_for_compute_scores(p_answer, question, question_id, None)   
 
             xm.master_print(f"predicted_answers: {predicted_answers}") 
