@@ -175,7 +175,7 @@ class MiniGPT4EvalAgent(BaseAgent):
 
             with open(file_path, 'a') as f:
                 if not file_exists:
-                    f.write("precision\trecall\tf1\tbleu\toverall_acc\toverall_acc\tyes_no_acc\tnumber_acc_acc\tother_acc\ttime\n")
+                    f.write("precision\trecall\tf1\tbleu\toverall_acc\tyes_no_acc\tnumber_acc_acc\tother_acc\ttime\n")
                 f.write("\n".join(self._log) + "\n")
 
         xm.master_print(f"Eval ended: {(test_utils.now())}")
