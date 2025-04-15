@@ -1,19 +1,23 @@
 import re
+import json
 
 class VQAEval:
-    def __init__(self, gts=None, preds=None, answers_type=None):
+    def __init__(self, gts=None, preds=None, answers_type=None, question_ids=None, question_path=None):
         """
         gts: list of ground truth answers (strings)
         preds: list of predicted answers (strings)
         """
-        if gts is None or preds is None or answers_type is None:
-            raise ValueError("Both gts, preds and answers_type must be provided")
+        if gts is None or preds is None or answers_type is None or question_ids is None:
+            raise ValueError("Both gts, preds, answers_type and question_ids must be provided")
         if len(gts) != len(preds):
             raise ValueError("Length of ground truth list and prediction list must match")
-
+        
         self.gts = gts
         self.preds = preds
         self.answers_type = answers_type
+        self.question_ids = question_ids
+        self.question_path = question_path
+        self.questions = json.load(open(question_path, 'r'))
         self.accuracy = {}
         self.evalQA = {}
 

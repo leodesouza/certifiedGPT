@@ -66,6 +66,8 @@ class MiniGPT4EvalAgent(BaseAgent):
         self._predictions = []
         self._ground_truths = []
         self._anwers_type = []
+        self._question_ids = []
+        self._image_ids = []
 
     def run(self):
         try:
@@ -111,43 +113,53 @@ class MiniGPT4EvalAgent(BaseAgent):
             saved_step += 1 
             xm.master_print(f"Eval will be resumed from step: {saved_step}")
                         
-        # for step, batch_sample in enumerate(val_loader):
+        for step, batch_sample in enumerate(val_loader):
                         
-        #     if step % 10 !=  0:
-        #         continue
+            if step % 10 !=  0:
+                continue
 
-        #     if step < saved_step:
-        #         continue
+            if step < saved_step:
+                continue
 
-        #     xm.master_print(f"Eval step: {step} - {(test_utils.now())}")  
-        #     self.logger.info(f"Eval step {step} started - {(test_utils.now())}")          
-        #     self.maybe_add_noise(batch_sample, self.config.run.noise_level)
+            xm.master_print(f"Eval step: {step} - {(test_utils.now())}")  
+            self.logger.info(f"Eval step {step} started - {(test_utils.now())}")          
+            self.maybe_add_noise(batch_sample, self.config.run.noise_level)
             
-        #     image = batch_sample["image"]            
-        #     questions = batch_sample["instruction_input"]            
-        #     ground_truth_answers = batch_sample["answer"]
-        #     answers_type = batch_sample["answer_type"]
+            image = batch_sample["image"]            
+            image_ids = batch_sample["image_id"]                        
+            question_ids = batch_sample["question_id"]            ,
+            questions = batch_sample["instruction_input"]            
+            ground_truth_answers = batch_sample["answer"]
+            answers_type = batch_sample["answer_type"]
+            
                         
-        #     texts = self.prepare_texts(questions, conv_temp)
+            texts = self.prepare_texts(questions, conv_temp)
 
-        #     predicted_answers, _ = (self.model.
-        #                generate(image, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False, calc_probs=False))
-        #     xm.mark_step()
+            predicted_answers, _ = (self.model.
+                       generate(image, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False, calc_probs=False))
+            xm.mark_step()
             
-        #     for p_answer, g_answer, answer_type  in zip(predicted_answers, ground_truth_answers, answers_type):
-        #         if not isinstance(p_answer, str):
-        #             p_answer = str(p_answer)                
-        #         clean_answer = p_answer.replace('#','')
-        #         p_answer = clean_answer.lower().replace('<unk>','').strip()
+            for p_answer, g_answer, answer_type, question_id, image_id  in zip(predicted_answers, ground_truth_answers, answers_type, question_ids, image_ids):
+                if not isinstance(p_answer, str):
+                    p_answer = str(p_answer)                
+                clean_answer = p_answer.replace('#','')
+                p_answer = clean_answer.lower().replace('<unk>','').strip()
                                 
-        #         if not isinstance(g_answer, str):
-        #             g_answer = str(g_answer)
-        #         clean_answer = g_answer.replace('#','')
-        #         g_answer = clean_answer.lower().replace('<unk>','').strip()                
-        #         self.prepare_for_compute_scores(p_answer, g_answer, answer_type)   
+                if not isinstance(g_answer, str):
+                    g_answer = str(g_answer)
+                clean_answer = g_answer.replace('#','')
+                g_answer = clean_answer.lower().replace('<unk>','').strip()                
+                self.prepare_for_compute_scores(p_answer, g_answer, answer_type, question_id, image_id)   
 
-        #     self.save_eval_state(step, self._predictions, self._ground_truths, self._anwers_type)
-        #     self.logger.info(f"Eval step ended: {step} - {(test_utils.now())}")                      
+            xm.master_print(f"_predictions: {self._predictions}")
+            xm.master_print(f"_ground_truths: {self._ground_truths}")
+            xm.master_print(f"_anwers_type: {self._anwers_type}")
+            xm.master_print(f"_question_ids: {self._question_ids}")
+            xm.master_print(f"_image_ids: {self._image_ids}")
+            raise ValueError("teste")            
+
+            self.save_eval_state(step, self._predictions, self._ground_truths, self._anwers_type, self._question_ids, self._image_ids)
+            self.logger.info(f"Eval step ended: {step} - {(test_utils.now())}")                      
                                                   
         overall_acc, yes_no_acc, number_acc, other_acc = self.compute_vqa_accuracy()                 
         precision, recall, f1 = self.compute_bertscore()
@@ -179,7 +191,7 @@ class MiniGPT4EvalAgent(BaseAgent):
 
         xm.master_print(f"Eval ended: {(test_utils.now())}")
     
-    def prepare_for_compute_scores(self, prediction, groud_truth_answer, answer_type):
+    def prepare_for_compute_scores(self, prediction, groud_truth_answer, answer_type, question_id, image_id):
         
         if prediction.strip() == "":            
             prediction = "[EMPTY]"
@@ -187,10 +199,12 @@ class MiniGPT4EvalAgent(BaseAgent):
         self._predictions.append(prediction)
         self._ground_truths.append(groud_truth_answer)
         self._anwers_type.append(answer_type)        
+        self._question_ids.append(question_id)        
+        self._image_ids.append(image_id)        
         
     def compute_vqa_accuracy(self):        
           
-        evaluator = VQAEval(self._ground_truths, self._predictions, self._anwers_type)
+        evaluator = VQAEval(self._ground_truths, self._predictions, self._anwers_type, self._question_ids, self._questions_paths)
         accuracy = evaluator.evaluate()   
     
         overall_acc = accuracy["overall"]
@@ -329,27 +343,26 @@ class MiniGPT4EvalAgent(BaseAgent):
         texts = [conv.get_prompt() for conv in convs]
         return texts
     
-    def save_eval_state(self, step, predictions, ground_truths, answers_type):        
+    def save_eval_state(self, step, predictions, ground_truths, answers_type, question_ids, image_ids):        
         xm.master_print("saving state..")   
         state = dict()
         state["step"] = step
         state["predictions"] = predictions
         state["ground_truths"] = ground_truths
         state["answer_type"] = answers_type
+        state["question_ids"] = question_ids
+        state["image_ids"] = image_ids
+
         rank = xm.runtime.global_ordinal()
-        file_path = os.path.join(self.config.run.output_dir,f"eval_output_{rank}.pkl")
+        file_path = os.path.join(self.config.run.output_dir,f"eval_output_r{rank}.pkl")
         with open(file_path, 'wb') as f:
             pickle.dump(state, f)
         xm.master_print("state saved!")   
-        xm.rendezvous("eval_state_saved")   
-        
-        # xm.master_print("Syncronizing in all tpus...")   
-        # xm.rendezvous("eval_state_saved")   
-        # xm.master_print("Syncronizing completed")   
+        xm.rendezvous("eval_state_saved")                   
 
     def load_eval_state(self):
         rank = xm.runtime.global_ordinal()
-        file_path = os.path.join(self.config.run.output_dir, f"eval_output_{rank}.pkl")
+        file_path = os.path.join(self.config.run.output_dir, f"eval_output_r{rank}.pkl")
 
         if not os.path.exists(file_path):
             xm.master_print(f'file not found: {file_path}')
