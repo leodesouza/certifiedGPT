@@ -57,20 +57,17 @@ class VQAEval:
 
     def evaluate(self):        
         acc_per_question = {}
-        for idx, (gt, pred, ans_type) in enumerate(zip(self.gts, self.preds, self.answers_type)):            
-            if ans_type in ["yes/no", "number"]:                
-                norm_gt = self.normalize_answer(gt)
-                norm_pred = self.normalize_answer(pred)
-                acc = 1.0 if norm_gt == norm_pred else 0.0
-                acc_per_question[idx] = acc
-                
-        self.evalQA = acc_per_question
-        self.accuracy = {
-            "overall": 100.0 * sum(acc_per_question.values()) / len(acc_per_question)
+        for idx, (gt, pred, ans_type) in enumerate(zip(self.gts, self.preds, self.answers_type)):                        
+            norm_gt = self.normalize_answer(gt)
+            norm_pred = self.normalize_answer(pred)
+            acc = 1.0 if norm_gt == norm_pred else 0.0
+            acc_per_question[idx] = acc
+                        
+        return {
+            "overall": 100.0 * sum(acc_per_question.values()) / len(acc_per_question),
+            "yes/no": 100.0 * sum(acc_per_question[idx] for idx in range(len(self.answers_type)) if self.answers_type[idx] == "yes/no") / self.answers_type.count("yes/no"),
+            "number": 100.0 * sum(acc_per_question[idx] for idx in range(len(self.answers_type)) if self.answers_type[idx] == "number") / self.answers_type.count("number"),
+            "other": 100.0 * sum(acc_per_question[idx] for idx in range(len(self.answers_type)) if self.answers_type[idx] == "other") / self.answers_type.count("other"),
         }
         
-    def get_accuracy(self):
-        return self.accuracy["overall"]
-
-    def get_per_question_accuracy(self):
-        return self.evalQA
+            
