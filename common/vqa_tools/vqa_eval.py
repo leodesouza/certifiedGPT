@@ -12,7 +12,7 @@ class VQAEval:
                 
         self.preds = preds        
         self.question_ids = question_ids        
-        
+        print(f"annotation_path: {annotation_path}")
         self.annotations = json.load(open(annotation_path, 'r'))
         self.accuracy = {}
         self.evalQA = {}
