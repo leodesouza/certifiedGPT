@@ -128,6 +128,10 @@ class MiniGPT4EvalAgent(BaseAgent):
             image_ids = batch_sample["image_id"]                        
             question_ids = batch_sample["question_id"]            ,
             questions = batch_sample["instruction_input"]                        
+
+            xm.master_print(f"question_ids: {question_ids}") 
+            xm.master_print(f"questions: {questions}")                        
+            xm.master_print(f"image_ids: {image_ids}")    
                                     
             texts = self.prepare_texts(questions, conv_temp)
 
