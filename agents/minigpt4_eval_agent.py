@@ -192,7 +192,13 @@ class MiniGPT4EvalAgent(BaseAgent):
     def compute_vqa_accuracy(self):        
           
         evaluator = VQAEval(self._ground_truths, self._predictions, self._anwers_type)
-        overall_acc, yes_no_acc, number_acc, other_acc = evaluator.evaluate()
+        accuracy = evaluator.evaluate()   
+    
+        overall_acc = accuracy["overall"]
+        yes_no_acc = accuracy["yes/no"] 
+        number_acc = accuracy["number"] 
+        other_acc = accuracy["other"] 
+        
         print(f"{overall_acc, yes_no_acc, number_acc, other_acc}")
         
         overall_acc = torch.tensor(overall_acc, device=self.device)        

@@ -62,12 +62,7 @@ class VQAEval:
             norm_pred = self.normalize_answer(pred)
             acc = 1.0 if norm_gt == norm_pred else 0.0
             acc_per_question[idx] = acc
-        
-        print(f"acc_per_question: {len(acc_per_question)}")
-        print(f"preds: {len(self.preds)}")
-        print(f"gts: {len(self.gts)}")
-        print(f"answers_type: {len(self.answers_type)}")
-        
+                
         return {
             "overall": 100.0 * sum(acc_per_question.values()) / len(acc_per_question),
             "yes/no": 100.0 * sum(acc_per_question[idx] for idx in range(len(self.answers_type)) if self.answers_type[idx] == "yes/no") / self.answers_type.count("yes/no"),
