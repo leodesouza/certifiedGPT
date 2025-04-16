@@ -56,7 +56,7 @@ class VQAEval:
                 cleaned.append(self.contractions.get(word, word))
         return " ".join(cleaned)
     
-    def is_close_match(a, b, threshold=0.9):
+    def is_close_match(self, a, b, threshold=0.9):
         return SequenceMatcher(None, a, b).ratio >= threshold
     
     def compute_accuracy(self, pred, gts):
