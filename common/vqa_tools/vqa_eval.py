@@ -58,9 +58,9 @@ class VQAEval:
                 norm_pred = self.normalize_vqa_answer(pred)                
                 acc = self.compute_accuracy(norm_pred, gt_answers)                                    
             acc_per_question[idx] = acc
-            
+
             if acc < 1.0:
-                print(f"[FAIL] pred: '{norm_pred}' vs. gts: {gt_answers}")
+                print(f"[FAIL] pred: '{norm_pred}' vs. gts: {gt_answers}: question_id: {question_id}")
 
         if not acc_per_question:
             return {"overall": 0.0}
