@@ -104,10 +104,11 @@ class MiniGPT4EvalAgent(BaseAgent):
         saved_step = 0
         state = self.load_eval_state()
         if state is not None:            
-            saved_step = state.get("step", 0)
+            saved_step = state.get("step", 0)     
+        
             self._predictions = state.get("predictions", [])
             self._ground_truths = state.get("ground_truths", [])                
-            self._anwers_type = state.get("answer_type", [])
+            self._question_ids = state.get("question_ids", [])
             saved_step += 1 
             xm.master_print(f"Eval will be resumed from step: {saved_step}")
                         
@@ -150,7 +151,7 @@ class MiniGPT4EvalAgent(BaseAgent):
 
                 self.prepare_for_compute_scores(p_answer, question_id, ans)                           
                                                 
-            self.save_eval_state(step, self._predictions, self._question_ids)
+            self.save_eval_state(step, self._predictions, self._question_ids, self._ground_truths)
             self.logger.info(f"Eval step ended: {step} - {(test_utils.now())}")                      
                                                   
         overall_acc = self.compute_vqa_accuracy()                 
@@ -312,12 +313,14 @@ class MiniGPT4EvalAgent(BaseAgent):
         texts = [conv.get_prompt() for conv in convs]
         return texts
     
-    def save_eval_state(self, step, predictions, question_ids):        
+    def save_eval_state(self, step, predictions, question_ids, ground_truths):        
         xm.master_print("saving state..")   
+    
         state = dict()                
         state["step"] = step
-        state["predictions"] = predictions
-        state["question_ids"] = question_ids        
+        state["predictions"] = predictions        
+        state["question_ids"] = question_ids
+        state["ground_truths"] = ground_truths                
 
         rank = xm.runtime.global_ordinal()
         file_path = os.path.join(self.config.run.output_dir,f"eval_output_r{rank}.pkl")
