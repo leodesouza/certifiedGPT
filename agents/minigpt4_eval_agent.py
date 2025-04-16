@@ -63,7 +63,8 @@ class MiniGPT4EvalAgent(BaseAgent):
         self._annotations_paths = None
         self._log = []
         self._smooth_fn = SmoothingFunction().method1                
-        self._predictions = []                
+        self._predictions = []    
+        self._ground_truths = []            
         self._question_ids = []        
 
     def run(self):
@@ -112,11 +113,14 @@ class MiniGPT4EvalAgent(BaseAgent):
                         
         for step, batch_sample in enumerate(val_loader):
                     
-            if step % 10 !=  0:
-                continue
+            # if step % 10 !=  0:
+            #     continue
 
-            if step < saved_step:
-                continue            
+            # if step < saved_step:
+            #     continue            
+
+            if step > 0:
+                continue
 
             xm.master_print(f"Eval step: {step} - {(test_utils.now())}")  
             self.logger.info(f"Eval step {step} started - {(test_utils.now())}")          
@@ -128,6 +132,7 @@ class MiniGPT4EvalAgent(BaseAgent):
             question_ids = batch_sample["question_id"]
             question_ids = question_ids.tolist()
             questions = batch_sample["instruction_input"]                        
+            answers = batch_sample["answer"] 
                                     
             texts = self.prepare_texts(questions, conv_temp)
 
@@ -135,12 +140,18 @@ class MiniGPT4EvalAgent(BaseAgent):
                        generate(image, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False, calc_probs=False))
             xm.mark_step()
 
-            for p_answer, question_id in zip(predicted_answers, question_ids):
+            for p_answer, question_id, ans in zip(predicted_answers, question_ids, answers):
                 if not isinstance(p_answer, str):
                     p_answer = str(p_answer)                
                 clean_answer = p_answer.replace('#','')
                 p_answer = clean_answer.lower().replace('<unk>','').strip()                
-                self.prepare_for_compute_scores(p_answer, question_id)                           
+
+                if not isinstance(ans, str):
+                    ans = str(ans)                
+                clean_answer = ans.replace('#','')
+                ans = clean_answer
+
+                self.prepare_for_compute_scores(p_answer, question_id, ans)                           
                                     
             self.save_eval_state(step, self._predictions, self._question_ids)
             self.logger.info(f"Eval step ended: {step} - {(test_utils.now())}")                      
@@ -148,19 +159,13 @@ class MiniGPT4EvalAgent(BaseAgent):
         overall_acc = self.compute_vqa_accuracy()                 
         precision, recall, f1 = self.compute_bertscore()
         bleu = self.compute_bleuscore()
-                                        
-        global_precision = xm.mesh_reduce("precision", precision.item(), lambda x: sum(x) / len(x)) 
-        global_recall = xm.mesh_reduce("recall", recall.item(), lambda x: sum(x) / len(x)) 
-        global_f1 = xm.mesh_reduce("f1", f1.item(), lambda x: sum(x) / len(x))
-        global_bleu_score = xm.mesh_reduce("blue", bleu.item(), lambda x: sum(x) / len(x))        
-        global_accuracy = xm.mesh_reduce("overall_acc", overall_acc.item(), lambda x: sum(x) / len(x))        
-                                                
+                                                                                        
         if xm.is_master_ordinal():
                        
             after_time = time()
             elapsed_time = str(datetime.timedelta(seconds=(after_time - before_time)))
         
-            self._log.append(f"{global_precision}\t{global_recall}\t{global_f1}\t{global_bleu_score}\t{global_accuracy}\t{elapsed_time}")
+            self._log.append(f"{precision.item()}\t{recall.item()}\t{f1.item()}\t{bleu.item()}\t{overall_acc.item()}\t{elapsed_time}")
             file_path = os.path.join(self.config.run.output_dir,"eval_output.txt")
             file_exists = os.path.exists(file_path)
 
@@ -171,13 +176,14 @@ class MiniGPT4EvalAgent(BaseAgent):
 
         xm.master_print(f"Eval ended: {(test_utils.now())}")
     
-    def prepare_for_compute_scores(self, prediction, question_id):
+    def prepare_for_compute_scores(self, prediction, question_id, answer):
         
         if prediction.strip() == "":            
             prediction = "[EMPTY]"
             xm.master_print("empty detected")
         
-        self._predictions.append(prediction)        
+        self._predictions.append(prediction)     
+        self._ground_truths.append(answer)   
         self._question_ids.append(question_id)                
         
     def compute_vqa_accuracy(self):        
