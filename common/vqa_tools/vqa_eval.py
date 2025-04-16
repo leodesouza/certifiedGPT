@@ -87,7 +87,7 @@ class VQAEval:
 
         if not acc_per_question:
             return {"overall": 0.0}
-
+        print(f"acc_per_question: {len(acc_per_question)}")
         overall_acc = 100.0 * sum(acc_per_question.values()) / len(acc_per_question)
         return overall_acc
 
