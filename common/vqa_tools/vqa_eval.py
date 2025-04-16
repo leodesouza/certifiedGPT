@@ -13,8 +13,7 @@ class VQAEval:
         self.preds = preds        
         self.question_ids = question_ids                
         self.annotations = json.load(open(annotation_path[0], 'r'))        
-        self.answers = {ann["question_id"]:ann for ann in self.annotations["annotations"]}
-        print(f"self.answers: {len(self.answers)}")
+        self.answers = {ann["question_id"]:ann for ann in self.annotations["annotations"]}        
         self.accuracy = {}
         self.evalQA = {}
 
@@ -73,9 +72,10 @@ class VQAEval:
             acc = self.compute_accuracy(norm_pred, gt_answers)
             acc_per_question[idx] = acc
 
-        print(f"overall completed")                        
+        overall_acc = 100.0 * sum(acc_per_question.values()) / len(acc_per_question)
+        print(f"overall_acc: {overall_acc}")
         return {
-            "overall": 100.0 * sum(acc_per_question.values()) / len(acc_per_question),            
+            "overall": overall_acc,            
         }
         
             
