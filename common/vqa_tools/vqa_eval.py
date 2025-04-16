@@ -15,8 +15,7 @@ class VQAEval:
         self.question_ids = question_ids                
         self.annotations = json.load(open(annotation_path[0], 'r'))        
         self.answers = {
-            ann["question_id"]:ann for ann in self.annotations["annotations"] 
-            if ann["answer_type"] in ["yes/no", "number"]
+            ann["question_id"]:ann for ann in self.annotations["annotations"]            
         }        
 
         self.accuracy = {}
@@ -43,45 +42,20 @@ class VQAEval:
         self.commaStrip = re.compile(r"(\d)(,)(\d)")
         self.punct = r";/[]\"{}()=+\\_-<>@`?,!"
     
-    def normalize_answer(self, ans):
-        ans = ''.join(ans)
-        ans = ans.replace('\n', ' ').replace('\t', ' ').strip().lower()
-
-        for p in self.punct:
-            ans = ans.replace(p, '' if p != '.' else ' ')
-        ans = self.periodStrip.sub("", ans)
-        ans = self.commaStrip.sub(r"\1\3", ans)
-
-        words = ans.split()
-        cleaned = []
-        for word in words:
-            word = self.manualMap.get(word, word)
-            if word not in self.articles:
-                cleaned.append(self.contractions.get(word, word))
-        return " ".join(cleaned)
-    
-    def is_close_match(self, a, b, threshold=0.5):
-        return SequenceMatcher(None, a, b).ratio() >= threshold
-    
-    def compute_accuracy(self, pred, gts):
-        matchs = sum([1 for gt in gts if self.is_close_match(pred, gt)])
-        return min(1.0, matchs /3)
-    
-
     def evaluate(self):        
         acc_per_question = {}
         for idx, (pred, question_id) in enumerate(zip(self.preds, self.question_ids)):                        
             answers = self.answers.get(question_id)            
             answers = answers["answers"]            
             gt_answers = [
-                self.normalize_answer(ann["answer"]) 
+                self.normalize_vqa_answer(ann["answer"]) 
                 for ann in answers                 
             ]            
             
             if not gt_answers:
                 acc = 0.0
             else:
-                norm_pred = self.normalize_answer(pred)                
+                norm_pred = self.normalize_vqa_answer(pred)                
                 acc = self.compute_accuracy(norm_pred, gt_answers)                                    
             acc_per_question[idx] = acc
 
@@ -91,5 +65,66 @@ class VQAEval:
         overall_acc = 100.0 * sum(acc_per_question.values()) / len(acc_per_question)
         return overall_acc
 
+    
+    # def normalize_answer(self, ans):
+    #     ans = ''.join(ans)
+    #     ans = ans.replace('\n', ' ').replace('\t', ' ').strip().lower()
+
+    #     for p in self.punct:
+    #         ans = ans.replace(p, '' if p != '.' else ' ')
+    #     ans = self.periodStrip.sub("", ans)
+    #     ans = self.commaStrip.sub(r"\1\3", ans)
+
+    #     words = ans.split()
+    #     cleaned = []
+    #     for word in words:
+    #         word = self.manualMap.get(word, word)
+    #         if word not in self.articles:
+    #             cleaned.append(self.contractions.get(word, word))
+    #     return " ".join(cleaned)
+        
+    def is_close_match(self, a, b, threshold=0.5):
+        return SequenceMatcher(None, a, b).ratio() >= threshold
+    
+    def compute_accuracy(self, pred, gts):
+        matchs = sum([1 for gt in gts if gt == pred])
+        return min(1.0, matchs /3)
+    
+    def processPunctuation(self, inText):
+        outText = inText
+        for p in self.punct:
+            if (p + " " in inText or " " + p in inText) or (
+                re.search(self.commaStrip, inText) != None
+            ):
+                outText = outText.replace(p, "")
+            else:
+                outText = outText.replace(p, " ")
+        outText = self.periodStrip.sub("", outText, re.UNICODE)
+        return outText
+
+    def processDigitArticle(self, inText):
+        outText = []
+        tempText = inText.lower().split()
+        for word in tempText:
+            word = self.manualMap.setdefault(word, word)
+            if word not in self.articles:
+                outText.append(word)
+            else:
+                pass
+        for wordId, word in enumerate(outText):
+            if word in self.contractions:
+                outText[wordId] = self.contractions[word]
+        outText = " ".join(outText)
+        return outText
+    
+    def normalize_vqa_answer(self, ans):
+        if not ans:
+            return ""
+        ans = ans.replace('\n', ' ').replace('\t', ' ').strip().lower()
+        ans = self.processPunctuation(ans)
+        ans = self.processDigitArticle(ans)
+        ans = ans.strip()
+        return ans
+        
         
             
