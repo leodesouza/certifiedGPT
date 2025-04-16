@@ -57,7 +57,7 @@ class VQAEval:
         return " ".join(cleaned)
     
     def is_close_match(self, a, b, threshold=0.9):
-        return SequenceMatcher(None, a, b).ratio >= threshold
+        return SequenceMatcher(None, a, b).ratio() >= threshold
     
     def compute_accuracy(self, pred, gts):
         matchs = sum([1 for gt in gts if self.is_close_match(pred, gt)])
