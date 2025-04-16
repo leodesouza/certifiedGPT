@@ -68,17 +68,15 @@ class VQAEval:
             answers = self.answers.get(question_id)            
             answers = answers["answers"]
             print(f"answers: {answers}")
-            gt_answers = [self.normalize_answer(ann) for ann in answers["answer"]]            
+            gt_answers = [self.normalize_answer(ann["answer"]) for ann in answers]            
             print(f"gt_answers: {gt_answers}")
             norm_pred = self.normalize_answer(pred)
             acc = self.compute_accuracy(norm_pred, gt_answers)
             acc_per_question[idx] = acc
-                        
+
+        print(f"overall completed")                        
         return {
-            "overall": 100.0 * sum(acc_per_question.values()) / len(acc_per_question),
-            "yes/no": 100.0 * sum(acc_per_question[idx] for idx in range(len(self.answers_type)) if self.answers_type[idx] == "yes/no") / self.answers_type.count("yes/no"),
-            "number": 100.0 * sum(acc_per_question[idx] for idx in range(len(self.answers_type)) if self.answers_type[idx] == "number") / self.answers_type.count("number"),
-            "other": 100.0 * sum(acc_per_question[idx] for idx in range(len(self.answers_type)) if self.answers_type[idx] == "other") / self.answers_type.count("other"),
+            "overall": 100.0 * sum(acc_per_question.values()) / len(acc_per_question),            
         }
         
             
