@@ -72,7 +72,8 @@ class VQAEval:
         return SequenceMatcher(None, a, b).ratio() >= threshold
     
     def compute_accuracy(self, pred, gts):
-        matchs = sum([1 for gt in gts if gt == pred])
+        # matchs = sum([1 for gt in gts if gt == pred])
+        matchs = sum([1 for gt in gts if self.is_close_match(pred, gt)])        
         return min(1.0, matchs /3)
     
     def processPunctuation(self, inText):
