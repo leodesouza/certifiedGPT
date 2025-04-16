@@ -152,6 +152,12 @@ class MiniGPT4EvalAgent(BaseAgent):
                 ans = clean_answer
 
                 self.prepare_for_compute_scores(p_answer, question_id, ans)                           
+            
+            xm.master_print(f'_predictions: {self._predictions}')
+            xm.master_print(f'_ground_truths: {self._ground_truths}')
+            xm.master_print(f'_question_ids: {self._question_ids}')
+
+            raise ValueError("teste...")
                                     
             self.save_eval_state(step, self._predictions, self._question_ids)
             self.logger.info(f"Eval step ended: {step} - {(test_utils.now())}")                      
