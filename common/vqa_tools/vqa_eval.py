@@ -56,7 +56,7 @@ class VQAEval:
                 cleaned.append(self.contractions.get(word, word))
         return " ".join(cleaned)
     
-    def is_close_match(self, a, b, threshold=0.7):
+    def is_close_match(self, a, b, threshold=0.5):
         return SequenceMatcher(None, a, b).ratio() >= threshold
     
     def compute_accuracy(self, pred, gts):
@@ -78,7 +78,7 @@ class VQAEval:
             if not gt_answers:
                 acc = 0.0
             else:
-                norm_pred = self.normalize_answer(pred)
+                norm_pred = self.normalize_answer(pred)                
                 acc = self.compute_accuracy(norm_pred, gt_answers)                                    
             acc_per_question[idx] = acc
 
