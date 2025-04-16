@@ -64,7 +64,8 @@ class VQAEval:
         acc_per_question = {}
         for idx, (pred, question_id) in enumerate(zip(self.question_ids, self.preds)):                        
             answers = self.answers.get(question_id)            
-            print(f"answers: {answers["answers"]}")
+            answers = answers["answers"]
+            print(f"answers: {answers}")
             gt_answers = [self.normalize_answer(ann) for ann in answers["answer"]]            
             print(f"gt_answers: {gt_answers}")
             norm_pred = self.normalize_answer(pred)
