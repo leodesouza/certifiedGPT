@@ -67,25 +67,7 @@ class VQAEval:
         print(f"acc_per_question: {len(acc_per_question)}")
         overall_acc = 100.0 * sum(acc_per_question.values()) / len(acc_per_question)
         return overall_acc
-
-    
-    # def normalize_answer(self, ans):
-    #     ans = ''.join(ans)
-    #     ans = ans.replace('\n', ' ').replace('\t', ' ').strip().lower()
-
-    #     for p in self.punct:
-    #         ans = ans.replace(p, '' if p != '.' else ' ')
-    #     ans = self.periodStrip.sub("", ans)
-    #     ans = self.commaStrip.sub(r"\1\3", ans)
-
-    #     words = ans.split()
-    #     cleaned = []
-    #     for word in words:
-    #         word = self.manualMap.get(word, word)
-    #         if word not in self.articles:
-    #             cleaned.append(self.contractions.get(word, word))
-    #     return " ".join(cleaned)
-        
+         
     def is_close_match(self, a, b, threshold=0.5):
         return SequenceMatcher(None, a, b).ratio() >= threshold
     
@@ -127,7 +109,16 @@ class VQAEval:
         ans = self.processPunctuation(ans)
         ans = self.processDigitArticle(ans)
         ans = ans.strip()
-        return ans
+
+        words = ans.split()
+        cleaned = []
+        seen = set()
+        for w in words:
+            if w not in seen:
+                cleaned.append(w)
+                seen.add(w)
+        
+        return " ".join(cleaned)
         
         
             
