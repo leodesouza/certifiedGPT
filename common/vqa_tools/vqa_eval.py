@@ -75,8 +75,7 @@ class VQAEval:
             answers = answers["answers"]            
             gt_answers = [
                 self.normalize_answer(ann["answer"]) 
-                for ann in answers 
-                if ann["answer_confidence"] in ["yes","maybe"]
+                for ann in answers                 
             ]            
             
             if not gt_answers:
