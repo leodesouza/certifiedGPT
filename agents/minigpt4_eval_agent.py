@@ -112,14 +112,11 @@ class MiniGPT4EvalAgent(BaseAgent):
                         
         for step, batch_sample in enumerate(val_loader):
                     
-            # if step % 10 !=  0:
-            #     continue
-
-            # if step < saved_step:
-            #     continue
-
-            if step > 0:
+            if step % 10 !=  0:
                 continue
+
+            if step < saved_step:
+                continue            
 
             xm.master_print(f"Eval step: {step} - {(test_utils.now())}")  
             self.logger.info(f"Eval step {step} started - {(test_utils.now())}")          
@@ -148,32 +145,28 @@ class MiniGPT4EvalAgent(BaseAgent):
             self.save_eval_state(step, self._predictions, self._question_ids)
             self.logger.info(f"Eval step ended: {step} - {(test_utils.now())}")                      
                                                   
-        overall_acc, yes_no_acc, number_acc, other_acc = self.compute_vqa_accuracy()                 
+        overall_acc = self.compute_vqa_accuracy()                 
         precision, recall, f1 = self.compute_bertscore()
         bleu = self.compute_bleuscore()
-        
-                                
+                                        
         global_precision = xm.mesh_reduce("precision", precision.item(), lambda x: sum(x) / len(x)) 
         global_recall = xm.mesh_reduce("recall", recall.item(), lambda x: sum(x) / len(x)) 
         global_f1 = xm.mesh_reduce("f1", f1.item(), lambda x: sum(x) / len(x))
         global_bleu_score = xm.mesh_reduce("blue", bleu.item(), lambda x: sum(x) / len(x))        
         global_accuracy = xm.mesh_reduce("overall_acc", overall_acc.item(), lambda x: sum(x) / len(x))        
-        global_yes_no_acc = xm.mesh_reduce("yes_no_acc", yes_no_acc.item(), lambda x: sum(x) / len(x))        
-        global_number_acc = xm.mesh_reduce("number_acc", number_acc.item(), lambda x: sum(x) / len(x))        
-        global_other_acc = xm.mesh_reduce("other_acc", other_acc.item(), lambda x: sum(x) / len(x))        
                                                 
         if xm.is_master_ordinal():
                        
             after_time = time()
             elapsed_time = str(datetime.timedelta(seconds=(after_time - before_time)))
         
-            self._log.append(f"{global_precision}\t{global_recall}\t{global_f1}\t{global_bleu_score}\t{global_accuracy}\t{global_yes_no_acc}\t{global_number_acc}\t{global_other_acc}\t{elapsed_time}")
+            self._log.append(f"{global_precision}\t{global_recall}\t{global_f1}\t{global_bleu_score}\t{global_accuracy}\t{elapsed_time}")
             file_path = os.path.join(self.config.run.output_dir,"eval_output.txt")
             file_exists = os.path.exists(file_path)
 
             with open(file_path, 'a') as f:
                 if not file_exists:
-                    f.write("precision\trecall\tf1\tbleu\toverall_acc\tyes_no_acc\tnumber_acc_acc\tother_acc\ttime\n")
+                    f.write("precision\trecall\tf1\tbleu\toverall_acc\ttime\n")
                 f.write("\n".join(self._log) + "\n")
 
         xm.master_print(f"Eval ended: {(test_utils.now())}")
@@ -190,21 +183,9 @@ class MiniGPT4EvalAgent(BaseAgent):
     def compute_vqa_accuracy(self):        
           
         evaluator = VQAEval(self._predictions, self._question_ids, self._annotations_paths)
-        accuracy = evaluator.evaluate()   
-    
-        overall_acc = accuracy["overall"]
-        yes_no_acc = accuracy["yes/no"] 
-        number_acc = accuracy["number"] 
-        other_acc = accuracy["other"] 
-        
-        print(f"{overall_acc, yes_no_acc, number_acc, other_acc}")
-        
-        overall_acc = torch.tensor(overall_acc, device=self.device)        
-        yes_no_acc = torch.tensor(yes_no_acc, device=self.device)        
-        number_acc = torch.tensor(number_acc, device=self.device)        
-        other_acc = torch.tensor(other_acc, device=self.device)        
-
-        return overall_acc, yes_no_acc, number_acc, other_acc
+        accuracy = evaluator.evaluate()               
+        accuracy = torch.tensor(accuracy, device=self.device)                
+        return accuracy
         
     def clean_text(self, text):
         return text.replace("#", "").lower().replace("<unk>","").strip()

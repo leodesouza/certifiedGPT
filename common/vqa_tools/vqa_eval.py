@@ -68,15 +68,13 @@ class VQAEval:
         acc_per_question = {}
         for idx, (pred, question_id) in enumerate(zip(self.preds, self.question_ids)):                        
             answers = self.answers.get(question_id)            
-            answers = answers["answers"]
-            print(f"answers: {answers}")
+            answers = answers["answers"]            
             gt_answers = [
                 self.normalize_answer(ann["answer"]) 
                 for ann in answers 
                 if ann["answer_confidence"] in ["yes","maybe"]
             ]            
-
-            print(f"gt_answers: {gt_answers}")
+            
             if not gt_answers:
                 acc = 0.0
             else:
@@ -88,10 +86,7 @@ class VQAEval:
             return {"overall": 0.0}
 
         overall_acc = 100.0 * sum(acc_per_question.values()) / len(acc_per_question)
-        print(f"overall_acc: {overall_acc}")
+        return overall_acc
 
-        return {
-            "overall": overall_acc            
-        }
         
             
