@@ -13,7 +13,9 @@ class VQAEval:
         self.preds = preds        
         self.question_ids = question_ids                
         self.annotations = json.load(open(annotation_path[0], 'r'))
+        print(f"self.annotations: {len(self.annotations)}")
         self.answers = {ann["question_id"]:ann for ann in self.annotations["annotations"]}
+        print(f"self.answers: {len(self.answers)}")
         self.accuracy = {}
         self.evalQA = {}
 
