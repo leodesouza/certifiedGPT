@@ -51,13 +51,16 @@ class VQAEval:
                 self.normalize_vqa_answer(ann["answer"]) 
                 for ann in answers                 
             ]            
-            
+                        
             if not gt_answers:
                 acc = 0.0
             else:
                 norm_pred = self.normalize_vqa_answer(pred)                
                 acc = self.compute_accuracy(norm_pred, gt_answers)                                    
             acc_per_question[idx] = acc
+            
+            if acc < 1.0:
+                print(f"[FAIL] pred: '{norm_pred}' vs. gts: {gt_answers}")
 
         if not acc_per_question:
             return {"overall": 0.0}
