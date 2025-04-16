@@ -14,7 +14,11 @@ class VQAEval:
         self.preds = preds        
         self.question_ids = question_ids                
         self.annotations = json.load(open(annotation_path[0], 'r'))        
-        self.answers = {ann["question_id"]:ann for ann in self.annotations["annotations"]}        
+        self.answers = {
+            ann["question_id"]:ann for ann in self.annotations["annotations"] 
+            if ann["answer_type"] in ["yes/no", "number"]
+        }        
+
         self.accuracy = {}
         self.evalQA = {}
 
