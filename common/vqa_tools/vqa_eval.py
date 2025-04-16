@@ -1,5 +1,6 @@
 import re
 import json
+from difflib import SequenceMatcher
 
 class VQAEval:
     def __init__(self, preds=None, question_ids=None, annotation_path=None):
@@ -55,8 +56,11 @@ class VQAEval:
                 cleaned.append(self.contractions.get(word, word))
         return " ".join(cleaned)
     
+    def is_close_match(a, b, threshold=0.9):
+        return SequenceMatcher(None, a, b).ratio >= threshold
+    
     def compute_accuracy(self, pred, gts):
-        matchs = sum([1 for gt in gts if pred == gt])
+        matchs = sum([1 for gt in gts if self.is_close_match(pred, gt)])
         return min(1.0, matchs /3)
     
 
@@ -66,16 +70,28 @@ class VQAEval:
             answers = self.answers.get(question_id)            
             answers = answers["answers"]
             print(f"answers: {answers}")
-            gt_answers = [self.normalize_answer(ann["answer"]) for ann in answers]            
+            gt_answers = [
+                self.normalize_answer(ann["answer"]) 
+                for ann in answers 
+                if ann["answer_confidence"] in ["yes","maybe"]
+            ]            
+
             print(f"gt_answers: {gt_answers}")
-            norm_pred = self.normalize_answer(pred)
-            acc = self.compute_accuracy(norm_pred, gt_answers)
+            if not gt_answers:
+                acc = 0.0
+            else:
+                norm_pred = self.normalize_answer(pred)
+                acc = self.compute_accuracy(norm_pred, gt_answers)                                    
             acc_per_question[idx] = acc
+
+        if not acc_per_question:
+            return {"overall": 0.0}
 
         overall_acc = 100.0 * sum(acc_per_question.values()) / len(acc_per_question)
         print(f"overall_acc: {overall_acc}")
+
         return {
-            "overall": overall_acc,            
+            "overall": overall_acc            
         }
         
             
