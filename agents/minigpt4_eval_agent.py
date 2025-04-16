@@ -113,15 +113,12 @@ class MiniGPT4EvalAgent(BaseAgent):
                         
         for step, batch_sample in enumerate(val_loader):
                     
-            # if step % 10 !=  0:
-            #     continue
-
-            # if step < saved_step:
-            #     continue            
-
-            if step > 0:
+            if step % 10 !=  0:
                 continue
 
+            if step < saved_step:
+                continue            
+          
             xm.master_print(f"Eval step: {step} - {(test_utils.now())}")  
             self.logger.info(f"Eval step {step} started - {(test_utils.now())}")          
             self.maybe_add_noise(batch_sample, self.config.run.noise_level)
