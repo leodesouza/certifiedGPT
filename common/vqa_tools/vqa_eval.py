@@ -44,8 +44,11 @@ class VQAEval:
     
     def evaluate(self):        
         acc_per_question = {}
+        acc_per_question_yes_no = {}
+        acc_per_question_number = {}
         for idx, (pred, question_id) in enumerate(zip(self.preds, self.question_ids)):                        
-            answers = self.answers.get(question_id)            
+            answers = self.answers.get(question_id)
+            answer_type = answers["answer_type"]                                     
             answers = answers["answers"]            
             gt_answers = [
                 self.normalize_vqa_answer(ann["answer"]) 
@@ -59,20 +62,35 @@ class VQAEval:
                 acc = self.compute_accuracy(norm_pred, gt_answers)                                    
             acc_per_question[idx] = acc
 
+            if answer_type ==  "yes/no":
+                acc_per_question_yes_no[idx] = acc
+            
+            if answer_type == "number":
+                acc_per_question_number[idx] = acc
+
             if acc < 1.0:
                 print(f"[FAIL] pred: '{norm_pred}' vs. gts: {gt_answers}: question_id: {question_id}")
 
         if not acc_per_question:
             return {"overall": 0.0}
         print(f"acc_per_question: {len(acc_per_question)}")
+        
         overall_acc = 100.0 * sum(acc_per_question.values()) / len(acc_per_question)
-        return overall_acc
+        acc_yes_no = ( 
+            100.0 * sum(acc_per_question_yes_no.values()) / len(acc_per_question_yes_no)
+            if acc_per_question_yes_no else 0.0                      
+        )
+        acc_number = (
+            100.0 * sum(acc_per_question_number.values()) / len(acc_per_question_number)
+            if acc_per_question_number else 0.0
+        )
+
+        return overall_acc, acc_yes_no, acc_number
          
     def is_close_match(self, a, b, threshold=0.5):
         return SequenceMatcher(None, a, b).ratio() >= threshold
     
-    def compute_accuracy(self, pred, gts):
-        # matchs = sum([1 for gt in gts if gt == pred])
+    def compute_accuracy(self, pred, gts):        
         matchs = sum([1 for gt in gts if self.is_close_match(pred, gt)])        
         return min(1.0, matchs /3)
     
