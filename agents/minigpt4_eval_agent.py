@@ -208,8 +208,9 @@ class MiniGPT4EvalAgent(BaseAgent):
     def compute_bleuscore(self):                       
         tokens_predictions = [word_tokenize(p) for p in self._predictions]
         tokens_ground_truths = [[word_tokenize(g)] for g in self._ground_truths]
-        weights_bleu_1 = (1,0,0,0)        
-        score = corpus_bleu(tokens_ground_truths, tokens_predictions, weights=weights_bleu_1, smoothing_function=self._smooth_fn)
+        # weights_bleu_1 = (1,0,0,0)        
+        weights_bleu_2 = (0.5, 0.5, 0, 0)
+        score = corpus_bleu(tokens_ground_truths, tokens_predictions, weights=weights_bleu_2, smoothing_function=self._smooth_fn)
         score = torch.tensor(score, device=self.device)        
         return score
 
