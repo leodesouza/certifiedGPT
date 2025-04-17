@@ -156,6 +156,7 @@ class MiniGPT4EvalAgent(BaseAgent):
         
         overall_acc, acc_yes_no, acc_number = self.compute_vqa_accuracy()
 
+        print(f"overall_acc: {overall_acc}")                 
         print(f"acc_yes_no: {acc_yes_no}")                 
         print(f"acc_number: {acc_number}")                 
 
