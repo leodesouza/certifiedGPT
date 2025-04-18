@@ -154,11 +154,13 @@ class MiniGPT4EvalAgent(BaseAgent):
         #     self.save_eval_state(step, self._predictions, self._question_ids, self._ground_truths)
         #     self.logger.info(f"Eval step ended: {step} - {(test_utils.now())}")                      
         
-        overall_acc, acc_yes_no, acc_number = self.compute_vqa_accuracy()
+        overall_acc, acc_yes_no, acc_number, acc_other = self.compute_vqa_accuracy()
 
         print(f"overall_acc: {overall_acc}")                 
         print(f"acc_yes_no: {acc_yes_no}")                 
-        print(f"acc_number: {acc_number}")                 
+        print(f"acc_number: {acc_number}")         
+        print(f"acc_other: {acc_other}")         
+        
 
         precision, recall, f1 = self.compute_bertscore()
         bleu = self.compute_bleuscore()
@@ -192,13 +194,14 @@ class MiniGPT4EvalAgent(BaseAgent):
     def compute_vqa_accuracy(self):        
           
         evaluator = VQAEval(self._predictions, self._question_ids, self._annotations_paths)        
-        accuracy, acc_yes_no, acc_number = evaluator.evaluate()               
+        accuracy, acc_yes_no, acc_number, acc_other = evaluator.evaluate()               
 
         accuracy = torch.tensor(accuracy, device=self.device)                
         acc_yes_no = torch.tensor(acc_yes_no, device=self.device)                
         acc_number = torch.tensor(acc_number, device=self.device)                
+        acc_other = torch.tensor(acc_other, device=self.device)          
 
-        return accuracy, acc_yes_no, acc_number
+        return accuracy, acc_yes_no, acc_number, acc_other
         
     def clean_text(self, text):
         return text.replace("#", "").lower().replace("<unk>","").strip()

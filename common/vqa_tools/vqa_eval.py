@@ -46,6 +46,7 @@ class VQAEval:
         acc_per_question = {}
         acc_per_question_yes_no = {}
         acc_per_question_number = {}
+        acc_per_question_other = {}
         for idx, (pred, question_id) in enumerate(zip(self.preds, self.question_ids)):                        
             answers = self.answers.get(question_id)
             answer_type = answers["answer_type"]                                     
@@ -68,6 +69,9 @@ class VQAEval:
             if answer_type == "number":
                 acc_per_question_number[idx] = acc
 
+            if answer_type == "other":
+                acc_per_question_other[idx] = acc
+            
             if acc < 1.0:
                 print(f"[FAIL] pred: '{norm_pred}' vs. gts: {gt_answers}: question_id: {question_id}")
 
@@ -85,7 +89,12 @@ class VQAEval:
             if acc_per_question_number else 0.0
         )
 
-        return overall_acc, acc_yes_no, acc_number
+        acc_other = (
+            100.0 * sum(acc_per_question_other.values()) / len(acc_per_question_other)
+            if acc_per_question_other else 0.0
+        )        
+
+        return overall_acc, acc_yes_no, acc_number, acc_other
          
     def is_close_match(self, a, b, threshold=0.9):
         return SequenceMatcher(None, a, b).ratio() >= threshold
