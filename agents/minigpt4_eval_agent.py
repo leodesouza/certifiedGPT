@@ -45,6 +45,7 @@ nltk.download('punkt_tab')
 from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction 
 from nltk.tokenize import word_tokenize
 
+
 import pickle
 
 # rank and world size are inferred from XLA Device
@@ -170,13 +171,13 @@ class MiniGPT4EvalAgent(BaseAgent):
             after_time = time()
             elapsed_time = str(datetime.timedelta(seconds=(after_time - before_time)))
         
-            self._log.append(f"{precision.item()}\t{recall.item()}\t{f1.item()}\t{bleu.item()}\t{overall_acc.item()}\t{elapsed_time}")
+            self._log.append(f"{precision.item()}\t{recall.item()}\t{f1.item()}\t{bleu.item()}\t{overall_acc.item()}\t{acc_yes_no}\t{acc_number}\t{acc_other}\t{elapsed_time}")
             file_path = os.path.join(self.config.run.output_dir,"eval_output.txt")
             file_exists = os.path.exists(file_path)
 
             with open(file_path, 'a') as f:
                 if not file_exists:
-                    f.write("precision\trecall\tf1\tbleu\toverall_acc\ttime\n")
+                    f.write("precision\trecall\tf1\tbleu\toverall_acc\tacc_yes_no\tacc_number\tacc_other\ttime\n")
                 f.write("\n".join(self._log) + "\n")
 
         xm.master_print(f"Eval ended: {(test_utils.now())}")
