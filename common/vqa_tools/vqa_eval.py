@@ -60,7 +60,7 @@ class VQAEval:
                 acc = 0.0
             else:
                 norm_pred = self.normalize_vqa_answer(pred)                
-                acc = self.compute_accuracy(norm_pred, gt_answers)                                    
+                acc = self.compute_soft_accuracy(norm_pred, gt_answers)                                    
             acc_per_question[idx] = acc
 
             if answer_type ==  "yes/no":
