@@ -96,7 +96,7 @@ class VQAEval:
 
         return overall_acc, acc_yes_no, acc_number, acc_other
          
-    def is_close_match(self, a, b, threshold=0.5):
+    def is_close_match(self, a, b, threshold=0.9):
         return SequenceMatcher(None, a, b).ratio() >= threshold
     
     def compute_soft_accuracy(self, pred, gts):        
