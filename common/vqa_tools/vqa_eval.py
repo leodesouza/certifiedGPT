@@ -70,7 +70,7 @@ class VQAEval:
                 acc_per_question_number[idx] = acc
 
             if answer_type == "other":
-                acc_per_question_other[idx] = acc
+                acc_per_question_other[idx] = self.compute_soft_accuracy(norm_pred, gt_answers)
             
             if acc < 1.0:
                 print(f"[FAIL] pred: '{norm_pred}' vs. gts: {gt_answers}: question_id: {question_id}")
@@ -96,14 +96,16 @@ class VQAEval:
 
         return overall_acc, acc_yes_no, acc_number, acc_other
          
-    def is_close_match(self, a, b, threshold=0.9):
+    def is_close_match(self, a, b, threshold=0.5):
         return SequenceMatcher(None, a, b).ratio() >= threshold
     
-    def compute_accuracy(self, pred, gts):        
+    def compute_soft_accuracy(self, pred, gts):        
         matchs = sum([1 for gt in gts if self.is_close_match(pred, gt)])        
+        return min(1.0, matchs /3)        
+
+    def compute_accuracy(self, pred, gts):                
+        matchs = sum([1 for gt in gts if pred == gt])        
         return min(1.0, matchs /3)
-        # matchs = sum([1 for gt in gts if pred == gt])        
-        # return min(1.0, matchs /3)
     
     def processPunctuation(self, inText):
         outText = inText
