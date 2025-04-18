@@ -64,7 +64,7 @@ class VQAEval:
             acc_per_question[idx] = acc
 
             if answer_type ==  "yes/no":
-                acc_per_question_yes_no[idx] = acc
+                acc_per_question_yes_no[idx] = self.compute_soft_accuracy(norm_pred, gt_answers)
             
             if answer_type == "number":
                 acc_per_question_number[idx] = acc
@@ -96,10 +96,14 @@ class VQAEval:
 
         return overall_acc, acc_yes_no, acc_number, acc_other
          
-    def is_close_match(self, a, b, threshold=0.60):
+    def is_close_match(self, a, b, threshold=0.7):
         return SequenceMatcher(None, a, b).ratio() >= threshold
     
     def compute_soft_accuracy(self, pred, gts):        
+        ''''
+        Check https://arxiv.org/pdf/2211.09699 paper to get insights on how to implement the soft
+        VQA accuracy. Code below is just an inspiration of the metric using soft matching.
+        '''
         matchs = sum([1 for gt in gts if self.is_close_match(pred, gt)])        
         return min(1.0, matchs /3)        
 
