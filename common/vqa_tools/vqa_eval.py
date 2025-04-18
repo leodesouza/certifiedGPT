@@ -70,15 +70,11 @@ class VQAEval:
                 acc_per_question_number[idx] = self.compute_soft_accuracy(norm_pred, gt_answers)
 
             if answer_type == "other":
-                acc_per_question_other[idx] = self.compute_soft_accuracy(norm_pred, gt_answers)
-            
-            if acc < 1.0:
-                print(f"[FAIL] pred: '{norm_pred}' vs. gts: {gt_answers}: question_id: {question_id}")
+                acc_per_question_other[idx] = self.compute_soft_accuracy(norm_pred, gt_answers)                        
 
         if not acc_per_question:
             return {"overall": 0.0}
-        print(f"acc_per_question: {len(acc_per_question)}")
-        
+                
         overall_acc = 100.0 * sum(acc_per_question.values()) / len(acc_per_question)
         acc_yes_no = ( 
             100.0 * sum(acc_per_question_yes_no.values()) / len(acc_per_question_yes_no)
