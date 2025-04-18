@@ -113,56 +113,50 @@ class MiniGPT4EvalAgent(BaseAgent):
             saved_step += 1 
             xm.master_print(f"Eval will be resumed from step: {saved_step}")
                         
-        # for step, batch_sample in enumerate(val_loader):
+        for step, batch_sample in enumerate(val_loader):
                     
-        #     if step % 10 !=  0:
-        #         continue
+            if step % 10 !=  0:
+                continue
 
-        #     if step < saved_step:
-        #         continue            
+            if step < saved_step:
+                continue            
           
-        #     xm.master_print(f"Eval step: {step} - {(test_utils.now())}")  
-        #     self.logger.info(f"Eval step {step} started - {(test_utils.now())}")          
-        #     self.maybe_add_noise(batch_sample, self.config.run.noise_level)
+            xm.master_print(f"Eval step: {step} - {(test_utils.now())}")  
+            self.logger.info(f"Eval step {step} started - {(test_utils.now())}")          
+            self.maybe_add_noise(batch_sample, self.config.run.noise_level)
             
-        #     image = batch_sample["image"]            
-        #     image_ids = batch_sample["image_id"]                        
-        #     image_ids = image_ids.tolist()
-        #     question_ids = batch_sample["question_id"]
-        #     question_ids = question_ids.tolist()
-        #     questions = batch_sample["instruction_input"]                        
-        #     answers = batch_sample["answer"] 
+            image = batch_sample["image"]            
+            image_ids = batch_sample["image_id"]                        
+            image_ids = image_ids.tolist()
+            question_ids = batch_sample["question_id"]
+            question_ids = question_ids.tolist()
+            questions = batch_sample["instruction_input"]                        
+            answers = batch_sample["answer"] 
                                     
-        #     texts = self.prepare_texts(questions, conv_temp)
+            texts = self.prepare_texts(questions, conv_temp)
 
-        #     predicted_answers, _ = (self.model.
-        #                generate(image, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False, calc_probs=False))
-        #     xm.mark_step()
+            predicted_answers, _ = (self.model.
+                       generate(image, texts, max_new_tokens=self.config.run.max_new_tokens, do_sample=False, calc_probs=False))
+            xm.mark_step()
 
-        #     for p_answer, question_id, ans in zip(predicted_answers, question_ids, answers):
-        #         if not isinstance(p_answer, str):
-        #             p_answer = str(p_answer)                
-        #         clean_answer = p_answer.replace('#','')
-        #         p_answer = clean_answer.lower().replace('<unk>','').strip()                
+            for p_answer, question_id, ans in zip(predicted_answers, question_ids, answers):
+                if not isinstance(p_answer, str):
+                    p_answer = str(p_answer)                
+                clean_answer = p_answer.replace('#','')
+                p_answer = clean_answer.lower().replace('<unk>','').strip()                
 
-        #         if not isinstance(ans, str):
-        #             ans = str(ans)                
-        #         clean_answer = ans.replace('#','')
-        #         ans = clean_answer
+                if not isinstance(ans, str):
+                    ans = str(ans)                
+                clean_answer = ans.replace('#','')
+                ans = clean_answer
 
-        #         self.prepare_for_compute_scores(p_answer, question_id, ans)                           
+                self.prepare_for_compute_scores(p_answer, question_id, ans)                           
                                                 
-        #     self.save_eval_state(step, self._predictions, self._question_ids, self._ground_truths)
-        #     self.logger.info(f"Eval step ended: {step} - {(test_utils.now())}")                      
+            self.save_eval_state(step, self._predictions, self._question_ids, self._ground_truths)
+            self.logger.info(f"Eval step ended: {step} - {(test_utils.now())}")                      
         
         overall_acc, acc_yes_no, acc_number, acc_other = self.compute_vqa_accuracy()
-
-        print(f"overall_acc: {overall_acc}")                 
-        print(f"acc_yes_no: {acc_yes_no}")                 
-        print(f"acc_number: {acc_number}")         
-        print(f"acc_other: {acc_other}")         
         
-
         precision, recall, f1 = self.compute_bertscore()
         bleu = self.compute_bleuscore()
                                                                                         
