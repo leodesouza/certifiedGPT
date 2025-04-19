@@ -95,6 +95,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
               
             image_id = batch_sample["image_id"]            
             question_id = batch_sample["question_id"]
+            question = batch_sample["instruction_input"]
             answers = batch_sample["answer"]                                             
                         
             # certify prediction of smoothed decoder around images
@@ -119,7 +120,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
                     if correct:
                         break
 
-            self.results.append(f"{step}\t{image_id.item()}\t{question_id.item()}\t{answers}\t{prediction}\t{radius:.3}\t{correct}\t{time_elapsed}")                
+            self.results.append(f"{step}\t{image_id.item()}\t{question_id.item()}\t{question}\t{answers}\t{prediction}\t{radius:.3}\t{correct}\t{time_elapsed}")                
 
         if xm.is_master_ordinal():
             file_path = os.path.join(self.config.run.output_dir,"certify_output.txt")
@@ -127,7 +128,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
 
             with open(file_path, 'a') as f:
                 if not file_exists:
-                    f.write("step\timageid\tquestion\tanswer\tpredicted\tradius\tcorrect\ttime\n")
+                    f.write("step\timageid\tquestion_id\tquestion\tanswer\tpredicted\tradius\tcorrect\ttime\n")
                 f.write("\n".join(self.results) + "\n")
 
             xm.master_print(f"Step {step} Ended. {(test_utils.now())}")  
