@@ -79,9 +79,9 @@ class MiniGPT4CertifyAgent(BaseAgent):
         if len(val_loader) == 0:
             return float("inf")
 
-        xm.master_print(f"Certification started: {(test_utils.now())}")
-        
+        xm.master_print(f"Certification started: {(test_utils.now())}")        
         before_time = time()        
+
         self.model.eval()
         for step, batch_sample in enumerate(val_loader):
             # certify every skip examples and break when step == max
@@ -109,8 +109,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
             correct = False
             if prediction != self.smoothed_decoder.ABSTAIN:                                                                    
                 for a in answers: 
-                    text = a[0]                    
-                    xm.master_print(f"text to compare {text}")      
+                    text = a[0]                                        
                     similarity_threshold = self.config.run.similarity_threshold            
                     embp = self.sentence_transformer.encode(prediction)
                     embt = self.sentence_transformer.encode(text)                                        
@@ -120,7 +119,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
                     if correct:
                         break
 
-            self.results.append(f"{step}\t{image_id.item()}\t{question_id.item()}\t{question}\t{answers}\t{prediction}\t{radius:.3}\t{correct}\t{time_elapsed}")                
+            self.results.append(f"{step}\t{image_id.item()}\t{question_id.item()}\t{question[0]}\t{answers[0]}\t{prediction}\t{radius:.3}\t{correct}\t{time_elapsed}")                
 
         if xm.is_master_ordinal():
             file_path = os.path.join(self.config.run.output_dir,"certify_output.txt")

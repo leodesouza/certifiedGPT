@@ -50,9 +50,6 @@ class Smooth(object):
                  in the case of abstention, the class will be ABSTAIN and the radius 0.
         """
         self.base_decoder.eval()
-        image = x["image"]
-        image_id = x["image_id"]
-        question_id = x["question_id"]
         
         # draw samples of f(x+ epsilon)
         sample_for_selection = self._sample_noise(x, n0, batch_size)                
@@ -139,8 +136,9 @@ class Smooth(object):
                 xm.mark_step()                
 
                 for answer, prob in zip(answers, probs):                    
-                    answer = answer.lower().replace('<unk>', '').strip()                                        
-                    predictions.append((answer, prob))                    
+                    answer = answer.lower().replace('<unk>', '').strip() 
+                    clean_answer = answer.replace('#','')                                       
+                    predictions.append((clean_answer, prob))                    
 
             predictions = np.array(predictions, dtype=object)
             return predictions
