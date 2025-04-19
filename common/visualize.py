@@ -5,7 +5,6 @@ from torchvision.transforms.functional import to_pil_image
 import torch_xla
 import torch_xla.core.xla_model as xm
 
-toPilImage = ToPILImage()
 
 def save_image(image, image_id, question_id, noise, output):
     
