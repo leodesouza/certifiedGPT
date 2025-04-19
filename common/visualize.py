@@ -11,6 +11,9 @@ def save_image(image, image_id, question_id, noise, output):
     imagem_cpu = image.cpu()
     imagem_cpu = imagem_cpu.squeeze(0) # removing batch dimension b. (B,C,W,H)
     
+    image_id = image_id.item()
+    question_id = question_id.item()
+    
     #original image    
     pil = toPilImage(imagem_cpu)
     pil.save(f"{output}/{image_id}_{question_id}.png")
