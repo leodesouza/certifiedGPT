@@ -28,6 +28,7 @@ from randomized_smoothing.smoothing import Smooth
 from bert_score import score
 import torch_xla.amp as xla_amp
 from sentence_transformers import SentenceTransformer, util
+from time import time
 
 # rank and world size are inferred from XLA Device
 # source: https://github.com/pytorch/xla/
@@ -80,17 +81,19 @@ class MiniGPT4CertifyAgent(BaseAgent):
 
         xm.master_print(f"Certification started: {(test_utils.now())}")
         
+        before_time = time()        
         self.model.eval()
         for step, batch_sample in enumerate(val_loader):
             # certify every skip examples and break when step == max
-            if step % self.config.run.skip != 0:
+            # if step % self.config.run.skip != 0:
+            #     continue
+
+            if step > 0:
                 continue
-            if step == self.config.run.max:
-                break
-            
+                        
             xm.master_print(f"Step {step} Started. {(test_utils.now())}")              
               
-            image_id = batch_sample["image_id"]
+            image_id = batch_sample["image_id"]            
             question_id = batch_sample["question_id"]
             answers = batch_sample["answer"]                                             
                         
@@ -99,13 +102,13 @@ class MiniGPT4CertifyAgent(BaseAgent):
             prediction, radius = self.smoothed_decoder.certify(
                 batch_sample, n0, n, self.config.run.alpha, batch_size=self.config.run.batch_size
             )
-            after_time = time()
+            after_time = time()                        
 
             time_elapsed = str(datetime.timedelta(seconds=(after_time - before_time)))            
             correct = False
             if prediction != self.smoothed_decoder.ABSTAIN:                                                                    
                 for a in answers: 
-                    text = a[0]
+                    text = a[0]                    
                     xm.master_print(f"text to compare {text}")      
                     similarity_threshold = self.config.run.similarity_threshold            
                     embp = self.sentence_transformer.encode(prediction)

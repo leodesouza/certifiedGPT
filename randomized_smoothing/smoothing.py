@@ -3,6 +3,7 @@
 # visit the repo at:https://github.com/locuslab/smoothing
 
 
+from common.visualize import save_image
 import torch
 # from scipy.stats import norm, binom_test
 from scipy.stats import norm, binomtest
@@ -37,7 +38,7 @@ class Smooth(object):
 
     def certify(self, x: torch.tensor, n0: int, n: int, alpha: float, batch_size: int) -> (int, float):
         """ Monte Carlo algorithm for certifying that g's prediction around x is constant within some L2 radius.
-        With probability at least 1 - alpha, the class returned by this method will equal g(x), and g's prediction will
+        With probability at least 1 - alpha, the answer returned by this method will equal g(x), and g's prediction will
         robust within a L2 ball of radius R around x.
 
         :param x: the input [channel x height x width]
@@ -45,15 +46,20 @@ class Smooth(object):
         :param n: the number of Monte Carlo samples to use for estimation
         :param alpha: the failure probability
         :param batch_size: batch size to use when evaluating the base classifier
-        :return: (predicted class, certified radius)
+        :return: (predicted answer, certified radius)
                  in the case of abstention, the class will be ABSTAIN and the radius 0.
         """
         self.base_decoder.eval()
+        image = x["image"]
+        image_id = x["image_id"]
+        question_id = x["question_id"]
+
+        save_image(image, image_id, question_id, self.sigma, self.self.config.run.output_dir)
 
         # draw samples of f(x+ epsilon)
         sample_for_selection = self._sample_noise(x, n0, batch_size)                
 
-        # use these samples to take a guess at the top class
+        # use these samples to take a guess at the top answer
         probs_selection = np.array(sample_for_selection[:,1], dtype=float)                       
         pAHat = probs_selection.argmax().item()
         text = sample_for_selection[pAHat][0]   
@@ -123,13 +129,14 @@ class Smooth(object):
                 image = batch_sample["image"]
                 batch_image = image.repeat((this_batch_size, 1, 1, 1))
                 noise = torch.randn_like(batch_image, device=self._device) * self.sigma
+                noisy_image_batch = batch_image + noise
                 
                 batch_question = question * this_batch_size
                 questions = self.prepare_texts(batch_question, conv_temp)                                
                 max_tokens = self.config.run.max_new_tokens 
 
                 with xla_amp.autocast(enabled=self.config.run.amp, device=self._device):
-                    answers, probs = (self.base_decoder.generate(batch_image + noise, questions, max_new_tokens=max_tokens, do_sample=False))
+                    answers, probs = (self.base_decoder.generate(noisy_image_batch, questions, max_new_tokens=max_tokens, do_sample=False))
                 
                 xm.mark_step()                
 

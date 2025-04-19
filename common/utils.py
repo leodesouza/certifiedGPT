@@ -19,3 +19,4 @@ def load_coco_val2014_annotations():
     with open(config.run.coco_annotation_path_file) as f:
         image_objects = json.load(f)
     return image_objects
+
