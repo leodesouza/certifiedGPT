@@ -54,6 +54,7 @@ class Smooth(object):
         image_id = x["image_id"]
         question_id = x["question_id"]
 
+        print("Trying to save image...")              
         save_image(image, image_id, question_id, self.sigma, self.config.run.output_dir)
 
         # draw samples of f(x+ epsilon)
