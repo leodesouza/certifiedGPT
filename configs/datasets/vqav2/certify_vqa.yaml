@@ -9,8 +9,8 @@ datasets:
       annotations:
         val:
           path:
-               - ${env:DATA_DIR}/annotations/val/sample_v2_mscoco_val2014_annotations__1.json
+               - ${env:DATA_DIR}/annotations/val/sample_v2_mscoco_val2014_annotations__2.json
       images:
         val:
           path:               
-               - /home/swf_developer/val_1
+               - /home/swf_developer/val_2

@@ -54,13 +54,16 @@ run:
   wandb_api_key: ${env:WANDB_API_KEY}
   wandb_name: "vqav2_eval_batch52_noise_0.5"
   number_monte_carlo_samples_for_selection: 100
-  number_monte_carlo_samples_for_estimation: 1000
+  number_monte_carlo_samples_for_estimation: 100
   skip: 100 # certify every skip examples
   max: 1000 # and break when step == max
   alpha: 0.001 # the failure probability
   number_answers: 10206
   batch_size: 1 # for certification
   similarity_threshold: 0.6
+
+  dataset_config_name: certify_vqa.yaml
+  
 
 # DataLoader
   distributed: False
