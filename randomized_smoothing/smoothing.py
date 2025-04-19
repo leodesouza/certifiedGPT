@@ -53,11 +53,7 @@ class Smooth(object):
         image = x["image"]
         image_id = x["image_id"]
         question_id = x["question_id"]
-
-        print("Trying to save noise image..")              
-        save_image(image, image_id, question_id, self.sigma, self.config.run.output_dir)
-        print("image saved")              
-
+        
         # draw samples of f(x+ epsilon)
         sample_for_selection = self._sample_noise(x, n0, batch_size)                
 
