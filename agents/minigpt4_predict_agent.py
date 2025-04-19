@@ -91,6 +91,7 @@ class MiniGPT4PredictAgent(BaseAgent):
             xm.master_print(f"Step {step} Started. {(test_utils.now())}")              
               
             image_id = batch_sample["image_id"]
+            question = batch_sample["instruction_input"]
             question_id = batch_sample["question_id"]
             answers = batch_sample["answer"]                                             
                         
@@ -116,7 +117,7 @@ class MiniGPT4PredictAgent(BaseAgent):
                     if correct:
                         break
 
-            self.results.append(f"{step}\t{image_id.item()}\t{question_id.item()}\t{answers}\t{prediction}\t{correct}\t{time_elapsed}")                
+            self.results.append(f"{step}\t{image_id.item()}\t{question_id.item()}\t{question.item()}\t{answers}\t{prediction}\t{correct}\t{time_elapsed}")                
 
         if xm.is_master_ordinal():
             file_path = os.path.join(self.config.run.output_dir,"predict_output.txt")
@@ -124,7 +125,7 @@ class MiniGPT4PredictAgent(BaseAgent):
 
             with open(file_path, 'a') as f:
                 if not file_exists:
-                    f.write("step\timageid\tquestion\tanswer\tpredicted\tcorrect\ttime\n")
+                    f.write("step\timageid\tquestion_id\tquestion\tanswer\tpredicted\tcorrect\ttime\n")
                 f.write("\n".join(self.results) + "\n")
 
             xm.master_print(f"Step {step} Ended. {(test_utils.now())}")  
