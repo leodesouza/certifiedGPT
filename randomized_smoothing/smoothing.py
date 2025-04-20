@@ -24,14 +24,12 @@ class Smooth(object):
     # to abstain, Smooth returns this int
     ABSTAIN = -1
 
-    def __init__(self, base_decoder: torch.nn.Module, num_classes: int, sigma: float):
+    def __init__(self, base_decoder: torch.nn.Module, sigma: float):
         """
-        :param base_decoder: maps from [batch x channel x height x width] to [batch x num_classes]
-        :param num_classes:
+        :param base_decoder: a model instance        
         :param sigma: the noise level hyperparameter
         """
-        self.base_decoder = base_decoder
-        self.num_classes = num_classes
+        self.base_decoder = base_decoder        
         self.sigma = sigma
         self._device = xm.xla_device()
         self.config = registry.get_configuration_class("configuration")

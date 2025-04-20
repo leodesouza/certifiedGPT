@@ -44,7 +44,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
         self._tpu_metrics = TPUMetrics()
         self.questions_paths = None
         self.annotations_paths = None
-        self.smoothed_decoder = Smooth(self._model, self.config.run.number_answers, self.config.run.noise_level)                
+        self.smoothed_decoder = Smooth(self._model, self.config.run.noise_level)                
         self.sentence_transformer = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
         self.results = []
             
@@ -103,9 +103,8 @@ class MiniGPT4CertifyAgent(BaseAgent):
             prediction, radius = self.smoothed_decoder.certify(
                 batch_sample, n0, n, self.config.run.alpha, batch_size=self.config.run.batch_size
             )
-            print(f"prediction: {prediction}")
+            
             after_time = time()                        
-
             time_elapsed = str(datetime.timedelta(seconds=(after_time - before_time)))            
             correct = False
             if prediction != self.smoothed_decoder.ABSTAIN:                                                                    
