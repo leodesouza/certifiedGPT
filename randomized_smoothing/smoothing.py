@@ -61,7 +61,7 @@ class Smooth(object):
         
         # draw more samples of f(x + epsilon)
         sample_for_estimation = self._sample_noise(x, n, batch_size)                
-        print(f'sample_for_estimation --> {sample_for_estimation}')
+        # print(f'sample_for_estimation --> {sample_for_estimation}')
         nA = sum(1 for row in sample_for_estimation if row[0] == text)        
                     
         pABar = self._lower_confidence_bound(nA, n, alpha)
