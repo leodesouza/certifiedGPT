@@ -103,6 +103,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
             prediction, radius = self.smoothed_decoder.certify(
                 batch_sample, n0, n, self.config.run.alpha, batch_size=self.config.run.batch_size
             )
+            print(f"prediction: {prediction}")
             after_time = time()                        
 
             time_elapsed = str(datetime.timedelta(seconds=(after_time - before_time)))            
@@ -119,7 +120,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
                     if correct:
                         break
 
-            self.results.append(f"{step}\t{image_id.item()}\t{question_id.item()}\t{question[0]}\t{answers[0]}\t{prediction}\t{radius:.3}\t{correct}\t{time_elapsed}")                
+            self.results.append(f"{step}\t{image_id.item()}\t{question_id.item()}\t{question[0]}\t{answers}\t{prediction}\t{radius:.3}\t{correct}\t{time_elapsed}")                
 
         if xm.is_master_ordinal():
             file_path = os.path.join(self.config.run.output_dir,"certify_output.txt")
