@@ -88,7 +88,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
             # if step % self.config.run.skip != 0:
             #     continue
 
-            if step > 3:
+            if step > 0:
                 continue
                         
             xm.master_print(f"Step {step} Started. {(test_utils.now())}")              
