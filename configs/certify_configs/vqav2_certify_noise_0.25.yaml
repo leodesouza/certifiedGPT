@@ -42,7 +42,7 @@ datasets:
 run:
   agent: image_text_eval
   max_new_tokens: 2 
-  noise_level: 0.25
+  noise_level: 0
   seed: 42  
   output_dir: ${env:OUTPUT_DIR}          
   amp: True
