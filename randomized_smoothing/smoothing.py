@@ -50,14 +50,12 @@ class Smooth(object):
         self.base_decoder.eval()
         
         # draw samples of f(x+ epsilon)
-        sample_for_selection = self._sample_noise(x, n0, batch_size)     
-        print(f'sample_for_selection --> {sample_for_selection}')           
+        sample_for_selection = self._sample_noise(x, n0, batch_size)             
 
         # use these samples to take a guess at the top answer
         probs_selection = np.array(sample_for_selection[:,1], dtype=float)                       
         pAHat = probs_selection.argmax().item()
-        text = sample_for_selection[pAHat][0]   
-        print(f'text = sample_for_selection[pAHat][0] --> {text}')
+        text = sample_for_selection[pAHat][0]           
         
         # draw more samples of f(x + epsilon)
         sample_for_estimation = self._sample_noise(x, n, batch_size)                

@@ -41,7 +41,7 @@ datasets:
 
 run:
   agent: image_text_eval
-  max_new_tokens: 2 
+  max_new_tokens: 8 
   noise_level: 0.25
   seed: 42  
   output_dir: ${env:OUTPUT_DIR}          
@@ -55,10 +55,10 @@ run:
   wandb_name: "vqav2_eval_batch52_noise_0.5"
   
   number_monte_carlo_samples_for_selection: 48 
-  number_monte_carlo_samples_for_estimation: 48
+  number_monte_carlo_samples_for_estimation: 100
   batch_size: 48 # for certification
   
-  skip: 100 # certify every skip examples
+  skip: 250 # certify every skip examples
   max: 5000 # and break when step == max
   alpha: 0.001 # the failure probability
   number_answers: 10206

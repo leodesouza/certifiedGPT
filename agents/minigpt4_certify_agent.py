@@ -29,6 +29,7 @@ from bert_score import score
 import torch_xla.amp as xla_amp
 from sentence_transformers import SentenceTransformer, util
 from time import time
+import pickle
 
 # rank and world size are inferred from XLA Device
 # source: https://github.com/pytorch/xla/
@@ -79,19 +80,31 @@ class MiniGPT4CertifyAgent(BaseAgent):
         if len(val_loader) == 0:
             return float("inf")
 
-        xm.master_print(f"Certification started: {(test_utils.now())}")        
+        xm.master_print(f"Certification started: {(test_utils.now())}")   
+        self.logger.info(f"Certification started: {(test_utils.now())}")                   
+
+        saved_step = 0
+        state = self.load_certification_state()
+        if state is not None:            
+            saved_step = state.get("step", 0)                     
+            self.results = state.get("certification_results", [])            
+            saved_step += 1 
+            xm.master_print(f"Certification will be resumed from step: {saved_step}")
+
         before_time = time()        
 
         self.model.eval()
         for step, batch_sample in enumerate(val_loader):
-            # certify every skip examples and break when step == max
-            # if step % self.config.run.skip != 0:
-            #     continue
 
-            if step > 0:
+            # certify every skip examples and break when step == max
+            if step % self.config.run.skip != 0:
                 continue
+
+            if step < saved_step:
+                continue            
                         
-            xm.master_print(f"Step {step} Started. {(test_utils.now())}")              
+            xm.master_print(f"Step {step} Started. {(test_utils.now())}")
+            self.logger.info(f"Step {step} Started. {(test_utils.now())}")              
               
             image_id = batch_sample["image_id"]            
             question_id = batch_sample["question_id"]
@@ -120,6 +133,8 @@ class MiniGPT4CertifyAgent(BaseAgent):
                         break
 
             self.results.append(f"{step}\t{image_id.item()}\t{question_id.item()}\t{question[0]}\t{answers}\t{prediction}\t{radius:.3}\t{correct}\t{time_elapsed}")                
+            self.logger.info(f"Step {step} Ended. {(test_utils.now())}")              
+            self.save_certification_state(step, self.results)
 
         if xm.is_master_ordinal():
             file_path = os.path.join(self.config.run.output_dir,"certify_output.txt")
@@ -128,11 +143,10 @@ class MiniGPT4CertifyAgent(BaseAgent):
             with open(file_path, 'a') as f:
                 if not file_exists:
                     f.write("step\timageid\tquestion_id\tquestion\tanswer\tpredicted\tradius\tcorrect\ttime\n")
-                f.write("\n".join(self.results) + "\n")
-
-            xm.master_print(f"Step {step} Ended. {(test_utils.now())}")  
+                f.write("\n".join(self.results) + "\n")            
 
         xm.master_print(f"Certification ended: {(test_utils.now())}")
+        self.logger.info(f"Certification ended: {(test_utils.now())}")                   
     
     @classmethod
     def setup_agent(cls, **kwargs):
@@ -208,3 +222,31 @@ class MiniGPT4CertifyAgent(BaseAgent):
         model = model_type.from_config(self.config.model)
         model.to(self.device)
         return model
+    
+    def save_certification_state(self, step, certification_results):        
+        xm.master_print("saving state..")   
+    
+        state = dict()                
+        state["step"] = step
+        state["certification_results"] = certification_results                
+
+        rank = xm.runtime.global_ordinal()
+        file_path = os.path.join(self.config.run.output_dir,f"certification_output_r{rank}.pkl")
+        with open(file_path, 'wb') as f:
+            pickle.dump(state, f)
+        xm.master_print("state saved!")   
+        xm.rendezvous("certification_state_saved")                   
+
+    def load_certification_state(self):
+        rank = xm.runtime.global_ordinal()
+        file_path = os.path.join(self.config.run.output_dir, f"certification_output_r{rank}.pkl")
+
+        if not os.path.exists(file_path):
+            xm.master_print(f'file not found: {file_path}')
+            return None
+        
+        with open(file_path, 'rb') as f:
+            state = pickle.load(f)
+        xm.master_print("certification_state_loaded")   
+        xm.rendezvous("certification_state_loaded")
+        return state
