@@ -122,8 +122,8 @@ class Smooth(object):
                 this_batch_size = min(batch_size, num)                
                 num -= this_batch_size
 
-                if num < batch_size:
-                    break
+                # if num < batch_size:
+                #     break
 
                 self.logger.info(f"Sample: {step} of size: {this_batch_size}")
 
