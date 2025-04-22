@@ -119,8 +119,11 @@ class Smooth(object):
             step = 1
             for _ in range(ceil(num / batch_size)):
                 
-                this_batch_size = min(batch_size, num)
+                this_batch_size = min(batch_size, num)                
                 num -= this_batch_size
+
+                if num < batch_size:
+                    break
 
                 self.logger.info(f"Sample: {step} of size: {this_batch_size}")
 
@@ -141,7 +144,8 @@ class Smooth(object):
                 for answer, prob in zip(answers, probs):                    
                     answer = answer.lower().replace('<unk>', '').strip() 
                     clean_answer = answer.replace('#','')                                       
-                    predictions.append((clean_answer, prob))                    
+                    predictions.append((clean_answer, prob))
+                step += 1                    
 
             predictions = np.array(predictions, dtype=object)
             return predictions
