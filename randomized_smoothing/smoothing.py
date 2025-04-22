@@ -99,7 +99,7 @@ class Smooth(object):
         else:
             return top2[0]
 
-    def _sample_noise(self, batch_sample: torch.tensor, num: int, batch_size) -> np.ndarray:
+    def _sample_noise(self, batch_sample: torch.tensor, num: int, batch_size, sample_type) -> np.ndarray:
         """ Sample the base classifier's prediction under noisy corruptions of the input x.
 
         :param batch_sample: the input [channel x width x height]
@@ -115,11 +115,15 @@ class Smooth(object):
         with torch.no_grad():
             
             predictions = []
+            self.logger.info(f"Generating sample for {sample_type}")                    
+            step = 1
             for _ in range(ceil(num / batch_size)):
-                                
+                
                 this_batch_size = min(batch_size, num)
                 num -= this_batch_size
 
+                self.logger.info(f"Sample: {step} of size: {this_batch_size}")
+                                    
                 image = batch_sample["image"]
                 batch_image = image.repeat((this_batch_size, 1, 1, 1))
                 noise = torch.randn_like(batch_image, device=self._device) * self.sigma
@@ -167,3 +171,8 @@ class Smooth(object):
         [conv.append_message(conv.roles[1], None) for conv in convs]
         texts = [conv.get_prompt() for conv in convs]
         return texts
+    
+    @property
+    def logger(self):
+        logger = registry.get_configuration_class("logger")
+        return logger
