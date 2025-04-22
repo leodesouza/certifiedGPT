@@ -102,23 +102,23 @@ class MiniGPT4CertifyAgent(BaseAgent):
 
             if step < saved_step:
                 continue            
-                        
-            xm.master_print(f"Step {step} Started. {(test_utils.now())}")
-            self.logger.info(f"Step {step} Started. {(test_utils.now())}")              
-              
+                                                              
             image_id = batch_sample["image_id"]            
             question_id = batch_sample["question_id"]
             question = batch_sample["instruction_input"]
             answers = batch_sample["answer"]                                             
                         
             # certify prediction of smoothed decoder around images
-            before_time = time()
+            self.logger.info("Certify Step {step} started") 
+            before_time = time()            
             prediction, radius = self.smoothed_decoder.certify(
                 batch_sample, n0, n, self.config.run.alpha, batch_size=self.config.run.batch_size
             )
             
             after_time = time()                        
             time_elapsed = str(datetime.timedelta(seconds=(after_time - before_time)))            
+            self.logger.info(f"Certify Step {step} ended in {time_elapsed}")
+
             correct = False
             if prediction != self.smoothed_decoder.ABSTAIN:                                                                    
                 for a in answers: 
