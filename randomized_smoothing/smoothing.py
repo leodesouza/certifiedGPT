@@ -110,7 +110,7 @@ class Smooth(object):
         else:
             return top2[0]
 
-    def _sample_noise(self, batch_sample: torch.tensor, num: int, batch_size, sample_type) -> np.ndarray:
+    def _sample_noise(self, batch_sample: torch.tensor, num: int, batch_size, sample_type = "estimation") -> np.ndarray:
         """ Sample the base classifier's prediction under noisy corruptions of the input x.
 
         :param batch_sample: the input [channel x width x height]
