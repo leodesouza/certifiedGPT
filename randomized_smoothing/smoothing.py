@@ -105,7 +105,7 @@ class Smooth(object):
         # Null hypothesis: the two answers are equally likely (p=0.5).
         # If p-value > alpha, we fail to reject the null → Not confident → ABSTAIN.
         # If p-value ≤ alpha, we accept the top answer.
-        if binom_test(count1, count1 + count2, p=0.5) > alpha:
+        if binomtest(count1, count1 + count2, p=0.5).pvalue > alpha:
             return Smooth.ABSTAIN
         else:
             return top2[0]
