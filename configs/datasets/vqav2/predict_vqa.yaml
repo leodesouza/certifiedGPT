@@ -1,0 +1,16 @@
+datasets:
+  coco_vqa:
+    data_type: images
+    build_info:
+      questions:
+        val:
+          path:
+              - ${env:DATA_DIR}/questions/val/v2_OpenEnded_mscoco_val2014_questions.json
+      annotations:
+        val:
+          path:
+               - ${env:DATA_DIR}/annotations/val/sample_v2_mscoco_val2014_annotations__3.json
+      images:
+        val:
+          path:               
+               - /home/swf_developer/val_3

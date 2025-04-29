@@ -28,13 +28,15 @@ from randomized_smoothing.smoothing import Smooth
 from bert_score import score
 import torch_xla.amp as xla_amp
 from sentence_transformers import SentenceTransformer, util
+from time import time
+import pickle
 
 # rank and world size are inferred from XLA Device
 # source: https://github.com/pytorch/xla/
 dist.init_process_group(backend='xla', init_method='xla://')
 
 @registry.register_agent("image_text_eval")
-class MiniGPT4PredictAgent(BaseAgent):
+class MiniGPT4CertifyAgent(BaseAgent):
     def __init__(self):
         super().__init__()
         self.start_step = 0
@@ -43,7 +45,7 @@ class MiniGPT4PredictAgent(BaseAgent):
         self._tpu_metrics = TPUMetrics()
         self.questions_paths = None
         self.annotations_paths = None
-        self.smoothed_decoder = Smooth(self._model, self.config.run.number_answers, self.config.run.noise_level)                
+        self.smoothed_decoder = Smooth(self._model, self.config.run.noise_level)                
         self.sentence_transformer = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
         self.results = []
             
@@ -61,53 +63,65 @@ class MiniGPT4PredictAgent(BaseAgent):
                     xm.master_print("No noise will be applied to the image inputs")
 
             self.load_finetuned_model(self._model)
-            self.certify()
+            self.predict()
 
         except Exception as e:
             xm.master_print(f"Error on agent run: {test_utils.now()}. Details: {e}")
             self.logger.error(f"Error on agent run: {test_utils.now()}. Details: {e}")
 
     @torch.no_grad()
-    def certify(self):        
+    def predict(self):        
         val_loader = self._dataloaders["val"]
         val_loader = pl.MpDeviceLoader(val_loader, self.device)
-
-        n0 = self.config.run.number_monte_carlo_samples_for_selection
+        
         n = self.config.run.number_monte_carlo_samples_for_estimation
 
         if len(val_loader) == 0:
             return float("inf")
 
-        xm.master_print(f"Eval Smooth Prediction started: {(test_utils.now())}")
-        
+        xm.master_print(f"Prediction started: {(test_utils.now())}")   
+        self.logger.info(f"Prediction started: {(test_utils.now())}")                   
+
+        saved_step = 0
+        state = self.load_prediction_state()
+        if state is not None:            
+            saved_step = state.get("step", 0)                     
+            self.results = state.get("prediction_results", [])            
+            saved_step += 1 
+            xm.master_print(f"Prediction will be resumed from step: {saved_step}")
+
+        before_time = time()        
+
         self.model.eval()
         for step, batch_sample in enumerate(val_loader):
+
             # certify every skip examples and break when step == max
             if step % self.config.run.skip != 0:
                 continue
-            if step == self.config.run.max:
-                break
-            
-            xm.master_print(f"Step {step} Started. {(test_utils.now())}")              
-              
-            image_id = batch_sample["image_id"]
-            question = batch_sample["instruction_input"]
+
+            if step < saved_step:
+                continue            
+                                                              
+            image_id = batch_sample["image_id"]            
             question_id = batch_sample["question_id"]
+            question = batch_sample["instruction_input"]
             answers = batch_sample["answer"]                                             
                         
             # certify prediction of smoothed decoder around images
-            before_time = time()
+            self.logger.info(f"Certify Step {step} started") 
+            before_time = time()            
             prediction = self.smoothed_decoder.predict(
                 batch_sample, n, self.config.run.alpha, batch_size=self.config.run.batch_size
             )
-            after_time = time()
-
+            
+            after_time = time()                        
             time_elapsed = str(datetime.timedelta(seconds=(after_time - before_time)))            
+            
+
             correct = False
             if prediction != self.smoothed_decoder.ABSTAIN:                                                                    
                 for a in answers: 
-                    text = a[0]
-                    xm.master_print(f"text to compare {text}")      
+                    text = a[0]                                        
                     similarity_threshold = self.config.run.similarity_threshold            
                     embp = self.sentence_transformer.encode(prediction)
                     embt = self.sentence_transformer.encode(text)                                        
@@ -117,7 +131,9 @@ class MiniGPT4PredictAgent(BaseAgent):
                     if correct:
                         break
 
-            self.results.append(f"{step}\t{image_id.item()}\t{question_id.item()}\t{question.item()}\t{answers}\t{prediction}\t{correct}\t{time_elapsed}")                
+            self.results.append(f"{step}\t{image_id.item()}\t{question_id.item()}\t{question[0]}\t{answers}\t{prediction}\t{correct}\t{time_elapsed}")                
+            self.logger.info(f"Certify Step {step} ended in {time_elapsed}")
+            self.save_prediction_state(step, self.results)
 
         if xm.is_master_ordinal():
             file_path = os.path.join(self.config.run.output_dir,"predict_output.txt")
@@ -126,11 +142,10 @@ class MiniGPT4PredictAgent(BaseAgent):
             with open(file_path, 'a') as f:
                 if not file_exists:
                     f.write("step\timageid\tquestion_id\tquestion\tanswer\tpredicted\tcorrect\ttime\n")
-                f.write("\n".join(self.results) + "\n")
+                f.write("\n".join(self.results) + "\n")            
 
-            xm.master_print(f"Step {step} Ended. {(test_utils.now())}")  
-
-        xm.master_print(f"Eval Smooth Prediction ended: {(test_utils.now())}")
+        xm.master_print(f"Prediction ended: {(test_utils.now())}")
+        self.logger.info(f"Prediction ended: {(test_utils.now())}")                   
     
     @classmethod
     def setup_agent(cls, **kwargs):
@@ -206,3 +221,31 @@ class MiniGPT4PredictAgent(BaseAgent):
         model = model_type.from_config(self.config.model)
         model.to(self.device)
         return model
+    
+    def save_prediction_state(self, step, certification_results):        
+        xm.master_print("saving state..")   
+    
+        state = dict()                
+        state["step"] = step
+        state["prediction_results"] = certification_results                
+
+        rank = xm.runtime.global_ordinal()
+        file_path = os.path.join(self.config.run.output_dir,f"prediction_output_r{rank}.pkl")
+        with open(file_path, 'wb') as f:
+            pickle.dump(state, f)
+        xm.master_print("state saved!")   
+        xm.rendezvous("prediction_state_saved")                   
+
+    def load_prediction_state(self):
+        rank = xm.runtime.global_ordinal()
+        file_path = os.path.join(self.config.run.output_dir, f"prediction_output_r{rank}.pkl")
+
+        if not os.path.exists(file_path):
+            xm.master_print(f'file not found: {file_path}')
+            return None
+        
+        with open(file_path, 'rb') as f:
+            state = pickle.load(f)
+        xm.master_print("prediction_state_loaded")   
+        xm.rendezvous("prediction_state_loaded")
+        return state

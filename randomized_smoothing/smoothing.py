@@ -71,7 +71,7 @@ class Smooth(object):
 
     def predict(self, x: torch.tensor, n: int, alpha: float, batch_size: int) -> int:
         """ Monte Carlo algorithm for evaluating the prediction of g at x.  With probability at least 1 - alpha, the
-        class returned by this method will equal g(x).
+        answer returned by this method will equal g(x).
 
         This function uses the hypothesis test described in https://arxiv.org/abs/1610.03944
         for identifying the top category of a multinomial distribution.
@@ -80,20 +80,31 @@ class Smooth(object):
         :param n: the number of Monte Carlo samples to use
         :param alpha: the failure probability
         :param batch_size: batch size to use when evaluating the base classifier
-        :return: the predicted class, or ABSTAIN
+        :return: the predicted answer, or ABSTAIN
         """
         self.base_decoder.eval()
         sample_for_estimation = self._sample_noise(x, n, batch_size)
+        print(f'[PREDICT] sample_for_estimation --> {sample_for_estimation}')
         
         probs_selection = np.array(sample_for_estimation[:,1], dtype=float)                       
-        top2 = probs_selection.argsoft()[::1][:2]
+        top2 = probs_selection.argsort()[::1][:2]
+        print(f'[TOP2] sample_for_estimation --> {top2}')
 
         text1 = sample_for_estimation[top2[0]][0]
         text2 = sample_for_estimation[top2[1]][0]
 
+        print(f'[TEXT1] --> {text1}')
+        print(f'[TEXT2] --> {text2}')
+
         count1 = sum(1 for row in sample_for_estimation if row[0] == text1) 
         count2 = sum(1 for row in sample_for_estimation if row[0] == text2) 
+
+        print(f'[count1] --> {count1}')
+        print(f'[count1] --> {count1}')
         
+        # Null hypothesis: the two answers are equally likely (p=0.5).
+        # If p-value > alpha, we fail to reject the null → Not confident → ABSTAIN.
+        # If p-value ≤ alpha, we accept the top answer.
         if binom_test(count1, count1 + count2, p=0.5) > alpha:
             return Smooth.ABSTAIN
         else:
