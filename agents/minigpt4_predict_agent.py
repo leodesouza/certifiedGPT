@@ -36,7 +36,7 @@ import pickle
 dist.init_process_group(backend='xla', init_method='xla://')
 
 @registry.register_agent("image_text_eval")
-class MiniGPT4CertifyAgent(BaseAgent):
+class MiniGPT4PredictionAgent(BaseAgent):
     def __init__(self):
         super().__init__()
         self.start_step = 0
@@ -107,8 +107,8 @@ class MiniGPT4CertifyAgent(BaseAgent):
             question = batch_sample["instruction_input"]
             answers = batch_sample["answer"]                                             
                         
-            # certify prediction of smoothed decoder around images
-            self.logger.info(f"Certify Step {step} started") 
+            # eval prediction of smoothed decoder around images
+            self.logger.info(f"Prediction Step {step} started") 
             before_time = time()            
             prediction = self.smoothed_decoder.predict(
                 batch_sample, n, self.config.run.alpha, batch_size=self.config.run.batch_size
@@ -132,7 +132,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
                         break
 
             self.results.append(f"{step}\t{image_id.item()}\t{question_id.item()}\t{question[0]}\t{answers}\t{prediction}\t{correct}\t{time_elapsed}")                
-            self.logger.info(f"Certify Step {step} ended in {time_elapsed}")
+            self.logger.info(f"Prediction Step {step} ended in {time_elapsed}")
             self.save_prediction_state(step, self.results)
 
         if xm.is_master_ordinal():
