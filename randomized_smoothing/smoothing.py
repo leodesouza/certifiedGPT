@@ -84,23 +84,15 @@ class Smooth(object):
         """
         self.base_decoder.eval()
         sample_for_estimation = self._sample_noise(x, n, batch_size)
-        print(f'[PREDICT] sample_for_estimation --> {sample_for_estimation}')
-        
+                
         probs_selection = np.array(sample_for_estimation[:,1], dtype=float)                       
         top2 = probs_selection.argsort()[::1][:2]
-        print(f'[TOP2] sample_for_estimation --> {top2}')
 
         text1 = sample_for_estimation[top2[0]][0]
         text2 = sample_for_estimation[top2[1]][0]
-
-        print(f'[TEXT1] --> {text1}')
-        print(f'[TEXT2] --> {text2}')
-
+        
         count1 = sum(1 for row in sample_for_estimation if row[0] == text1) 
         count2 = sum(1 for row in sample_for_estimation if row[0] == text2) 
-
-        print(f'[count1] --> {count1}')
-        print(f'[count1] --> {count1}')
         
         # Null hypothesis: the two answers are equally likely (p=0.5).
         # If p-value > alpha, we fail to reject the null → Not confident → ABSTAIN.
