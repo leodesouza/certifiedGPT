@@ -12,7 +12,6 @@ from torch.utils.data import Dataset
 from datasets.datasets.base_dataset import BaseDataset
 from PIL import Image
 from common.registry import registry
-import torch_xla.core.xla_model as xm
 import collections
 
 
@@ -40,20 +39,18 @@ class VQAv2Dataset(BaseDataset):
             "[vqa] Based on the image, respond to this question with a short answer: {}",
         ]
 
-        xm.master_print(f'Loading {split} split')
+        print(f'Loading {split} split')
         self.split = split
         questions_dict = {q["question_id"]: q for q in self.questions}
 
         self.logger.info(
             f"Filter annotations that contains images int the path: {vis_paths}"
         )                
-                                    
+                                                    
         try:
-
             self.questions = []
+            print(f'Loading annotations...')
 
-            xm.master_print(f'Loading annotations...')
-            
             for annotation in self.annotations:
                 question_id = annotation.get("question_id")
                 if question_id is None:
@@ -70,17 +67,16 @@ class VQAv2Dataset(BaseDataset):
                     continue
 
                 self.questions.append(question)
-                            
+
             self.logger.info("Loading annotations. Done!")
-            xm.master_print(f"Loading {split} annotations. Done!")
+            print(f"Loading {split} annotations. Done!")
 
-            self.questions_dict = {q["question_id"]: q for q in self.questions}            
+            self.questions_dict = {q["question_id"]: q for q in self.questions}
 
-        except Exception as e:            
-            xm.master_print(f"error on loading the dataset. Details: {e}")
+        except Exception as e:
+            print(f"Error on loading the dataset. Details: {e}")
 
     def get_data(self, index):
-
         try:
             annotation = self.annotations[index]
 
@@ -89,7 +85,7 @@ class VQAv2Dataset(BaseDataset):
                 or "question_id" not in annotation
                 or "answers" not in annotation
             ):
-                raise ValueError(f" Invalid annotation at index {index}: {annotation}")
+                raise ValueError(f"Invalid annotation at index {index}: {annotation}")
             
             question_id = annotation["question_id"]
             question = self.questions_dict.get(question_id)
@@ -101,7 +97,7 @@ class VQAv2Dataset(BaseDataset):
                 )
             
             answer_type = annotation.get("answer_type")
-                        
+
             image_id = annotation.get("image_id")                                
             file_name = f"COCO_{self.split}2014_{image_id:012d}.jpg"
             image_path = os.path.join(self.vis_paths, file_name)                                            
@@ -113,25 +109,24 @@ class VQAv2Dataset(BaseDataset):
 
             if num_answer == 0:
                 raise ValueError(f"No answers found for question_id {question_id}")
-            
+
             answer_weights = collections.defaultdict(float)
 
             for answer in all_answers:
-                
                 answer_confidence = answer.get("answer_confidence")
                 answer = answer.get("answer")
 
                 if not answer:
                     continue
 
-                confidence = 0 
+                confidence = 0
                 if answer_confidence == 'yes':
                     confidence = 2
-                elif  answer_confidence == 'maybe':
-                    confidence = 1                
+                elif answer_confidence == 'maybe':
+                    confidence = 1
 
                 answer_weights[answer] += confidence
-                
+
             total_weight = sum(answer_weights.values())
             if total_weight > 0:
                 for answer in answer_weights:
@@ -139,8 +134,7 @@ class VQAv2Dataset(BaseDataset):
 
             answers = list(answer_weights.keys())
             weights = list(answer_weights.values())
-            answer = random.choices(answers, weights=weights, k=1)
-            answer = answer[0]
+            answer = random.choices(answers, weights=weights, k=1)[0]
             answer = self.text_processor(answer)
 
             return {
@@ -151,12 +145,13 @@ class VQAv2Dataset(BaseDataset):
                 "image_id": image_id,
                 "answer_type": answer_type
             }
+
         except Exception as e:
-            print(f"Error at index:{index}{e}")
+            print(f"Error at index:{index} {e}")
             return None
 
     def __getitem__(self, index):
-        data = self.get_data(index)        
+        data = self.get_data(index)
         instruction = random.choice(self.instruction_template).format(data["question"])
         instruction = "<Img><ImageHere></Img> {} ".format(instruction)
 
@@ -167,7 +162,7 @@ class VQAv2Dataset(BaseDataset):
             "answer": data["answer"],
             "image_id": data["image_id"],
             "answer_type": data["answer_type"]
-        }       
+        }
 
     @property
     def split_name(self):
@@ -181,17 +176,17 @@ class VQAv2TestDataset(Dataset):
         self.vis_paths = vis_paths
         self.split = split
         self.questions = []
-        
+
         self.logger.info("Loading eval dataset ...")
         self.logger.info("Loading questions json files")
         for question_path in self.questions_paths:
             question = json.load(open(question_path, "r"))
             if isinstance(question, dict):
-                self.questions.extend(json.load(open(question_path, "r"))["questions"])
+                self.questions.extend(question["questions"])
 
     def __len__(self):
         return len(self.questions)
-        
+
     def __getitem__(self, idx):
         data = self.questions[idx]
         img_id = data['image_id']
@@ -217,10 +212,10 @@ class VQAv2TestDataset(Dataset):
     @property
     def split_name(self):
         return self.split
-    
+
 
 class VQAv2EvalForCertificationDataset(BaseDataset):
-    
+
     def __init__(
         self,
         vis_processor,
@@ -237,26 +232,24 @@ class VQAv2EvalForCertificationDataset(BaseDataset):
             vis_paths=vis_paths,
             annotation_paths=annotation_paths,
         )
-        
+
         self.instruction_template = [
             "[vqa] {}",
             "[vqa] Based on the image, respond to this question with a short answer: {}",
         ]
 
-        xm.master_print(f'Loading {split} split')
+        print(f'Loading {split} split')
         self.split = split
         questions_dict = {q["question_id"]: q for q in self.questions}
 
         self.logger.info(
             f"Filter annotations that contains images int the path: {vis_paths}"
         )                
-                                    
+
         try:
-
             self.questions = []
+            print(f'Loading annotations...')
 
-            xm.master_print(f'Loading annotations...')
-            
             for annotation in self.annotations:
                 question_id = annotation.get("question_id")
                 if question_id is None:
@@ -273,17 +266,16 @@ class VQAv2EvalForCertificationDataset(BaseDataset):
                     continue
 
                 self.questions.append(question)
-                            
+
             self.logger.info("Loading annotations. Done!")
-            xm.master_print(f"Loading {split} annotations. Done!")
+            print(f"Loading {split} annotations. Done!")
 
-            self.questions_dict = {q["question_id"]: q for q in self.questions}            
+            self.questions_dict = {q["question_id"]: q for q in self.questions}
 
-        except Exception as e:            
-            xm.master_print(f"error on loading the dataset. Details: {e}")
+        except Exception as e:
+            print(f"Error on loading the dataset. Details: {e}")
 
     def get_data(self, index):
-
         try:
             annotation = self.annotations[index]
 
@@ -292,8 +284,8 @@ class VQAv2EvalForCertificationDataset(BaseDataset):
                 or "question_id" not in annotation
                 or "answers" not in annotation
             ):
-                raise ValueError(f" Invalid annotation at index {index}: {annotation}")
-            
+                raise ValueError(f"Invalid annotation at index {index}: {annotation}")
+
             question_id = annotation["question_id"]
             question = self.questions_dict.get(question_id)
             question = self.text_processor(question["question"])
@@ -302,7 +294,7 @@ class VQAv2EvalForCertificationDataset(BaseDataset):
                 raise ValueError(
                     f"Invalid or missing question for question_id {question_id}"
                 )
-                        
+
             image_id = annotation.get("image_id")                                
             file_name = f"COCO_{self.split}2014_{image_id:012d}.jpg"
             image_path = os.path.join(self.vis_paths, file_name)                                            
@@ -315,18 +307,18 @@ class VQAv2EvalForCertificationDataset(BaseDataset):
 
             if num_answer == 0:
                 raise ValueError(f"No answers found for question_id {question_id}")
-                                    
-            for answer in all_answers:                                
+
+            for answer in all_answers:
                 answer_confidence = answer.get("answer_confidence")
                 answer = answer.get("answer")
 
                 if not answer:
                     continue
-                
-                if answer_confidence == "yes":                    
+
+                if answer_confidence == "yes":
                     an = self.text_processor(answer)
-                    answers.append(an)    
-                                                                                  
+                    answers.append(an)
+
             return {
                 "image": image,
                 "question": question,
@@ -334,13 +326,13 @@ class VQAv2EvalForCertificationDataset(BaseDataset):
                 "answer": answers,
                 "image_id": image_id
             }
-        
+
         except Exception as e:
-            print(f"Error at index:{index}{e}")
+            print(f"Error at index:{index} {e}")
             return None
 
     def __getitem__(self, index):
-        data = self.get_data(index)        
+        data = self.get_data(index)
         instruction = random.choice(self.instruction_template).format(data["question"])
         instruction = "<Img><ImageHere></Img> {} ".format(instruction)
 
@@ -350,7 +342,7 @@ class VQAv2EvalForCertificationDataset(BaseDataset):
             "instruction_input": instruction,
             "answer": data["answer"],
             "image_id": data["image_id"]
-        }       
+        }
 
     @property
     def split_name(self):

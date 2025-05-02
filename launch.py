@@ -1,5 +1,4 @@
 import logging
-# logging.disable(logging.CRITICAL)
 import argparse
 import os
 import random
@@ -7,35 +6,27 @@ import sys
 
 import numpy as np
 import torch
+import torch.distributed as dist
+import torch.multiprocessing as mp
 
-# local imports 
-
+# Local imports
 from common.config import Config
 from common.registry import registry
-
-# to register builders
 from datasets.builders import *
-
-# to register processors
 from processors import blip_processors
-
-# register models
 from graphs.models import *
-
-# register optimizer and learning rate scheduler
 from graphs.models.minigpt4.common.optims import *
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Training")
     parser.add_argument("mode", choices=["train", "eval", "smoothing_predict", "certify"])
-    parser.add_argument("--config-path", required=True, help="path to configuration file.")
-    args = parser.parse_args()
-    return args
+    parser.add_argument("--config-path", required=True, help="Path to configuration file.")
+    return parser.parse_args()
 
 
-def setup_logger():
-    logger = logging.getLogger("logger")
+def setup_logger(rank):
+    logger = logging.getLogger(f"logger_rank_{rank}")
     logger.setLevel(logging.INFO)
 
     console_handler = logging.StreamHandler()
@@ -43,7 +34,7 @@ def setup_logger():
     console_formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
     console_handler.setFormatter(console_formatter)
 
-    log_file_path = os.path.join(os.environ.get("OUTPUT_DIR"), "certified.log")
+    log_file_path = os.path.join(os.environ.get("OUTPUT_DIR", "."), f"certified_rank{rank}.log")
     file_handler = logging.FileHandler(log_file_path)
     file_handler.setLevel(logging.INFO)
     file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
@@ -55,11 +46,12 @@ def setup_logger():
     registry.register("logger", logger)
 
 
-def setup_seeds(config):
-    seed = config.run.seed
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
+def setup_seeds(seed, rank):
+    random.seed(seed + rank)
+    np.random.seed(seed + rank)
+    torch.manual_seed(seed + rank)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed + rank)
 
 
 def register_variables():
@@ -69,52 +61,70 @@ def register_variables():
     registry.register("SPLIT_NAMES", ["train", "val", "test"])
 
 
-def disable_print():
-    sys.stdout = open(os.devnull, 'w')
+def init_distributed(rank, world_size):
+    dist.init_process_group(
+        backend='nccl',
+        init_method='env://',
+        world_size=world_size,
+        rank=rank
+    )
+    torch.cuda.set_device(rank)
 
 
-def enable_print():
-    sys.stdout = sys.__stdout__
+def cleanup_distributed():
+    dist.destroy_process_group()
 
 
-def main(rank):
-    # disable_print()
+def main_worker(rank, world_size, args):
+    try:
+        init_distributed(rank, world_size)
 
+        config = Config(args)
+        setup_seeds(config.run.seed, rank)
+        setup_logger(rank)
+        register_variables()
+
+        device = torch.device(f"cuda:{rank}")
+        registry.register("device", device)
+        registry.register("rank", rank)
+        registry.register("world_size", world_size)
+
+        # Import after rank/device setup
+        from agents import BaseAgent, setup_agent
+
+        if args.mode == "train":
+            print(f"[Rank {rank}] Running training with agent: minigpt4_finetune_agent")
+            from agents import minigpt4_finetune_agent
+        elif args.mode == "eval":
+            print(f"[Rank {rank}] Running eval with agent: minigpt4_eval_agent")
+            from agents import minigpt4_eval_agent
+        elif args.mode == "smoothing_predict":
+            print(f"[Rank {rank}] Running predict with agent: minigpt4_predict_agent")
+            from agents import minigpt4_predict_agent
+        elif args.mode == "certify":
+            print(f"[Rank {rank}] Running certifying with agent: minigpt4_certify_agent")
+            from agents import minigpt4_certify_agent
+
+        agent = setup_agent(config, rank=rank, world_size=world_size)
+        agent.run()
+        agent.finalize()
+
+    except Exception as e:
+        logger = logging.getLogger(f"logger_rank_{rank}")
+        logger.error(f"Exception in rank {rank}: {e}", exc_info=True)
+    finally:
+        cleanup_distributed()
+
+
+def launch_distributed():
     args = parse_args()
-    config = Config(args)    
+    world_size = torch.cuda.device_count()
 
-    from agents import BaseAgent, setup_agent
+    os.environ['MASTER_ADDR'] = '127.0.0.1'
+    os.environ['MASTER_PORT'] = '29500'
 
-    if args.mode == "train":
-        print('Running training with agent: minigpt4_finetune_agent')
-        from agents import minigpt4_finetune_agent
-    elif args.mode == "eval":
-        print('Running eval with agent: minigpt4_eval_agent')
-        from agents import minigpt4_eval_agent
-    elif args.mode == "smoothing_predict":
-        print('Running training with agent: minigpt4_predict_agent')
-        from agents import minigpt4_predict_agent
-    elif args.mode == "certify":
-        print('Running certifying with agent: minigpt4_certify_agent')
-        from agents import minigpt4_certify_agent
-
-    setup_logger()
-    setup_seeds(config)
-    register_variables()
-
-    agent = setup_agent(config)
-    agent.run()
-    agent.finalize()
+    mp.spawn(main_worker, args=(world_size, args), nprocs=world_size)
 
 
 if __name__ == "__main__":
-    
-    import torch_xla as xla
-    
-    _args = parse_args()
-    _config = Config(_args)    
-    if _config.run.debug_graph_computation:
-        print('Running training in debug mode')
-        xla.launch(main, args=(), debug_single_process=True)
-    else:        
-        xla.launch(main, args=())
+    launch_distributed()

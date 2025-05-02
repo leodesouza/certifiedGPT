@@ -4,8 +4,6 @@ import random
 import torch
 torch.serialization.add_safe_globals(['numpy.core.multiarray._reconstruct'])
 
-import torch_xla
-from torch_xla.amp import autocast as autocast
 import torch.nn as nn
 
 from common.registry import registry

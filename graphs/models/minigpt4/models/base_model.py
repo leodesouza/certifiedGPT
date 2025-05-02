@@ -11,7 +11,6 @@ import contextlib
 from omegaconf import OmegaConf
 import numpy as np
 import torch
-import torch_xla.core.xla_model as xm
 import torch.nn as nn
 from transformers import LlamaTokenizer
 from peft import (
@@ -147,7 +146,7 @@ class BaseModel(nn.Module):
     ):
         logging = registry.get_configuration_class("logger")
         try:            
-            xm.master_print('Loading VIT')
+            print('Loading VIT')
 
             assert model_name == "eva_clip_g", "vit model must be eva_clip_g for current version of MiniGPT-4"
             if not freeze:
@@ -169,13 +168,13 @@ class BaseModel(nn.Module):
                 ln_vision = ln_vision.eval()
                 ln_vision.train = disabled_train
                 logging.info("freeze vision encoder")
-                xm.master_print("freeze vision encoder")
+                print("freeze vision encoder")
             
-            xm.master_print('Loading VIT Done')
+            print('Loading VIT Done')
             return visual_encoder, ln_vision
         except Exception as e:            
             logging.error("Error loading Vit", exc_info=True)
-            xm.master_print(f"Error loading Vit. {e}")
+            print(f"Error loading Vit. {e}")
             raise
 
     def init_llm(cls, llama_model_path, low_resource=False, low_res_device=0, lora_r=0,
@@ -237,13 +236,13 @@ class BaseModel(nn.Module):
             else:
                 for name, param in llama_model.named_parameters():
                     param.requires_grad = False                
-                xm.master_print('freeze LLM Done')
+                print('freeze LLM Done')
             
-            xm.master_print('Loading LLM Done')
+            print('Loading LLM Done')
             return llama_model, llama_tokenizer
         except Exception as e:
             logging.error("Error on loading the LLM(LLAMA or VICUNA.", exc_info=True)
-            xm.master_print(f"Error on loading the LLM(LLAMA or VICUNA. {e}")
+            print(f"Error on loading the LLM(LLAMA or VICUNA. {e}")
             raise
 
     def load_from_pretrained(self, url_or_filename):
