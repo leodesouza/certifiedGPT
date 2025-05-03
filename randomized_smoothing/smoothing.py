@@ -60,7 +60,7 @@ class Smooth(object):
             return Smooth.ABSTAIN
         else:
             top = top2[0]
-            text = sample_for_estimation[top]
+            text = sample_for_estimation[top][0]
             return text
         
         
