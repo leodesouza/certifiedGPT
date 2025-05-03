@@ -1,6 +1,6 @@
 from common.visualize import save_image
 import torch
-from scipy.stats import norm, binomtest
+from scipy.stats import norm, binom_test
 import numpy as np
 from math import ceil
 from statsmodels.stats.proportion import proportion_confint
@@ -56,7 +56,7 @@ class Smooth(object):
         self.logger.info(f"count1 text1 {count1}")
         self.logger.info(f"count2 text2 {count2}")
 
-        if binomtest(count1, count1 + count2, p=0.5).pvalue > alpha:
+        if binom_test(count1, count1 + count2, p=0.5) > alpha:
             return Smooth.ABSTAIN
         else:
             top = top2[0]
