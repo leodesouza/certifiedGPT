@@ -20,6 +20,7 @@ class BaseAgent:
         self.val_dataloader = None
         self.test_dataloader = None
         self.config = registry.get("config")
+        print(f"config: {self.config}")
         self._logger = registry.get("logger")
         self.history_file = os.path.join(self.config.output_dir, "history.json")
         self.loss_history = self.load_history() or {"train": [], "val": [], "lr": []}
