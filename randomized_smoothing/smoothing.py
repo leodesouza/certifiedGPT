@@ -95,6 +95,7 @@ class Smooth(object):
             self.logger.info("Finished Sampling...")
             predictions = np.array(predictions, dtype=object)
             self.logger.info("np.array(predictions, dtype=object)")
+            self.logger.info(f"predictions: {predictions}")
             return predictions
 
     def _count_arr(self, arr: np.ndarray, length: int) -> np.ndarray:
