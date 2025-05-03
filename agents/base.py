@@ -19,9 +19,7 @@ class BaseAgent:
         self.train_dataloader = None
         self.val_dataloader = None
         self.test_dataloader = None
-        self.config = registry.get("config")
-        print(f"config: {self.config}")
-        self._logger = registry.get("logger")
+        self.config = registry.get_configuration_class("configuration")                
         self.history_file = os.path.join(self.config.output_dir, "history.json")
         self.loss_history = self.load_history() or {"train": [], "val": [], "lr": []}
 
@@ -125,7 +123,8 @@ class BaseAgent:
 
     @property
     def logger(self):
-        return self._logger
+        logger = registry.get_configuration_class("logger")
+        return logger
 
     def log_info_master_print(self, message):
         print(message)
