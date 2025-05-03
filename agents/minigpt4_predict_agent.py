@@ -17,9 +17,6 @@ from common.registry import registry
 from randomized_smoothing.smoothing import Smooth
 
 
-# Initialize standard PyTorch distributed setup
-dist.init_process_group(backend='nccl')  # Use 'gloo' if running on CPU
-
 @registry.register_agent("image_text_eval")
 class MiniGPT4PredictionAgent(BaseAgent):
     def __init__(self):
