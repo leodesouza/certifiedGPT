@@ -1,4 +1,3 @@
-import torch_xla.core.xla_model as xm
 import subprocess
 
 def mount_gcsfuse(bucket_name="certifiedgpt_storage", mount_point="~/storage"):    
