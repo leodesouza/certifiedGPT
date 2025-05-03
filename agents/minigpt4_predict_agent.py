@@ -111,11 +111,13 @@ class MiniGPT4PredictionAgent(BaseAgent):
             prediction = self.smoothed_decoder.predict(
                 batch_sample, n, self.config.run.alpha, batch_size=self.config.run.batch_size
             )
-            
+
+            self.logger.info(f"prediction -- {prediction}")
+            self.logger.info(f"answers -- {answers}")
+
             after_time = time()                        
             time_elapsed = str(timedelta(seconds=(after_time - before_time)))            
             
-
             correct = False
             if prediction != self.smoothed_decoder.ABSTAIN:                                                                    
                 for a in answers: 
@@ -128,7 +130,8 @@ class MiniGPT4PredictionAgent(BaseAgent):
                     correct  = similarity_score >= similarity_threshold
                     if correct:
                         break
-
+            
+            self.logger.info(f"writing results..")
             self.results.append(f"{step}\t{image_id.item()}\t{question_id.item()}\t{question[0]}\t{answers}\t{prediction}\t{correct}\t{time_elapsed}")                
             self.logger.info(f"Prediction Step {step} ended in {time_elapsed}")
             self.save_prediction_state(step, self.results)
