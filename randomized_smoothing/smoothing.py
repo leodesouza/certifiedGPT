@@ -55,10 +55,16 @@ class Smooth(object):
         count2 = sum(1 for row in sample_for_estimation if row[0] == text2)
 
         self.logger.info("defore binomtest")
+        self.logger.info(f"count1:{count1}")
+        self.logger.info(f"count2:{count2}")
+        self.logger.info(f"top2:{top2[0]}")
+        
         if binomtest(count1, count1 + count2, p=0.5).pvalue > alpha:
             return Smooth.ABSTAIN
         else:
             return top2[0]
+        
+        
 
     def _sample_noise(self, batch_sample: torch.tensor, num: int, batch_size, sample_type="estimation"):
         question = batch_sample["instruction_input"]
