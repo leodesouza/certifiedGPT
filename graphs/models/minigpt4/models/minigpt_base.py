@@ -292,8 +292,7 @@ class MiniGPTBase(BaseModel):
                 truncation=True,
                 max_length=self.max_txt_len,
                 add_special_tokens=False
-            ).to(xm.xla_device())
-            #.to(self.device)
+            ).to(self.device)
 
             regress_token_ids = regress_tokens.input_ids
             regress_atts = regress_tokens.attention_mask
@@ -350,7 +349,7 @@ class MiniGPTBase(BaseModel):
 
             return outputs
         except Exception as e:
-            xm.master_print(f"Forward error: {e}")
+            print(f"Forward error: {e}")
 
     def embed_tokens(self, token_ids):
         if hasattr(self.llama_model.base_model, 'model'):  ## lora wrapped model
@@ -398,9 +397,9 @@ class MiniGPTBase(BaseModel):
             embs[i, -emb_len:] = emb[0]
             attn_mask[i, -emb_len:] = 1
         
-        with self.maybe_autocast():
-            embs = embs.to(xm.xla_device())
-            attn_mask = attn_mask.to(xm.xla_device())
+        with self.maybe_autocast():            
+            embs = embs.to("cuda" if torch.cuda.is_available() else "cpu")
+            attn_mask = attn_mask.to("cuda" if torch.cuda.is_available() else "cpu")
             outputs = self.llama_model.generate(
                 inputs_embeds=embs,
                 attention_mask=attn_mask,
