@@ -7,12 +7,13 @@
 
 import os
 from time import time
-import datetime
+from datetime import datetime
 from pathlib import Path
 import numpy as np
 
 # Torch
 import torch
+
 
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
@@ -71,8 +72,7 @@ class MiniGPT4PredictionAgent(BaseAgent):
     @torch.no_grad()
     def predict(self):        
         val_loader = self._dataloaders["val"]
-        val_loader = pl.MpDeviceLoader(val_loader, self.device)
-        
+                
         n = self.config.run.number_monte_carlo_samples_for_estimation
 
         if len(val_loader) == 0:
