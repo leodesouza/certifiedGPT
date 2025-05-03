@@ -17,6 +17,7 @@ import torch
 
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
+import torch.distributed as dist
 
 
 # Pytorch XLA
