@@ -6,7 +6,7 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import matplotlib.pyplot as plt
 import numpy as np
-from lavis.common.registry import registry
+from common.registry import registry
 
 
 class BaseAgent:
