@@ -121,7 +121,8 @@ class MiniGPT4PredictionAgent(BaseAgent):
             correct = False
             if prediction != self.smoothed_decoder.ABSTAIN:                                                                    
                 for a in answers: 
-                    text = a[0]                                        
+                    text = a[0]    
+                    self.logger.info(f"text to compare: {text}")                                    
                     similarity_threshold = self.config.run.similarity_threshold            
                     embp = self.sentence_transformer.encode(prediction)
                     embt = self.sentence_transformer.encode(text)                                        
