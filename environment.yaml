@@ -2,15 +2,15 @@ name: certifiedgpt
 channels:
   - pytorch
   - defaults
-  - anaconda
+  - conda-forge
 dependencies:
   - python=3.9
-  - pytorch=2.0.0
+  - pip
+  - cudatoolkit=11.8  # Ensures CUDA runtime matches nvcc 11.8
   - torchvision
   - torchaudio
-  - cudatoolkit=11.8
-  - pip
   - pip:
+      - torch==2.0.0+cu118
       - huggingface-hub==0.18.0
       - matplotlib==3.7.0
       - psutil==5.9.4
@@ -32,4 +32,3 @@ dependencies:
       - bitsandbytes==0.37.0
       - scikit-image
       - wandb
-      - visual-genome
