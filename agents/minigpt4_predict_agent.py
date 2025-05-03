@@ -126,6 +126,7 @@ class MiniGPT4PredictionAgent(BaseAgent):
                     similarity_threshold = self.config.run.similarity_threshold            
                     embp = self.sentence_transformer.encode(prediction)
                     embt = self.sentence_transformer.encode(text)                                        
+                    print(f"embp shape: {embp.shape}, embt shape: {embt.shape}")
                     similarity = util.cos_sim(embp, embt)
                     similarity_score = similarity.item()                    
                     correct  = similarity_score >= similarity_threshold
