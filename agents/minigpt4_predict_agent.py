@@ -14,8 +14,9 @@ import numpy as np
 # Torch
 import torch
 
-from torch.utils.data.distributed import DataLoader, DistributedSampler
-import torch.distributed as dist
+from torch.utils.data import DataLoader
+from torch.utils.data.distributed import DistributedSampler
+
 
 # Pytorch XLA
 # from torch_xla import runtime as xr
