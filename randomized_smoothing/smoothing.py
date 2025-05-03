@@ -54,7 +54,9 @@ class Smooth(object):
         if binomtest(count1, count1 + count2, p=0.5).pvalue > alpha:
             return Smooth.ABSTAIN
         else:
-            return sample_for_estimation[top2[0]][0]
+            top = top2[0]
+            text = sample_for_estimation[top]
+            return text
         
         
 
