@@ -31,7 +31,6 @@ from common.registry import registry
 from randomized_smoothing.smoothing import Smooth
 from bert_score import score
 from sentence_transformers import SentenceTransformer, util
-from time import time
 import pickle
 
 
@@ -114,7 +113,7 @@ class MiniGPT4PredictionAgent(BaseAgent):
             )
             
             after_time = time()                        
-            time_elapsed = str(datetime.timedelta(seconds=(after_time - before_time)))            
+            time_elapsed = str(timedelta(seconds=(after_time - before_time)))            
             
 
             correct = False
