@@ -105,7 +105,7 @@ def main_worker(rank, world_size, args):
             print(f"[Rank {rank}] Running certifying with agent: minigpt4_certify_agent")
             from agents import minigpt4_certify_agent
 
-        agent = setup_agent(config, rank=rank, world_size=world_size)
+        agent = setup_agent(config)
         agent.run()
         agent.finalize()
 
