@@ -124,8 +124,8 @@ class MiniGPT4PredictionAgent(BaseAgent):
                     text = a[0]    
                     self.logger.info(f"text to compare: {text}")                                    
                     similarity_threshold = self.config.run.similarity_threshold            
-                    embp = self.sentence_transformer.encode(prediction)
-                    embt = self.sentence_transformer.encode(text)                                        
+                    embp = self.sentence_transformer.encode(prediction, convert_to_tensor=True)
+                    embt = self.sentence_transformer.encode(text, convert_to_tensor=True)                                        
                     print(f"embp shape: {embp.shape}, embt shape: {embt.shape}")
                     similarity = util.cos_sim(embp, embt)
                     similarity_score = similarity[0][0].item()                    
