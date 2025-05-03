@@ -94,7 +94,8 @@ class Smooth(object):
                     predictions.append((clean_answer, prob))
                 step += 1
             
-            predictions = np.array(predictions, dtype=object)            
+            predictions = np.array(predictions, dtype=object)    
+            self.logger.info(f"noisy predictions: {predictions}")        
             return predictions
 
     def _count_arr(self, arr: np.ndarray, length: int) -> np.ndarray:
