@@ -13,7 +13,7 @@ from common.registry import registry
 import os
 import json
 import matplotlib.pyplot as plt
-import datetime
+from datetime import datetime
 import torch.distributed as dist
 
 
