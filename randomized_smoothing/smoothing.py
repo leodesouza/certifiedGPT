@@ -42,15 +42,19 @@ class Smooth(object):
         self.base_decoder.eval()
         sample_for_estimation = self._sample_noise(x, n, batch_size)
 
+        self.logger.info("probs_selection")
         probs_selection = np.array(sample_for_estimation[:, 1], dtype=float)
         top2 = probs_selection.argsort()[::1][:2]
 
         text1 = sample_for_estimation[top2[0]][0]
         text2 = sample_for_estimation[top2[1]][0]
 
+        self.logger.info("text1 and text2")
+
         count1 = sum(1 for row in sample_for_estimation if row[0] == text1)
         count2 = sum(1 for row in sample_for_estimation if row[0] == text2)
 
+        self.logger.info("defore binomtest")
         if binomtest(count1, count1 + count2, p=0.5).pvalue > alpha:
             return Smooth.ABSTAIN
         else:
@@ -91,11 +95,8 @@ class Smooth(object):
                     clean_answer = answer.replace('#', '')
                     predictions.append((clean_answer, prob))
                 step += 1
-
-            self.logger.info("Finished Sampling...")
-            predictions = np.array(predictions, dtype=object)
-            self.logger.info("np.array(predictions, dtype=object)")
-            self.logger.info(f"predictions: {predictions}")
+            
+            predictions = np.array(predictions, dtype=object)            
             return predictions
 
     def _count_arr(self, arr: np.ndarray, length: int) -> np.ndarray:
