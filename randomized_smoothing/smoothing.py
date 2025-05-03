@@ -48,8 +48,13 @@ class Smooth(object):
         text1 = sample_for_estimation[top2[0]][0]
         text2 = sample_for_estimation[top2[1]][0]
         
+        self.logger.info(f"text1 {text1}")
+        self.logger.info(f"text2 {text2}")
         count1 = sum(1 for row in sample_for_estimation if row[0] == text1)
         count2 = sum(1 for row in sample_for_estimation if row[0] == text2)        
+
+        self.logger.info(f"count1 text1 {count1}")
+        self.logger.info(f"count2 text2 {count2}")
 
         if binomtest(count1, count1 + count2, p=0.5).pvalue > alpha:
             return Smooth.ABSTAIN
