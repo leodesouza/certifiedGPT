@@ -119,8 +119,10 @@ class MiniGPT4PredictionAgent(BaseAgent):
             time_elapsed = str(timedelta(seconds=(after_time - before_time)))            
             
             correct = False
+            
             if prediction != self.smoothed_decoder.ABSTAIN:                                                                    
                 print("prediction != self.smoothed_decoder.ABSTAIN")  
+                qcorrects = 0
                 for a in answers: 
                     text = a[0]    
                     print(f"text to compare: {text}")                                    
@@ -133,6 +135,8 @@ class MiniGPT4PredictionAgent(BaseAgent):
                     similarity_score = similarity[0][0].item()                    
                     correct  = similarity_score >= similarity_threshold
                     if correct:
+                        qcorrects += 1
+                    if qcorrects == 3:                    
                         break
             
             self.logger.info("writing results..")
