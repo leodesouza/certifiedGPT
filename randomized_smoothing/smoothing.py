@@ -8,6 +8,8 @@ from statsmodels.stats.proportion import proportion_confint
 from common.registry import registry
 from graphs.models.minigpt4.conversation.conversation import CONV_VISION_LLama2
 
+from sentence_transformers import SentenceTransformer, util
+
 
 class Smooth(object):
     """A smoothed classifier g """
@@ -19,6 +21,7 @@ class Smooth(object):
         self.sigma = sigma
         self._device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.config = registry.get_configuration_class("configuration")
+        self.sentence_transformer = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
     def certify(self, x: torch.tensor, n0: int, n: int, alpha: float, batch_size: int):
         self.base_decoder.eval()
@@ -52,9 +55,9 @@ class Smooth(object):
         print(f'sample_for_estimation: {sample_for_estimation}')
         print(f'text1: {text1}')
         print(f'text2: {text2}')
-                
-        count1 = sum(1 for row in sample_for_estimation if row[0] == text1)
-        count2 = sum(1 for row in sample_for_estimation if row[0] == text2)        
+                        
+        count1 = sum(1 for row in sample_for_estimation if self.is_similiar(row[0], text1))
+        count2 = sum(1 for row in sample_for_estimation if self.is_similiar(row[0], text2))        
         
         if binom_test(count1, count1 + count2, p=0.5) > alpha:
             return Smooth.ABSTAIN
@@ -63,7 +66,14 @@ class Smooth(object):
             text = sample_for_estimation[top][0]
             return text
         
-        
+    def is_similiar(self, text1, text2):
+        similarity_threshold = 0.6
+        embp = self.sentence_transformer.encode(text1, convert_to_tensor=True)
+        embt = self.sentence_transformer.encode(text2, convert_to_tensor=True)                                                            
+        similarity = util.cos_sim(embp, embt)
+        similarity_score = similarity[0][0].item()                    
+        return similarity_score >= similarity_threshold
+                
 
     def _sample_noise(self, batch_sample: torch.tensor, num: int, batch_size, sample_type="estimation"):
         question = batch_sample["instruction_input"]
