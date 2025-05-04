@@ -366,10 +366,10 @@ class MiniGPTBase(BaseModel):
             num_beams=1,
             max_new_tokens=5,
             min_length=1,
-            top_p=0.9,
+            top_p=0.9 # To sample only tokens with high probabilities,
             repetition_penalty=1,
             length_penalty=1,
-            temperature=1,
+            temperature=0.3, # Encorages the model to stick with high-probabilities answers and to reduce hallucination
             do_sample=False,
             stop_words_ids=[2],
             calc_probs=True
