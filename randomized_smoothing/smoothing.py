@@ -47,15 +47,10 @@ class Smooth(object):
 
         text1 = sample_for_estimation[top2[0]][0]
         text2 = sample_for_estimation[top2[1]][0]
-        
-        self.logger.info(f"text1 {text1}")
-        self.logger.info(f"text2 {text2}")
+                
         count1 = sum(1 for row in sample_for_estimation if row[0] == text1)
         count2 = sum(1 for row in sample_for_estimation if row[0] == text2)        
-
-        self.logger.info(f"count1 text1 {count1}")
-        self.logger.info(f"count2 text2 {count2}")
-
+        
         if binom_test(count1, count1 + count2, p=0.5) > alpha:
             return Smooth.ABSTAIN
         else:
@@ -101,8 +96,7 @@ class Smooth(object):
                     predictions.append((clean_answer, prob))
                 step += 1
             
-            predictions = np.array(predictions, dtype=object)    
-            self.logger.info(f"noisy predictions: {predictions}")        
+            predictions = np.array(predictions, dtype=object)                
             return predictions
 
     def _count_arr(self, arr: np.ndarray, length: int) -> np.ndarray:

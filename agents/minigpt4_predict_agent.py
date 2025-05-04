@@ -112,25 +112,23 @@ class MiniGPT4PredictionAgent(BaseAgent):
                 batch_sample, n, self.config.run.alpha, batch_size=self.config.run.batch_size
             )
 
+            self.logger.info(f"image_id -- {image_id.item()}")
+            self.logger.info(f"question_id -- {question_id.item()}")
             self.logger.info(f"prediction -- {prediction}")
-            self.logger.info(f"answers -- {answers}")
+            self.logger.info(f"true answers -- {answers}")
 
             after_time = time()                        
             time_elapsed = str(timedelta(seconds=(after_time - before_time)))            
             
             correct = False
             
-            if prediction != self.smoothed_decoder.ABSTAIN:                                                                    
-                print("prediction != self.smoothed_decoder.ABSTAIN")  
+            if prediction != self.smoothed_decoder.ABSTAIN:                                                                                    
                 qcorrects = 0
                 for a in answers: 
-                    text = a[0]    
-                    print(f"text to compare: {text}")                                    
-                    similarity_threshold = self.config.run.similarity_threshold            
-                    print(f"similarity_threshold: {similarity_threshold}") 
+                    text = a[0]                                                            
+                    similarity_threshold = self.config.run.similarity_threshold                                
                     embp = self.sentence_transformer.encode(prediction, convert_to_tensor=True)
-                    embt = self.sentence_transformer.encode(text, convert_to_tensor=True)                                        
-                    print(f"embp shape: {embp.shape}, embt shape: {embt.shape}")
+                    embt = self.sentence_transformer.encode(text, convert_to_tensor=True)                                                            
                     similarity = util.cos_sim(embp, embt)
                     similarity_score = similarity[0][0].item()                    
                     correct  = similarity_score >= similarity_threshold
