@@ -135,13 +135,13 @@ class MiniGPT4PredictionAgent(BaseAgent):
                     if correct:
                         break
             
-            self.logger.info(f"writing results..")
+            self.logger.info("writing results..")
             self.results.append(f"{step}\t{image_id.item()}\t{question_id.item()}\t{question[0]}\t{answers}\t{prediction}\t{correct}\t{time_elapsed}")                
             self.logger.info(f"Prediction Step {step} ended in {time_elapsed}")
             self.save_prediction_state(step, self.results)
 
         if self.is_main_process():
-            file_path = os.path.join(self.config.run.output_dir,"predict_output.txt")
+            file_path = os.path.join(self.config.run.output_dir,f"predict_output_n{n}.txt")
             file_exists = os.path.exists(file_path)
 
             with open(file_path, 'a') as f:

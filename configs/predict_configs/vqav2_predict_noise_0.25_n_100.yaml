@@ -41,8 +41,8 @@ datasets:
 
 run:
   agent: image_text_eval
-  max_new_tokens: 8 
-  noise_level: 1.0
+  max_new_tokens: 20 
+  noise_level: 0.25
   seed: 42  
   output_dir: ${env:OUTPUT_DIR}          
   amp: True
@@ -56,7 +56,7 @@ run:
   number_monte_carlo_samples_for_estimation: 100
   batch_size: 48 # for prediction
   
-  skip: 250 # certify every skip examples
+  skip: 10 # certify every skip examples
   max: 5000 # and break when step == max
   alpha: 0.001 # the failure probability
   
