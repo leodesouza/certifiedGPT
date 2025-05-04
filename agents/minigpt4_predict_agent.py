@@ -133,8 +133,10 @@ class MiniGPT4PredictionAgent(BaseAgent):
                     similarity_score = similarity[0][0].item()                    
                     correct  = similarity_score >= similarity_threshold
                     if correct:
+                        self.logger.info("acertou pelo menos 1")
                         qcorrects += 1
                     if qcorrects == 3:                    
+                        self.logger.info("acertou pelo menos 3")
                         break
             
             self.logger.info("writing results..")
