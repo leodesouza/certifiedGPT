@@ -44,9 +44,14 @@ class Smooth(object):
         
         probs_selection = np.array(sample_for_estimation[:, 1], dtype=float)
         top2 = probs_selection.argsort()[::1][:2]
+        print(f'top2: {top2}')
 
         text1 = sample_for_estimation[top2[0]][0]
         text2 = sample_for_estimation[top2[1]][0]
+
+        print(f'sample_for_estimation: {sample_for_estimation}')
+        print(f'text1: {text1}')
+        print(f'text2: {text2}')
                 
         count1 = sum(1 for row in sample_for_estimation if row[0] == text1)
         count2 = sum(1 for row in sample_for_estimation if row[0] == text2)        
