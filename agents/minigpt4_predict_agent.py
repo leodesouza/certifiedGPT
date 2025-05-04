@@ -113,7 +113,7 @@ class MiniGPT4PredictionAgent(BaseAgent):
             )
 
             self.logger.info(f"image_id -- {image_id.item()}")
-            self.logger.info(f"question_id -- {question_id.item()}")
+            self.logger.info(f"question_id -- {question}")
             self.logger.info(f"prediction -- {prediction}")
             self.logger.info(f"true answers -- {answers}")
 
