@@ -47,23 +47,17 @@ class Smooth(object):
         
         probs_selection = np.array(sample_for_estimation[:, 1], dtype=float)
         top2 = probs_selection.argsort()[::-1][:2]
-        self.logger.info(f'top2: {top2}')
-
+        
         text1 = sample_for_estimation[top2[0]][0]
         text2 = sample_for_estimation[top2[1]][0]
 
         # self.logger.info(f'sample_for_estimation: {sample_for_estimation}')
-        self.logger.info(f'text1: {text1}')
-        self.logger.info(f'text2: {text2}')
                         
-        count1 = sum(1 for row in sample_for_estimation if self.is_similiar(row[0], text1))
-        count2 = sum(1 for row in sample_for_estimation if self.is_similiar(row[0], text2))
+        # count1 = sum(1 for row in sample_for_estimation if self.is_similiar(row[0], text1))
+        # count2 = sum(1 for row in sample_for_estimation if self.is_similiar(row[0], text2))
 
-        # count1 = sum(1 for row in sample_for_estimation if row[0] == text1)
-        # count2 = sum(1 for row in sample_for_estimation if row[0] == text2)
-
-        self.logger.info(f'text1 : {count1}')        
-        self.logger.info(f'text2 : {count2}')        
+        count1 = sum(1 for row in sample_for_estimation if row[0] == text1)
+        count2 = sum(1 for row in sample_for_estimation if row[0] == text2)
         
         # binom_test > alpha (non-significant): the difference in occurrences of text1 and text2 is not statistically significant         
         if binom_test(count1, count1 + count2, p=0.5) > alpha:
