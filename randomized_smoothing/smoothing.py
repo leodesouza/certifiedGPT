@@ -75,7 +75,7 @@ class Smooth(object):
             return text
         
     def is_similiar(self, text1, text2):
-        similarity_threshold = 0.6
+        similarity_threshold = 0.9
         embp = self.sentence_transformer.encode(text1, convert_to_tensor=True)
         embt = self.sentence_transformer.encode(text2, convert_to_tensor=True)                                                            
         similarity = util.cos_sim(embp, embt)
