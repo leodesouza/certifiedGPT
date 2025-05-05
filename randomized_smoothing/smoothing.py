@@ -46,7 +46,7 @@ class Smooth(object):
         sample_for_estimation = self._sample_noise(x, n, batch_size)
         
         probs_selection = np.array(sample_for_estimation[:, 1], dtype=float)
-        top2 = probs_selection.argsort()[::1][:2]
+        top2 = probs_selection.argsort()[::-1][:2]
         self.logger.info(f'top2: {top2}')
 
         text1 = sample_for_estimation[top2[0]][0]
@@ -56,10 +56,8 @@ class Smooth(object):
         self.logger.info(f'text1: {text1}')
         self.logger.info(f'text2: {text2}')
                         
-        # count1 = sum(1 for row in sample_for_estimation if self.is_similiar(row[0], text1))
-        # count2 = sum(1 for row in sample_for_estimation if self.is_similiar(row[0], text2))        
-        count1 = sum(1 for row in sample_for_estimation if row[0] == text1)
-        count2 = sum(1 for row in sample_for_estimation if row[0] == text2)        
+        count1 = sum(1 for row in sample_for_estimation if self.is_similiar(row[0], text1))
+        count2 = sum(1 for row in sample_for_estimation if self.is_similiar(row[0], text2))        
         
         if binom_test(count1, count1 + count2, p=0.5) > alpha:
             return Smooth.ABSTAIN
