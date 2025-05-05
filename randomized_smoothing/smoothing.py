@@ -85,8 +85,8 @@ class Smooth(object):
                 this_batch_size = min(batch_size, num)
                 num -= this_batch_size
 
-                # self.logger.info(f"Sample: {step} of size: {this_batch_size}")
-
+                self.logger.info(f"Sample: {step} of size: {this_batch_size}")
+                
                 image = batch_sample["image"].to(self._device)
                 batch_image = image.repeat((this_batch_size, 1, 1, 1))
                 noise = torch.randn_like(batch_image, device=self._device) * self.sigma

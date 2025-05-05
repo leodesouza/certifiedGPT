@@ -54,7 +54,7 @@ run:
   wandb_api_key: ${env:WANDB_API_KEY}
   wandb_name: "vqav2_eval_batch52_noise_0.5"    
   number_monte_carlo_samples_for_estimation: 100
-  batch_size: 48 # for prediction
+  batch_size: 400 # for prediction
   
   skip: 40 # certify every skip examples
   max: 5000 # and break when step == max
