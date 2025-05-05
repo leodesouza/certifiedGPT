@@ -35,8 +35,8 @@ class VQAv2Dataset(BaseDataset):
         )
         
         self.instruction_template = [
-            "[vqa] {}",
-            "[vqa] Based on the image, respond to this question with a short answer: {}",
+            "[vqa] Answer in English only {}",
+            "[vqa] Based on the image, respond to this question in English with a short answer: {}",
         ]
 
         print(f'Loading {split} split')

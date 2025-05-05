@@ -103,6 +103,7 @@ class MiniGPT4PredictionAgent(BaseAgent):
             image_id = batch_sample["image_id"]            
             question_id = batch_sample["question_id"]
             question = batch_sample["instruction_input"]
+            question = 
             answers = batch_sample["answer"]                                             
                         
             # eval prediction of smoothed decoder around images
