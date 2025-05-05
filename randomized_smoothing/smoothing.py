@@ -50,12 +50,7 @@ class Smooth(object):
         
         text1 = sample_for_estimation[top2[0]][0]
         text2 = sample_for_estimation[top2[1]][0]
-
-        # self.logger.info(f'sample_for_estimation: {sample_for_estimation}')
-                        
-        # count1 = sum(1 for row in sample_for_estimation if self.is_similiar(row[0], text1))
-        # count2 = sum(1 for row in sample_for_estimation if self.is_similiar(row[0], text2))
-
+                                        
         count1 = sum(1 for row in sample_for_estimation if row[0] == text1)
         count2 = sum(1 for row in sample_for_estimation if row[0] == text2)
         
@@ -84,7 +79,7 @@ class Smooth(object):
 
         with torch.no_grad():
             predictions = []
-            self.logger.info(f"Generating sample for {sample_type}")
+            # self.logger.info(f"Generating sample for {sample_type}")
             step = 1
             for _ in range(ceil(num / batch_size)):
                 this_batch_size = min(batch_size, num)
