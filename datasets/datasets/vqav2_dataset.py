@@ -234,7 +234,7 @@ class VQAv2EvalForCertificationDataset(BaseDataset):
         )
 
         self.instruction_template = [
-            "[vqa] Answer in English only {}",
+            "[vqa] Answer in English only. {}",
             "[vqa] Based on the image, respond to this question in English with with a short answer: {}",
         ]
 
