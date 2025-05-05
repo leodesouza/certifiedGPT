@@ -56,8 +56,10 @@ class Smooth(object):
         self.logger.info(f'text1: {text1}')
         self.logger.info(f'text2: {text2}')
                         
-        count1 = sum(1 for row in sample_for_estimation if self.is_similiar(row[0], text1))
-        count2 = sum(1 for row in sample_for_estimation if self.is_similiar(row[0], text2))        
+        # count1 = sum(1 for row in sample_for_estimation if self.is_similiar(row[0], text1))
+        # count2 = sum(1 for row in sample_for_estimation if self.is_similiar(row[0], text2))        
+        count1 = sum(1 for row in sample_for_estimation if row[0] == text1)
+        count2 = sum(1 for row in sample_for_estimation if row[0] == text2)        
         
         if binom_test(count1, count1 + count2, p=0.5) > alpha:
             return Smooth.ABSTAIN
