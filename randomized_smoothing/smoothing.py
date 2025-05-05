@@ -56,24 +56,26 @@ class Smooth(object):
         self.logger.info(f'text1: {text1}')
         self.logger.info(f'text2: {text2}')
                         
-        # count1 = sum(1 for row in sample_for_estimation if self.is_similiar(row[0], text1))
-        # count2 = sum(1 for row in sample_for_estimation if self.is_similiar(row[0], text2))
+        count1 = sum(1 for row in sample_for_estimation if self.is_similiar(row[0], text1))
+        count2 = sum(1 for row in sample_for_estimation if self.is_similiar(row[0], text2))
 
-        count1 = sum(1 for row in sample_for_estimation if row[0] == text1)
-        count2 = sum(1 for row in sample_for_estimation if row[0] == text2)
+        # count1 = sum(1 for row in sample_for_estimation if row[0] == text1)
+        # count2 = sum(1 for row in sample_for_estimation if row[0] == text2)
 
         self.logger.info(f'text1 : {count1}')        
         self.logger.info(f'text2 : {count2}')        
         
+        # binom_test > alpha (non-significant): the difference in occurrences of text1 and text2 is not statistically significant         
         if binom_test(count1, count1 + count2, p=0.5) > alpha:
             return Smooth.ABSTAIN
         else:
+            #reject the null hypothesis and conclude that
             top = top2[0]
             text = sample_for_estimation[top][0]
             return text
         
     def is_similiar(self, text1, text2):
-        similarity_threshold = 0.6
+        similarity_threshold = 0.9
         embp = self.sentence_transformer.encode(text1, convert_to_tensor=True)
         embt = self.sentence_transformer.encode(text2, convert_to_tensor=True)                                                            
         similarity = util.cos_sim(embp, embt)
