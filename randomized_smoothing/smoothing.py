@@ -60,7 +60,7 @@ class Smooth(object):
         # count2 = sum(1 for row in sample_for_estimation if self.is_similiar(row[0], text2))
 
         count1 = sum(1 for row in sample_for_estimation if row[0] == text1)
-        count2 = sum(1 for row in sample_for_estimation if (row[0] == text2)
+        count2 = sum(1 for row in sample_for_estimation if row[0] == text2)
 
         self.logger.info(f'text1 : {count1}')        
         self.logger.info(f'text2 : {count2}')        
