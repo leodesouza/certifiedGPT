@@ -77,7 +77,7 @@ class ImageFolderWithPaths(torchvision.datasets.ImageFolder):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # minigpt-4
-    parser.add_argument("--cfg-path", default="./certify_configs/vqav2_certify_noise_0.5.yaml", help="path to configuration file.")
+    parser.add_argument("--cfg-path", default="./certify_configs/vqav2_certify_noise_0.25.yaml", help="path to configuration file.")
     parser.add_argument("--gpu-id", type=int, default=0, help="specify the gpu to load the model.")
     parser.add_argument(
         "--options",
