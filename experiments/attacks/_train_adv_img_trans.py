@@ -66,6 +66,7 @@ def to_tensor(pic):
     img = img.permute((2, 0, 1)).contiguous()
     return img.to(dtype=torch.get_default_dtype())
 
+    
 class ImageFolderWithPaths(torchvision.datasets.ImageFolder):
     def __getitem__(self, index: int):
         original_tuple = super().__getitem__(index)  # (img, label)
@@ -130,8 +131,8 @@ def main():
     data_loader_target   = torch.utils.data.DataLoader(target_data, batch_size=args.batch_size, shuffle=False, num_workers=8, drop_last=False)
     inverse_normalize = torchvision.transforms.Normalize(mean=[-0.48145466 / 0.26862954, -0.4578275 / 0.26130258, -0.40821073 / 0.27577711], std=[1.0 / 0.26862954, 1.0 / 0.26130258, 1.0 / 0.27577711])
     print("loading dataloaders.. done!")
+    print("start attack")    
 
-    print("start attack")
     # start attack
     for i, ((image_org, path), (image_tgt, _)) in enumerate(zip(data_loader_imagenet, data_loader_target)):
         if args.batch_size * (i+1) > args.num_samples:

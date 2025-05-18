@@ -231,3 +231,19 @@ class Chat:
 
         return msg
 
+    def forward_encoder(self, image_batch):
+        if isinstance(image_batch, Image.Image):
+            image_batch = self.vis_processor(image_batch).unsqueeze(0).to(self.device)
+        elif isinstance(image_batch, torch.Tensor):
+            if len(image_batch.shape) == 3:
+                image_batch = image_batch.unsqueeze(0)
+            image_batch = image_batch.to(self.device)
+        else: 
+            raise ValueError("Unsupported image type for forward_encoder")
+        
+        with torch.no_grad():
+            image_emb, _ = self.model.encode_img(image_batch)
+
+        return image_emb
+
+
