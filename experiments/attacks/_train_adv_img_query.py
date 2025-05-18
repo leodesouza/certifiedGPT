@@ -16,17 +16,17 @@ from PIL import Image
 import wandb
 import copy
 
-from minigpt4.common.config import Config
-from minigpt4.common.dist_utils import get_rank
-from minigpt4.common.registry import registry
-from minigpt4.conversation.conversation import Chat, CONV_VISION
+from graphs.models.minigpt4.common.config import Config
+from graphs.models.minigpt4.common.dist_utils import get_rank
+from graphs.models.minigpt4.common.registry import registry
+from graphs.models.minigpt4.conversation.conversation import Chat, CONV_VISION
 
 # imports modules for registration
-from minigpt4.datasets.builders import *
-from minigpt4.models import *
-from minigpt4.processors import *
-from minigpt4.runners import *
-from minigpt4.tasks import *
+from graphs.models.minigpt4.datasets.builders import *
+from graphs.models.minigpt4.models import *
+from graphs.models.minigpt4.processors import *
+from graphs.models.minigpt4.runners import *
+from graphs.models.minigpt4.tasks import *
 
 
 # seed for everything
