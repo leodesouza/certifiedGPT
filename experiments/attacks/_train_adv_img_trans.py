@@ -121,11 +121,11 @@ def main():
     # ------------- pre-processing images/text ------------- #
     print("loading clean images")
     # imagenet_data = ImageFolderWithPaths("/home/swf_developer/storage/attack/imagenet_clean_images/", transform=None)
-    imagenet_data = FlatImageDatasetWithPaths("/home/swf_developer/storage/attack/imagenet_clean_images/", transform=None)
+    imagenet_data = FlatImageDatasetWithPaths("/home/swf_developer/storage/attack/imagenet_clean_images/", transform=torchvision.transforms.ToTensor())
     
     print("loading target images")
     # target_data   = ImageFolderWithPaths("/home/swf_developer/storage/attack/targeted_images/samples", transform=None)
-    target_data   = FlatImageDatasetWithPaths("/home/swf_developer/storage/attack/targeted_images/samples", transform=None)
+    target_data   = FlatImageDatasetWithPaths("/home/swf_developer/storage/attack/targeted_images/samples", transform=torchvision.transforms.ToTensor())
     
     print("loading dataloaders")
     data_loader_imagenet = torch.utils.data.DataLoader(imagenet_data, batch_size=args.batch_size, shuffle=False, num_workers=8, drop_last=False)
