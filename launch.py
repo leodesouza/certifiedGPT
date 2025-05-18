@@ -107,7 +107,7 @@ def main_worker(rank, world_size, args):
         elif args.mode == "transfer_based_attack":
             print(f"[Rank {rank}] Running transfer based attacks..")
             import subprocess
-            subprocess.run(["bash", "~/certifiedGPT/experiments/attacks/_train_adv_img_trans.sh"])
+            subprocess.run(["bash", "/home/swf_developer/certifiedGPT/experiments/attacks/_train_adv_img_trans.sh"])
         
         if args.mode not in ["transfer_based_attack", "query_based_attack"]:             
             agent = setup_agent(config)
