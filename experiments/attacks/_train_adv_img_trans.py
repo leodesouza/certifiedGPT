@@ -16,17 +16,15 @@ import torch.backends.cudnn as cudnn
 import torchvision
 from PIL import Image
 
-from minigpt4.common.config import Config
-from minigpt4.common.dist_utils import get_rank
-from minigpt4.common.registry import registry
-from minigpt4.conversation.conversation import Chat, CONV_VISION
+from graphs.models.minigpt4.conversation.conversation import Chat, CONV_VISION_LLama2
 
 # imports modules for registration
-from minigpt4.datasets.builders import *
-from minigpt4.models import *
-from minigpt4.processors import *
-from minigpt4.runners import *
-from minigpt4.tasks import *
+from common.config import Config
+from common.registry import registry
+from datasets.builders import *
+from processors import blip_processors
+from graphs.models import *
+from graphs.models.minigpt4.common.optims import *
 
 DEFAULT_IMAGE_TOKEN = "<image>"
 DEFAULT_IMAGE_PATCH_TOKEN = "<im_patch>"
@@ -38,6 +36,8 @@ DEFAULT_IM_END_TOKEN = "<im_end>"
 # credit: https://www.kaggle.com/code/rhythmcam/random-seed-everything
 DEFAULT_RANDOM_SEED = 2023
 device = "cuda" if torch.cuda.is_available() else "cpu"
+config = registry.get_configuration_class("configuration")
+
 
 # basic random seed
 def seedBasic(seed=DEFAULT_RANDOM_SEED):
@@ -104,17 +104,17 @@ if __name__ == "__main__":
     alpha = args.alpha / 255.0 / scaling_tensor
     epsilon = args.epsilon / 255.0 / scaling_tensor
 
-    print(f"Loading MiniGPT-4 models..")
-    cfg = Config(args)
-    model_config = cfg.model_cfg
+    print("Loading MiniGPT-4 models..")
+         
+    model_config = config.model
     model_config.device_8bit = args.gpu_id
     model_cls = registry.get_model_class(model_config.arch)
     model = model_cls.from_config(model_config).to('cuda:{}'.format(args.gpu_id))
 
-    vis_processor_cfg = cfg.datasets_cfg.cc_sbu_align.vis_processor.train
+    vis_processor_cfg = config.datasets.evalvqav2.vis_processor.val
     vis_processor = registry.get_processor_class(vis_processor_cfg.name).from_config(vis_processor_cfg)
     chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id))
-    print(f"Done")
+    print("Done")
     
     # ------------- pre-processing images/text ------------- #
     print("loading clean images")
