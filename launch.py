@@ -105,9 +105,8 @@ def main_worker(rank, world_size, args):
             print(f"[Rank {rank}] Running certifying with agent: minigpt4_certify_agent")
             from agents import minigpt4_certify_agent
         elif args.mode == "transfer_based_attack":
-            print(f"[Rank {rank}] Running transfer based attacks..")
-            # import subprocess
-            # subprocess.run(["python3", "/experiments/attacks/_train_adv_img_trans.py"])
+            print(f"[Rank {rank}] Running transfer based attacks..")            
+            sys.argv = ["_train_adv_img_trans.py"]
             from  experiments.attacks._train_adv_img_trans import main
             main()
         
