@@ -36,8 +36,6 @@ DEFAULT_IM_END_TOKEN = "<im_end>"
 # credit: https://www.kaggle.com/code/rhythmcam/random-seed-everything
 DEFAULT_RANDOM_SEED = 2023
 device = "cuda" if torch.cuda.is_available() else "cpu"
-config = registry.get_configuration_class("configuration")
-
 
 # basic random seed
 def seedBasic(seed=DEFAULT_RANDOM_SEED):
@@ -77,7 +75,7 @@ class ImageFolderWithPaths(torchvision.datasets.ImageFolder):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # minigpt-4
-    parser.add_argument("--cfg-path", default="./certify_configs/vqav2_certify_noise_0.25.yaml", help="path to configuration file.")
+    parser.add_argument("--config-path", default="./certify_configs/vqav2_certify_noise_0.25.yaml", help="path to configuration file.")
     parser.add_argument("--gpu-id", type=int, default=0, help="specify the gpu to load the model.")
     parser.add_argument(
         "--options",
@@ -103,7 +101,8 @@ if __name__ == "__main__":
     scaling_tensor = scaling_tensor.reshape((3, 1, 1)).unsqueeze(0)
     alpha = args.alpha / 255.0 / scaling_tensor
     epsilon = args.epsilon / 255.0 / scaling_tensor
-
+    
+    config = Config(args)
     print("Loading MiniGPT-4 models..")
          
     model_config = config.model
