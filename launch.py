@@ -108,12 +108,11 @@ def main_worker(rank, world_size, args):
             print(f"[Rank {rank}] Running transfer based attacks..")
             import subprocess
             subprocess.run(["bash", "/experiments/attacks/_train_adv_img_trans.sh"])
-            
-
-
-        agent = setup_agent(config)
-        agent.run()
-        agent.finalize()
+        
+        if args.mode not in ["transfer_based_attack", "query_based_attack"]:             
+            agent = setup_agent(config)
+            agent.run()
+            agent.finalize()
 
     except Exception as e:
         logger = logging.getLogger(f"logger_rank_{rank}")
