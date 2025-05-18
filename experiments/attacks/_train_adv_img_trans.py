@@ -137,6 +137,7 @@ def main():
     # start attack
     for i, ((image_org, _, path), (image_tgt, _, _)) in enumerate(zip(data_loader_imagenet, data_loader_target)):
         if args.batch_size * (i+1) > args.num_samples:
+            print("break {i}")
             break
         print(f"attack {i}")
         # (bs, c, h, w)
