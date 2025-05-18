@@ -164,45 +164,55 @@ def main():
         # extract image features
         print(f"extract image features {i}")
         with torch.no_grad():
-            tgt_image_features = chat.forward_encoder(image_tgt)               # size=(batch_size, 577, 768)
-            tgt_image_features = (tgt_image_features)[:,0,:]                      # size=(batch_size, 768)
+            # tgt_image_features  -> size=(batch_size, 577, 768) ->
+            # 577 tokens = 576 image patches + 1 [CLS] token
+            # 768 is the embedding dimension                
+            tgt_image_features = chat.forward_encoder(image_tgt) 
+            
+            # size=(batch_size, 768)
+            # Select CLS token embedding as the image representation
+            # select only the 0-th token (the [CLS] token)
+            # select all 768 features of that token
+            # the model’s learned representation of the whole image.
+            tgt_image_features = (tgt_image_features)[:,0,:]                      
+
+            # Computes the L2 norm of each feature vector
+            # Normalize each embedding vector (useful for similarity comparisons)
+            # Normalizes the tgt_image_features along dimension 1
             tgt_image_features = tgt_image_features / tgt_image_features.norm(dim=1, keepdim=True)
         
-        # -------- get adv image -------- #
-        print(f"get adv image {i}")
+        # -------- get adv image -------- #        
+        # requires_grad=True, PyTorch will track all operations involving delta and compute gradients for each element
         delta = torch.zeros_like(image_org, requires_grad=True)
-        print(f"delta -- {delta.shape}")
+        
         for j in range(args.steps):
-            adv_image          = image_org + delta   # image is normalized to (0.0, 1.0)
-            print(f"adv_image -- {adv_image.shape}")
-            adv_image_features = chat.forward_encoder(adv_image)
-            print("finished forward_encoder ")
+            adv_image          = image_org + delta   # image is normalized to (0.0, 1.0)            
+            adv_image_features = chat.forward_encoder(adv_image)            
             adv_image_features = adv_image_features[:,0,:]  # size = (bs, 768)
             adv_image_features = adv_image_features / adv_image_features.norm(dim=1, keepdim=True)
-            print("finished norm ")
-            
-            embedding_sim = torch.mean(torch.sum(adv_image_features * tgt_image_features, dim=1))  # cos. sim            
+
+            # Calculates cosine similarity between the perturbed image and the target image
+            # os_sim=∑(a⋅b)
+            embedding_sim = torch.mean(torch.sum(adv_image_features * tgt_image_features, dim=1)) 
             embedding_sim.backward()
-            print("backward ")
-            
+                        
             grad = delta.grad.detach()
+            # Keeps it within a small, valid perturbation range [-ε, ε] so that it doesn't visibly distort the image.
+            # torch.sign(grad) gives the direction to perturb each pixel.
+            # alpha * torch.sign(grad) scales the direction by a small step size alpha.
+            # min=-epsilon, max=epsilon ensures that all values in delta_data stay within the allowed perturbation limit.
             delta_data = torch.clamp(delta + alpha * torch.sign(grad), min=-epsilon, max=epsilon)
             delta.data = delta_data
             delta.grad.zero_()
             print(f"iter {i}/{args.num_samples//args.batch_size} step:{j:3d}, embedding similarity={embedding_sim.item():.5f}, max delta={torch.max(torch.abs(delta_data)).item():.3f}, mean delta={torch.mean(torch.abs(delta_data)).item():.3f}")
 
-        # save imgs
-        print(f"save imgs {i}")
+        # save imgs        
         adv_image = image_org + delta
         adv_image = torch.clamp(inverse_normalize(adv_image), 0.0, 1.0)
         
         for path_idx in range(len(path)):
-            folder, name = path[path_idx].split("/")[-2], path[path_idx].split("/")[-1]
-            print(f"folder {folder}")
-            print(f"save imgs {name}")            
-            folder_to_save = os.path.join(args.output, folder)
-            print(f"folder_to_save {folder_to_save}")
-            print(f"name[:-4] {name[:-4]}")
+            folder, name = path[path_idx].split("/")[-2], path[path_idx].split("/")[-1]            
+            folder_to_save = os.path.join(args.output, folder)            
             if not os.path.exists(folder_to_save):
                 os.makedirs(folder_to_save, exist_ok=True)
             torchvision.utils.save_image(adv_image[path_idx], os.path.join(folder_to_save, name[:-4]) + '.png')
