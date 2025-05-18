@@ -7,6 +7,8 @@
 
 import argparse
 import os
+os.environ["BITSANDBYTES_NOWELCOME"] = "1"
+
 import random
 
 from common.utils import FlatImageDatasetWithPaths
@@ -86,12 +88,12 @@ def main():
         "change to --cfg-options instead.",
     )
     
-    parser.add_argument("--batch_size", default=5, type=int)
-    parser.add_argument("--num_samples", default=20, type=int)
+    parser.add_argument("--batch_size", default=1, type=int)
+    parser.add_argument("--num_samples", default=1, type=int)
     parser.add_argument("--alpha", default=1.0, type=float)
     parser.add_argument("--epsilon", default=8, type=int)
     parser.add_argument("--steps", default=10, type=int)
-    parser.add_argument("--output", default="temp", type=str, help='the folder name that restore your outputs')
+    parser.add_argument("--output", default="/home/swf_developer/storage/attack/minigpt4_adv/", type=str, help='the folder name that restore your outputs')
     args = parser.parse_args()
 
     alpha = args.alpha
@@ -136,18 +138,20 @@ def main():
     for i, ((image_org, _, path), (image_tgt, _, _)) in enumerate(zip(data_loader_imagenet, data_loader_target)):
         if args.batch_size * (i+1) > args.num_samples:
             break
-        
+        print(f"attack {i}")
         # (bs, c, h, w)
         image_org = image_org.to(device)
         image_tgt = image_tgt.to(device)
         
         # extract image features
+        print(f"extract image features {i}")
         with torch.no_grad():
             tgt_image_features = chat.forward_encoder(image_tgt)               # size=(batch_size, 577, 768)
             tgt_image_features = (tgt_image_features)[:,0,:]                      # size=(batch_size, 768)
             tgt_image_features = tgt_image_features / tgt_image_features.norm(dim=1, keepdim=True)
         
         # -------- get adv image -------- #
+        print(f"get adv image {i}")
         delta = torch.zeros_like(image_org, requires_grad=True)
         for j in range(args.steps):
             adv_image          = image_org + delta   # image is normalized to (0.0, 1.0)
@@ -165,6 +169,7 @@ def main():
             print(f"iter {i}/{args.num_samples//args.batch_size} step:{j:3d}, embedding similarity={embedding_sim.item():.5f}, max delta={torch.max(torch.abs(delta_data)).item():.3f}, mean delta={torch.mean(torch.abs(delta_data)).item():.3f}")
 
         # save imgs
+        print(f"save imgs {i}")
         adv_image = image_org + delta
         adv_image = torch.clamp(inverse_normalize(adv_image), 0.0, 1.0)
         
