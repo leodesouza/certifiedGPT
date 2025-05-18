@@ -122,7 +122,7 @@ def main():
     print("loading clean images")
     # imagenet_data = ImageFolderWithPaths("/home/swf_developer/storage/attack/imagenet_clean_images/", transform=None)
     imagenet_data = FlatImageDatasetWithPaths("/home/swf_developer/storage/attack/imagenet_clean_images/", transform=torchvision.transforms.ToTensor())
-    
+        
     print("loading target images")
     # target_data   = ImageFolderWithPaths("/home/swf_developer/storage/attack/targeted_images/samples", transform=None)
     target_data   = FlatImageDatasetWithPaths("/home/swf_developer/storage/attack/targeted_images/samples", transform=torchvision.transforms.ToTensor())
@@ -135,9 +135,9 @@ def main():
 
     print("start attack")
     # start attack
-    for i, ((image_org, _, path), (image_tgt, _, _)) in enumerate(zip(data_loader_imagenet, data_loader_target)):
+    for i, ((image_org, path), (image_tgt, _)) in enumerate(zip(data_loader_imagenet, data_loader_target)):
         if args.batch_size * (i+1) > args.num_samples:
-            print("break {i}")
+            print(f"break {i}")
             break
         print(f"attack {i}")
         # (bs, c, h, w)
