@@ -205,7 +205,7 @@ def main():
             print(f"name[:-4] {name[:-4]}")
             if not os.path.exists(folder_to_save):
                 os.makedirs(folder_to_save, exist_ok=True)
-            torchvision.utils.save_image(adv_image[path_idx], os.path.join(folder_to_save, name[:-4]) + 'png')
+            torchvision.utils.save_image(adv_image[path_idx], os.path.join(folder_to_save, name[:-4]) + '.png')
     
 if __name__ == "__main__":
     main()
