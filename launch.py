@@ -104,6 +104,12 @@ def main_worker(rank, world_size, args):
         elif args.mode == "certify":
             print(f"[Rank {rank}] Running certifying with agent: minigpt4_certify_agent")
             from agents import minigpt4_certify_agent
+        elif args.mode == "transfer_based_attack":
+            print(f"[Rank {rank}] Running transfer based attacks..")
+            import subprocess
+            subprocess.run(["bash", "/experiments/attacks/_train_adv_img_trans.sh"])
+            
+
 
         agent = setup_agent(config)
         agent.run()
