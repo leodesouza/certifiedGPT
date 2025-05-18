@@ -106,8 +106,10 @@ def main_worker(rank, world_size, args):
             from agents import minigpt4_certify_agent
         elif args.mode == "transfer_based_attack":
             print(f"[Rank {rank}] Running transfer based attacks..")
-            import subprocess
-            subprocess.run(["bash", "/home/swf_developer/certifiedGPT/experiments/attacks/_train_adv_img_trans.sh"])
+            # import subprocess
+            # subprocess.run(["python3", "/experiments/attacks/_train_adv_img_trans.py"])
+            from  experiments.attacks._train_adv_img_trans import main
+            main()
         
         if args.mode not in ["transfer_based_attack", "query_based_attack"]:             
             agent = setup_agent(config)

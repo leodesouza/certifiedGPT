@@ -71,8 +71,8 @@ class ImageFolderWithPaths(torchvision.datasets.ImageFolder):
         image_processed = vis_processor(original_tuple[0])
         
         return image_processed, original_tuple[1], path
-    
-if __name__ == "__main__":
+
+def main():
     parser = argparse.ArgumentParser()
     # minigpt-4
     parser.add_argument("--config-path", default="./configs/certify_configs/vqav2_certify_noise_0.25.yaml", help="path to configuration file.")
@@ -171,3 +171,6 @@ if __name__ == "__main__":
             if not os.path.exists(folder_to_save):
                 os.makedirs(folder_to_save, exist_ok=True)
             torchvision.utils.save_image(adv_image[path_idx], os.path.join(folder_to_save, name[:-4]) + 'png')
+    
+if __name__ == "__main__":
+    main()
