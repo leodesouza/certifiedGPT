@@ -199,10 +199,10 @@ def main():
         for path_idx in range(len(path)):
             folder, name = path[path_idx].split("/")[-2], path[path_idx].split("/")[-1]
             print(f"folder {folder}")
-            print(f"save imgs {name}")
+            print(f"save imgs {name}")            
+            folder_to_save = os.path.join(args.output, folder)
             print(f"folder_to_save {folder_to_save}")
             print(f"name[:-4] {name[:-4]}")
-            folder_to_save = os.path.join(args.output, folder)
             if not os.path.exists(folder_to_save):
                 os.makedirs(folder_to_save, exist_ok=True)
             torchvision.utils.save_image(adv_image[path_idx], os.path.join(folder_to_save, name[:-4]) + 'png')
