@@ -153,8 +153,10 @@ def main():
         # -------- get adv image -------- #
         print(f"get adv image {i}")
         delta = torch.zeros_like(image_org, requires_grad=True)
+        print(f"delta -- {delta.shape}")
         for j in range(args.steps):
             adv_image          = image_org + delta   # image is normalized to (0.0, 1.0)
+            print(f"adv_image -- {adv_image.shape}")
             adv_image_features = chat.forward_encoder(adv_image)
             adv_image_features = adv_image_features[:,0,:]  # size = (bs, 768)
             adv_image_features = adv_image_features / adv_image_features.norm(dim=1, keepdim=True)
