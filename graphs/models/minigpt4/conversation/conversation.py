@@ -240,9 +240,8 @@ class Chat:
             image_batch = image_batch.to(self.device)
         else: 
             raise ValueError("Unsupported image type for forward_encoder")
-        
-        with torch.no_grad():
-            image_emb, _ = self.model.encode_img(image_batch)
+                
+        image_emb, _ = self.model.encode_img(image_batch)
 
         return image_emb
 
