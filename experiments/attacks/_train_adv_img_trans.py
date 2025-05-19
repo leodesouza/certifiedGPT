@@ -127,8 +127,8 @@ def main():
     target_data   = FlatImageDatasetWithPaths("/home/swf_developer/storage/attack/targeted_images/samples", transform=vis_processor)
     
     print("loading dataloaders")
-    data_loader_imagenet = torch.utils.data.DataLoader(imagenet_data, batch_size=args.batch_size, shuffle=False, num_workers=0, drop_last=False, pin_memory=True)
-    data_loader_target   = torch.utils.data.DataLoader(target_data, batch_size=args.batch_size, shuffle=False, num_workers=0, drop_last=False, pin_memory=True)
+    data_loader_imagenet = torch.utils.data.DataLoader(imagenet_data, batch_size=args.batch_size, shuffle=False, num_workers=2, drop_last=False, pin_memory=True)
+    data_loader_target   = torch.utils.data.DataLoader(target_data, batch_size=args.batch_size, shuffle=False, num_workers=2, drop_last=False, pin_memory=True)
     inverse_normalize = torchvision.transforms.Normalize(mean=[-0.48145466 / 0.26862954, -0.4578275 / 0.26130258, -0.40821073 / 0.27577711], std=[1.0 / 0.26862954, 1.0 / 0.26130258, 1.0 / 0.27577711])
     print("loading dataloaders.. done!")
     print("start attack")    
