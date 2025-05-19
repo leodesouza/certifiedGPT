@@ -89,7 +89,7 @@ def main():
         "change to --cfg-options instead.",
     )
     
-    parser.add_argument("--batch_size", default=7, type=int)
+    parser.add_argument("--batch_size", default=5, type=int)
     parser.add_argument("--num_samples", default=5000, type=int)
     parser.add_argument("--alpha", default=1.0, type=float)
     parser.add_argument("--epsilon", default=8, type=int)
