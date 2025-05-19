@@ -112,7 +112,7 @@ def main():
     # parser.add_argument("--steps", default=100, type=int)
     # parser.add_argument("--output", default="/home/swf_developer/storage/attack/minigpt4_adv/", type=str, help='the folder name that restore your outputs')
     parser.add_argument("--batch_size", default=10, type=int)
-    parser.add_argument("--num_samples", default=1, type=int)
+    parser.add_argument("--num_samples", default=10, type=int)
     parser.add_argument("--alpha", default=1.0, type=float)
     parser.add_argument("--epsilon", default=8, type=int)
     parser.add_argument("--steps", default=100, type=int)
@@ -160,8 +160,7 @@ def main():
     # start attack
     try: 
         for i, ((image_org, path), (image_tgt, _)) in enumerate(zip(data_loader_imagenet, data_loader_target)):
-            if args.batch_size * (i+1) > args.num_samples: 
-                print('saiu')       
+            if args.batch_size * (i+1) > args.num_samples:                 
                 break
             
             # (bs, c, h, w)
