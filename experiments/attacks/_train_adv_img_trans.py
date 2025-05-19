@@ -105,11 +105,17 @@ def main():
         "change to --cfg-options instead.",
     )
     
-    parser.add_argument("--batch_size", default=10, type=int)
-    parser.add_argument("--num_samples", default=5000, type=int)
+    # parser.add_argument("--batch_size", default=10, type=int)
+    # parser.add_argument("--num_samples", default=5000, type=int)
+    # parser.add_argument("--alpha", default=1.0, type=float)
+    # parser.add_argument("--epsilon", default=8, type=int)
+    # parser.add_argument("--steps", default=100, type=int)
+    # parser.add_argument("--output", default="/home/swf_developer/storage/attack/minigpt4_adv/", type=str, help='the folder name that restore your outputs')
+    parser.add_argument("--batch_size", default=1, type=int)
+    parser.add_argument("--num_samples", default=1, type=int)
     parser.add_argument("--alpha", default=1.0, type=float)
     parser.add_argument("--epsilon", default=8, type=int)
-    parser.add_argument("--steps", default=100, type=int)
+    parser.add_argument("--steps", default=10, type=int)
     parser.add_argument("--output", default="/home/swf_developer/storage/attack/minigpt4_adv/", type=str, help='the folder name that restore your outputs')
     args = parser.parse_args()
 
@@ -153,16 +159,14 @@ def main():
 
     # start attack
     for i, ((image_org, path), (image_tgt, _)) in enumerate(zip(data_loader_imagenet, data_loader_target)):
-        if args.batch_size * (i+1) > args.num_samples:
-            print(f"break {i}")
+        if args.batch_size * (i+1) > args.num_samples:        
             break
-        print(f"attack {i}")
+        
         # (bs, c, h, w)
         image_org = image_org.to(device)
         image_tgt = image_tgt.to(device)
         
-        # extract image features
-        print(f"extract image features {i}")
+        # extract image features        
         with torch.no_grad():
             # tgt_image_features  -> size=(batch_size, 577, 768) ->
             # 577 tokens = 576 image patches + 1 [CLS] token
