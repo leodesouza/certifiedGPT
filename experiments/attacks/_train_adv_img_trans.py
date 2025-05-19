@@ -160,7 +160,8 @@ def main():
     # start attack
     try: 
         for i, ((image_org, path), (image_tgt, _)) in enumerate(zip(data_loader_imagenet, data_loader_target)):
-            if args.batch_size * (i+1) > args.num_samples:        
+            if args.batch_size * (i+1) > args.num_samples: 
+                print('saiu')       
                 break
             
             # (bs, c, h, w)
