@@ -111,7 +111,7 @@ def main():
     # parser.add_argument("--epsilon", default=8, type=int)
     # parser.add_argument("--steps", default=100, type=int)
     # parser.add_argument("--output", default="/home/swf_developer/storage/attack/minigpt4_adv/", type=str, help='the folder name that restore your outputs')
-    parser.add_argument("--batch_size", default=1, type=int)
+    parser.add_argument("--batch_size", default=10, type=int)
     parser.add_argument("--num_samples", default=1, type=int)
     parser.add_argument("--alpha", default=1.0, type=float)
     parser.add_argument("--epsilon", default=8, type=int)
