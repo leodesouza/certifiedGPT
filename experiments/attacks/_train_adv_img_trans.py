@@ -66,20 +66,20 @@ def to_tensor(pic):
     img = img.permute((2, 0, 1)).contiguous()
     return img.to(dtype=torch.get_default_dtype())
 
-def load_finetuned_model(config, model):
+# def load_finetuned_model(config, model):
 
-        print("Loading finetuned VQAv2")
-        checkpoint = config.model.vqa_finetuned                
+#         print("Loading finetuned VQAv2")
+#         checkpoint = config.model.vqa_finetuned                
 
-        print(f"Loading checkpoint from {checkpoint}")
-        checkpoint = torch.load(checkpoint, map_location=torch.device('cpu'))
+#         print(f"Loading checkpoint from {checkpoint}")
+#         checkpoint = torch.load(checkpoint, map_location=torch.device('cpu'))
         
 
-        print("Loading model state")
-        model.load_state_dict(checkpoint['model_state_dict'], strict=False)
-        print("Loading model state. Done!")
+#         print("Loading model state")
+#         model.load_state_dict(checkpoint['model_state_dict'], strict=False)
+#         print("Loading model state. Done!")
         
-        print(f"Numbers of treinable parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
+#         print(f"Numbers of treinable parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
 
 
     
@@ -135,8 +135,9 @@ def main():
     model_config.device_8bit = args.gpu_id
     model_cls = registry.get_model_class(model_config.arch)
     model = model_cls.from_config(model_config).to('cuda:{}'.format(args.gpu_id))
-        # load finetuned vqav2 checkpoint
-    load_finetuned_model(config, model )
+
+    # # load finetuned vqav2 checkpoint
+    # load_finetuned_model(config, model)
 
     vis_processor_cfg = config.datasets.evalvqav2.vis_processor.val
     vis_processor = registry.get_processor_class(vis_processor_cfg.name).from_config(vis_processor_cfg)
