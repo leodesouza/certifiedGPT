@@ -31,6 +31,7 @@ class MiniGPTBase(BaseModel):
             end_sym='\n',
             low_resource=False,  # use 8 bit and put vit in cpu
             device_8bit=0,  # the device of 8bit model should be set when loading and cannot be changed anymore.
+            low_res_device=0, 
             lora_r=0,  # lora_r means lora is not used
             lora_target_modules=["q_proj", "v_proj"],
             lora_alpha=16,
@@ -46,6 +47,7 @@ class MiniGPTBase(BaseModel):
             lora_target_modules=lora_target_modules,
             lora_alpha=lora_alpha,
             lora_dropout=lora_dropout,
+            low_res_device=low_res_device
         )
 
         self.visual_encoder, self.ln_vision = self.init_vision_encoder(
