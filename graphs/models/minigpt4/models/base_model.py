@@ -222,7 +222,8 @@ class BaseModel(nn.Module):
                 if hasattr(llama_model, "tie_weights"):
                     llama_model.tie_weights()
 
-                from transformers import infer_auto_device_map, get_balanced_memory
+                from accelerate import infer_auto_device_map, get_balanced_memory
+                
                 max_memory = get_balanced_memory(llama_model, dtype=torch.float16)
                 device_map = infer_auto_device_map(
                     llama_model,
