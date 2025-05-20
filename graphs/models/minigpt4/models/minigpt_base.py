@@ -42,7 +42,7 @@ class MiniGPTBase(BaseModel):
         self.llama_model, self.llama_tokenizer = self.init_llm(
             llama_model_path=llama_model,
             low_resource=low_resource,
-            low_res_device=device_8bit,
+            # low_res_device=device_8bit,
             lora_r=lora_r,
             lora_target_modules=lora_target_modules,
             lora_alpha=lora_alpha,
