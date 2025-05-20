@@ -199,10 +199,10 @@ class BaseModel(nn.Module):
             if low_resource:  
 
                 quant_config = BitsAndBytesConfig(
-                    load_in_4bit = True,
-                    bnb_4bit_use_double_quant=True,
-                    bnb_4bit_quant_type="nf4",
-                    bnb_4bit_compute_dtype=torch.float16,
+                    load_in_8bit=True,
+                    llm_int8_enable_fp32_cpu_offload=True,  # enable CPU offload
+                    # Optional:
+                    offload_folder="offload_dir",            # folder to store offloaded tensors
                 )
 
                 # quant_config = BitsAndBytesConfig(
@@ -216,6 +216,7 @@ class BaseModel(nn.Module):
                     llama_model_path,
                     quantization_config=quant_config,
                     device_map=device_map,
+                    # offload_folder="offload_dir",
                     torch_dtype=torch.float16
                 )
 
