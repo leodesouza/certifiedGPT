@@ -188,8 +188,7 @@ class BaseModel(nn.Module):
             logging.info("Loading tokenizers")
             llama_tokenizer = LlamaTokenizer.from_pretrained(llama_model_path, use_fast=False)
             llama_tokenizer.pad_token = "$$"
-            
-            
+                        
             if low_res_device == "auto":
                 print("llama_model will be loaded with device_map = auto for accelerate")                
                 device_map = "auto"
@@ -204,19 +203,11 @@ class BaseModel(nn.Module):
                     # Optional:
                     offload_folder="offload_dir",            # folder to store offloaded tensors
                 )
-
-                # quant_config = BitsAndBytesConfig(
-                #     load_in_8bit=True,
-                #     llm_int8_threshold=6.0,
-                #     llm_int8_skip_modules=None,
-                #     llm_int8_enable_fp32_cpu_offload=True,  # Enables offloading to CPU
-                # )
-               
+                
                 llama_model = LlamaForCausalLM.from_pretrained(
                     llama_model_path,
                     quantization_config=quant_config,
-                    device_map=device_map,
-                    # offload_folder="offload_dir",
+                    device_map=device_map,                    
                     torch_dtype=torch.float16
                 )
                 

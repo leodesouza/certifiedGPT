@@ -98,7 +98,7 @@ def main():
     # args = parser.parse_args()
 
 
-    parser.add_argument("--batch_size", default=8, type=int)
+    parser.add_argument("--batch_size", default=2, type=int)
     parser.add_argument("--num_samples", default=5000, type=int)
     parser.add_argument("--alpha", default=1.0, type=float)
     parser.add_argument("--epsilon", default=8, type=int)
@@ -145,6 +145,9 @@ def main():
     # start attack
     try: 
         for i, ((image_org, path), (image_tgt, _)) in enumerate(zip(data_loader_imagenet, data_loader_target)):
+            if i <= 384:
+                continue
+            
             if args.batch_size * (i+1) > args.num_samples:                 
                 break
             
