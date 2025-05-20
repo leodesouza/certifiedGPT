@@ -42,6 +42,7 @@ class MiniGPT4(MiniGPTBase):
             end_sym='\n',
             low_resource=False,  # use 8 bit and put vit in cpu
             device_8bit=0,  # the device of 8bit model should be set when loading and cannot be changed anymore.
+            low_res_device=0
     ):
         super().__init__(
             vit_model=vit_model,
@@ -55,6 +56,7 @@ class MiniGPT4(MiniGPTBase):
             end_sym=end_sym,
             low_resource=low_resource,
             device_8bit=device_8bit,
+            low_res_device=low_res_device
         )
 
         self.has_qformer = has_qformer
