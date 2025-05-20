@@ -186,8 +186,7 @@ class MiniGPT4(MiniGPTBase):
             max_txt_len=max_txt_len,
             end_sym=end_sym,
             low_resource=low_resource,
-            low_res_device=low_res_device,
-            device_8bit=device_8bit,
+            low_res_device=low_res_device,            
         )
 
         ckpt_path = cfg.get("ckpt", "")  # load weights of MiniGPT-4
