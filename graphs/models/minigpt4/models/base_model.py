@@ -222,14 +222,8 @@ class BaseModel(nn.Module):
                 if hasattr(llama_model, "tie_weights"):
                     llama_model.tie_weights()
 
-                from accelerate import infer_auto_device_map, get_balanced_memory
+                from accelerate import infer_auto_device_map
                 
-                max_memory = get_balanced_memory(llama_model, dtype=torch.float16)
-                device_map = infer_auto_device_map(
-                    llama_model,
-                    max_memory=max_memory,
-                    no_split_module_classes=["LlamaDecoderLayer"],  # adjust as needed
-                )
 
                 llama_model = LlamaForCausalLM.from_pretrained(
                     llama_model_path,
