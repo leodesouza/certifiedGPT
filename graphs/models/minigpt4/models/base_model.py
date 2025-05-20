@@ -26,10 +26,6 @@ from graphs.models.minigpt4.models.eva_vit import create_eva_vit_g
 from graphs.models.minigpt4.models.modeling_llama import LlamaForCausalLM
 from common.registry import registry
 
-#accelerate
-from accelerate import init_empty_weights, infer_auto_device_map, load_checkpoint_and_dispatch
-
-
 
 class BaseModel(nn.Module):
     """Base class for models."""
@@ -220,11 +216,25 @@ class BaseModel(nn.Module):
                 llama_model = LlamaForCausalLM.from_pretrained(
                     llama_model_path,
                     quantization_config=quant_config,                    
-                    device_map=device_map,                        
+                    device_map=None,                        
                 )
 
                 if hasattr(llama_model, "tie_weights"):
                     llama_model.tie_weights()
+
+                from transformers import infer_auto_device_map, get_balanced_memory
+                max_memory = get_balanced_memory(llama_model, dtype=torch.float16)
+                device_map = infer_auto_device_map(
+                    llama_model,
+                    max_memory=max_memory,
+                    no_split_module_classes=["LlamaDecoderLayer"],  # adjust as needed
+                )
+
+                llama_model = LlamaForCausalLM.from_pretrained(
+                    llama_model_path,
+                    quantization_config=quant_config,
+                    device_map=device_map,
+                )
 
             else:
                 logging.info("Default Loading with dbtype=16")
