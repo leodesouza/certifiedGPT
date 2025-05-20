@@ -192,7 +192,7 @@ class BaseModel(nn.Module):
             llama_tokenizer = LlamaTokenizer.from_pretrained(llama_model_path, use_fast=False)
             llama_tokenizer.pad_token = "$$"
             
-            print(f"low_res_device: low_res_device")
+            print(f"low_res_device: {low_res_device}")
             if low_res_device == "auto":
                 print("llama_model will be loaded with device_map = auto for accelerate")                
                 device_map = "auto"

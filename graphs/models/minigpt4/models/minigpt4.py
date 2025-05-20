@@ -163,9 +163,7 @@ class MiniGPT4(MiniGPTBase):
         has_qformer = cfg.get("has_qformer", True)
         freeze_qformer = cfg.get("freeze_qformer", True)
         low_resource = cfg.get("low_resource", False)
-        low_res_device = cfg.get("device_map", 0)        
-        device_8bit = cfg.get("device_8bit", 0)
-
+        low_res_device = cfg.get("low_res_device", 0)                
         prompt_path = cfg.get("prompt_path", "")
         prompt_template = cfg.get("prompt_template", "")
         max_txt_len = cfg.get("max_txt_len", 32)
