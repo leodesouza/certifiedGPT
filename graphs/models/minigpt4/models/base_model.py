@@ -199,7 +199,7 @@ class BaseModel(nn.Module):
             if low_resource:  
 
                 quant_config = BitsAndBytesConfig(
-                    load_in_8bit = True,
+                    load_in_4bit = True,
                     bnb_4bit_use_double_quant=True,
                     bnb_4bit_quant_type="nf4",
                     bnb_4bit_compute_dtype=torch.float16,
@@ -211,25 +211,17 @@ class BaseModel(nn.Module):
                 #     llm_int8_skip_modules=None,
                 #     llm_int8_enable_fp32_cpu_offload=True,  # Enables offloading to CPU
                 # )
-
-                logging.info("Loading with low resource. dtype=16 and 8bit")
-                llama_model = LlamaForCausalLM.from_pretrained(
-                    llama_model_path,
-                    quantization_config=quant_config,                    
-                    device_map=None,                        
-                )
-
-                if hasattr(llama_model, "tie_weights"):
-                    llama_model.tie_weights()
-
-                from accelerate import infer_auto_device_map
-                
-
+               
                 llama_model = LlamaForCausalLM.from_pretrained(
                     llama_model_path,
                     quantization_config=quant_config,
                     device_map=device_map,
+                    torch_dtype=torch.float16
                 )
+
+                if hasattr(llama_model, "tie_weights"):
+                    print("calling tie_weights")
+                    llama_model.tie_weights()                                               
 
             else:
                 logging.info("Default Loading with dbtype=16")
