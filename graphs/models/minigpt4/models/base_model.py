@@ -12,7 +12,7 @@ from omegaconf import OmegaConf
 import numpy as np
 import torch
 import torch.nn as nn
-from transformers import LlamaTokenizer
+from transformers import LlamaTokenizer, BitsAndBytesConfig
 from peft import (
     LoraConfig,
     get_peft_model,
@@ -28,6 +28,7 @@ from common.registry import registry
 
 #accelerate
 from accelerate import init_empty_weights, infer_auto_device_map, load_checkpoint_and_dispatch
+
 
 
 class BaseModel(nn.Module):
@@ -192,21 +193,39 @@ class BaseModel(nn.Module):
             llama_tokenizer = LlamaTokenizer.from_pretrained(llama_model_path, use_fast=False)
             llama_tokenizer.pad_token = "$$"
             
-            print(f"low_res_device: {low_res_device}")
+            
             if low_res_device == "auto":
                 print("llama_model will be loaded with device_map = auto for accelerate")                
                 device_map = "auto"
             else: 
                 device_map = {'': low_res_device} 
 
-            if low_resource:                
+            if low_resource:  
+
+                quant_config = BitsAndBytesConfig(
+                    load_in_8bit = True,
+                    bnb_4bit_use_double_quant=True,
+                    bnb_4bit_quant_type="nf4",
+                    bnb_4bit_compute_dtype=torch.float16,
+                )
+
+                # quant_config = BitsAndBytesConfig(
+                #     load_in_8bit=True,
+                #     llm_int8_threshold=6.0,
+                #     llm_int8_skip_modules=None,
+                #     llm_int8_enable_fp32_cpu_offload=True,  # Enables offloading to CPU
+                # )
+
                 logging.info("Loading with low resource. dtype=16 and 8bit")
                 llama_model = LlamaForCausalLM.from_pretrained(
                     llama_model_path,
-                    torch_dtype=torch.float16,
-                    load_in_8bit=True,
+                    quantization_config=quant_config,                    
                     device_map=device_map,                        
                 )
+
+                if hasattr(llama_model, "tie_weights"):
+                    llama_model.tie_weights()
+
             else:
                 logging.info("Default Loading with dbtype=16")
                 llama_model = LlamaForCausalLM.from_pretrained(
