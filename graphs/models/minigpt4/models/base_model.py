@@ -219,10 +219,8 @@ class BaseModel(nn.Module):
                     # offload_folder="offload_dir",
                     torch_dtype=torch.float16
                 )
-
-                if hasattr(llama_model, "tie_weights"):
-                    print("calling tie_weights")
-                    llama_model.tie_weights()                                               
+                
+                llama_model.tie_weights()                                               
 
             else:
                 logging.info("Default Loading with dbtype=16")

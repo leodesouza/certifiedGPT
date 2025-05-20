@@ -133,3 +133,8 @@ class LlamaForCausalLM(LlamaForCausalLMOrig):
             hidden_states=outputs.hidden_states,
             attentions=outputs.attentions,
         )
+    
+    def tie_weights(self):
+        if hasattr(self, "lm_head") and hasattr(self.model, "embed_tokens"):
+            self.lm_head.weight = self.model.embed_tokens.weight
+
