@@ -1,0 +1,64 @@
+model:
+  arch: minigpt4
+  max_txt_len: 160
+  end_sym: "###"
+  prompt_path: "prompts/alignment.txt"
+  prompt_template: '###Human: {} ###Assistant: '  
+  ckpt: ${env:MINIGPT_4}
+    
+  drop_path_rate: 0
+  use_grad_checkpoint: false
+  vit_precision: "fp16"
+  freeze_vit: true
+  has_qformer: true
+  freeze_qformer: true
+  num_query_token: 32
+  low_resource: true
+  device_8bit: 0
+  device_map: auto # for offloading
+  
+  llama_model: ${env:VICUNA_DIR}
+  blip_flant5_pth: ${env:BLIP_FLANT5_PTH}
+  eva_vit_g_pth: ${env:EVA_VIT_G_PTH}
+  vqa_finetuned: ${env:VQAV2_FINETUNED}
+
+
+# Total batch_size should be multiple of 64
+# featue dimension should be a multiple of 128
+# https://cloud.google.com/tpu/docs/performance-guide
+
+datasets:
+  evalvqav2:    
+    batch_size: 48 #64 #90
+    vis_processor:
+      val:
+        name: "blip2_image_val"
+        image_size: 448
+        min_scale: 0.5
+        max_scale: 1.0
+    text_processor:
+      val:
+        name: "blip_caption"
+
+run:
+  agent: image_text_eval
+  max_new_tokens: 8
+  noise_level: 0  
+  seed: 42  
+  output_dir: ${env:OUTPUT_DIR}          
+  amp: True
+  evaluate: False
+  train_splits: ["train"]
+  has_val_split: true
+  device: "tpu"
+  wandb: True
+  wandb_api_key: ${env:WANDB_API_KEY}
+  wandb_name: "vqav2_eval_batch52_noise_0.5" 
+
+  dataset_config_name: eval_vqa.yaml
+# DataLoader
+  distributed: False  
+  num_workers: 1 # n of workers to load data
+
+# debug
+  debug_graph_computation: True

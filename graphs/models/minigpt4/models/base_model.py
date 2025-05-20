@@ -26,6 +26,9 @@ from graphs.models.minigpt4.models.eva_vit import create_eva_vit_g
 from graphs.models.minigpt4.models.modeling_llama import LlamaForCausalLM
 from common.registry import registry
 
+#accelerate
+from accelerate import init_empty_weights, infer_auto_device_map, load_checkpoint_and_dispatch
+
 
 class BaseModel(nn.Module):
     """Base class for models."""
@@ -188,14 +191,20 @@ class BaseModel(nn.Module):
             logging.info("Loading tokenizers")
             llama_tokenizer = LlamaTokenizer.from_pretrained(llama_model_path, use_fast=False)
             llama_tokenizer.pad_token = "$$"
-             
+            
+            if low_res_device == "auto":
+                print("llama_model will be loaded with device_map = auto for accelerate")                
+                device_map = "auto"
+            else: 
+                device_map = {'': low_res_device} 
+
             if low_resource:                
                 logging.info("Loading with low resource. dtype=16 and 8bit")
                 llama_model = LlamaForCausalLM.from_pretrained(
                     llama_model_path,
                     torch_dtype=torch.float16,
                     load_in_8bit=True,
-                    device_map={'': low_res_device},                        
+                    device_map=device_map,                        
                 )
             else:
                 logging.info("Default Loading with dbtype=16")
