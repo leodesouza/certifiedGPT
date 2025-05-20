@@ -12,11 +12,7 @@ from transformers.models.llama.modeling_llama import LlamaForCausalLM as LlamaFo
 
 
 class LlamaForCausalLM(LlamaForCausalLMOrig):
-
-    def __init__(self, config):
-        super().__init__(config)
-        self.tie_weights()
-
+    
     @add_start_docstrings_to_model_forward(LLAMA_INPUTS_DOCSTRING)
     @replace_return_docstrings(output_type=CausalLMOutputWithPast, config_class=_CONFIG_FOR_DOC)
     def forward(
