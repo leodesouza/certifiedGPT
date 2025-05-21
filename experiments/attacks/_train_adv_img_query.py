@@ -17,10 +17,10 @@ from PIL import Image
 import wandb
 import copy
 
-from graphs.models.minigpt4.common.config import Config
-from graphs.models.minigpt4.common.dist_utils import get_rank
-from graphs.models.minigpt4.common.registry import registry
-from graphs.models.minigpt4.conversation.conversation import Chat, CONV_VISION
+from common.config import Config
+from common.registry import registry
+from graphs.models.minigpt4.conversation.conversation import Chat, CONV_VISION_LLama2
+
 
 # imports modules for registration
 from graphs.models.minigpt4.datasets.builders import *
@@ -92,13 +92,12 @@ def _i2t(args, chat, image_tensor):
     captions   = chat.get_text(args, mixed_embs, text_size=image_tensor.size()[0])
     return captions
 
-
-if __name__ == "__main__":
+def main():
     seedEverything()
     parser = argparse.ArgumentParser()
     # load models for i2t
     # minigpt-4
-    parser.add_argument("--cfg-path", default="./eval_configs/minigpt4_eval.yaml", help="path to configuration file.")
+    parser.add_argument("--config-path", default="./configs/certify_configs/vqav2_certify_noise_0.25.yaml", help="path to configuration file.")
     parser.add_argument("--gpu-id", type=int, default=0, help="specify the gpu to load the model.")
     parser.add_argument(
         "--options",
@@ -109,36 +108,36 @@ if __name__ == "__main__":
     )
     
     parser.add_argument("--batch_size", default=1, type=int)
-    parser.add_argument("--num_samples", default=5, type=int)
+    parser.add_argument("--num_samples", default=1000, type=int)
     parser.add_argument("--input_res", default=224, type=int)
     parser.add_argument("--alpha", default=1.0, type=float)
     parser.add_argument("--epsilon", default=8, type=int)
-    parser.add_argument("--steps", default=1, type=int)
-    parser.add_argument("--output", default="temp", type=str)
+    parser.add_argument("--steps", default=8, type=int)
+    parser.add_argument("--output", default="/home/swf_developer/storage/attack/query_based_attack_output/output.txt", type=str)
     parser.add_argument("--data_path", default="temp", type=str)
     parser.add_argument("--text_path", default="temp.txt", type=str)
     
     parser.add_argument("--delta", default="normal", type=str)
-    parser.add_argument("--num_query", default=20, type=int)
-    parser.add_argument("--num_sub_query", default=5, type=int)
+    parser.add_argument("--num_query", default=100, type=int)
+    parser.add_argument("--num_sub_query", default=25, type=int)
     parser.add_argument("--sigma", default=8, type=float)
     
     parser.add_argument("--wandb", action="store_true")
-    parser.add_argument("--wandb_project_name", type=str, default='temp_proj')
+    parser.add_argument("--wandb_project_name", type=str, default='certifiedgpt')
     parser.add_argument("--wandb_run_name", type=str, default='temp_run')
     
     args = parser.parse_args()
 
-    # ---------------------- #
-    print(f"Loading MiniGPT-4 models...")
-    # load models for i2t
-    cfg = Config(args)
-    model_config = cfg.model_cfg
+
+    config = Config(args)
+    print("Loading MiniGPT-4 models..")
+         
+    model_config = config.model
     model_config.device_8bit = args.gpu_id
-    model_cls = registry.get_model_class(model_config.arch)  # model_config.arch: minigpt-4
+    model_cls = registry.get_model_class(model_config.arch)
     model = model_cls.from_config(model_config).to('cuda:{}'.format(args.gpu_id))
 
-    vis_processor_cfg = cfg.datasets_cfg.cc_sbu_align.vis_processor.train
+    vis_processor_cfg = config.datasets.evalvqav2.vis_processor.val
     vis_processor     = registry.get_processor_class(vis_processor_cfg.name).from_config(vis_processor_cfg)       
     num_beams = 1
     temperature = 1.0
@@ -160,11 +159,11 @@ if __name__ == "__main__":
 
     # load adv image
     # adv_vit_data      = ImageFolderWithPaths(args.data_path, transform=transform)
-    adv_vit_data = FlatImageDatasetWithPaths("/home/swf_developer/storage/attack/imagenet_clean_images/", transform=vis_processor)
+    adv_vit_data = FlatImageDatasetWithPaths("/home/swf_developer/storage/attack/imagenet_adv_images/images/", transform=vis_processor)
     data_loader       = torch.utils.data.DataLoader(adv_vit_data, batch_size=batch_size, shuffle=False, num_workers=24)
 
     # load clean image
-    clean_data        = FlatImageDatasetWithPaths("path to imagenet-val", transform=transform)
+    clean_data        = FlatImageDatasetWithPaths("/home/swf_developer/storage/attack/imagenet_clean_images/", transform=transform)
     clean_data_loader = torch.utils.data.DataLoader(clean_data, batch_size=batch_size, shuffle=False, num_workers=24)
     
     chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id))     
@@ -182,7 +181,7 @@ if __name__ == "__main__":
         adv_vit_text_features = adv_vit_text_features.detach()
     
     # tgt text/features
-    tgt_text_path = 'path to _coco_captions_10000.txt'
+    tgt_text_path = '/home/swf_developer/storage/attack/target/coco_captions_5000.txt'
     with open(os.path.join(tgt_text_path), 'r') as f:
         tgt_text  = f.readlines()[:args.num_samples] 
         f.close()
@@ -247,7 +246,8 @@ if __name__ == "__main__":
     ## ----------
     
     if args.wandb:
-        run = wandb.init(project=args.wandb_project_name, name=args.wandb_run_name, reinit=True)
+        wandb.login(key=config.run.wandb_api_key)
+        run = wandb.init(project=args.wandb_project_name, name=args.wandb_run_name, reinit=True)                
     
     for i, ((image, _, path), (image_clean, _, _)) in enumerate(zip(data_loader, clean_data_loader)):
         if batch_size * (i+1) > args.num_samples:
@@ -396,10 +396,12 @@ if __name__ == "__main__":
 
         # log text
         print("best caption of current image:", best_caption)
-        with open(os.path.join(args.output + '.txt'), 'a') as f:
+        with open(os.path.join(args.output), 'a') as f:
             # print(''.join([best_caption]), file=f)
             if better_flag:
                 f.write(best_caption+'\n')
             else:
                 f.write(best_caption)
         f.close()
+if __name__ == "__main__":
+    main()
