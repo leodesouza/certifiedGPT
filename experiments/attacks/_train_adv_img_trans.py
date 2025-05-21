@@ -88,16 +88,7 @@ def main():
         "in xxx=yyy format will be merged into config file (deprecate), "
         "change to --cfg-options instead.",
     )
-    
-    # parser.add_argument("--batch_size", default=2, type=int)
-    # parser.add_argument("--num_samples", default=5000, type=int)
-    # parser.add_argument("--alpha", default=1.0, type=float)
-    # parser.add_argument("--epsilon", default=8, type=int)
-    # parser.add_argument("--steps", default=100, type=int)
-    # parser.add_argument("--output", default="/home/swf_developer/storage/attack/minigpt4_adv/", type=str, help='the folder name that restore your outputs')    
-    # args = parser.parse_args()
-
-
+      
     parser.add_argument("--batch_size", default=2, type=int)
     parser.add_argument("--num_samples", default=5000, type=int)
     parser.add_argument("--alpha", default=1.0, type=float)

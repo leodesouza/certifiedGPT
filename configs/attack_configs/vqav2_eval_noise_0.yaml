@@ -14,7 +14,7 @@ model:
   freeze_qformer: true
   num_query_token: 32
   low_resource: true
-  low_res_device: auto # for offloading
+  low_res_device: 0   # auto # for offloading
   device_8bit: 0
     
   llama_model: ${env:VICUNA_DIR}

@@ -188,13 +188,7 @@ class BaseModel(nn.Module):
             logging.info("Loading tokenizers")
             llama_tokenizer = LlamaTokenizer.from_pretrained(llama_model_path, use_fast=False)
             llama_tokenizer.pad_token = "$$"
-                        
-            if low_res_device == "auto":
-                print("llama_model will be loaded with device_map = auto for accelerate")                
-                device_map = "auto"
-            else: 
-                device_map = {'': low_res_device} 
-
+                                    
             if low_resource:  
 
                 quant_config = BitsAndBytesConfig(
@@ -207,11 +201,9 @@ class BaseModel(nn.Module):
                 llama_model = LlamaForCausalLM.from_pretrained(
                     llama_model_path,
                     quantization_config=quant_config,
-                    device_map=device_map,                    
+                    device_map={'': low_res_device},                    
                     torch_dtype=torch.float16
-                )
-                
-                llama_model.tie_weights()                                               
+                )                                
 
             else:
                 logging.info("Default Loading with dbtype=16")
