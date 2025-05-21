@@ -191,16 +191,16 @@ class BaseModel(nn.Module):
                                     
             if low_resource:  
 
-                quant_config = BitsAndBytesConfig(
-                    load_in_8bit=True,
-                    llm_int8_enable_fp32_cpu_offload=True,  # enable CPU offload
-                    # Optional:
-                    offload_folder="offload_dir",            # folder to store offloaded tensors
-                )
+                # quant_config = BitsAndBytesConfig(
+                #     load_in_8bit=True,
+                #     llm_int8_enable_fp32_cpu_offload=True,  # enable CPU offload
+                #     # Optional:
+                #     offload_folder="offload_dir",            # folder to store offloaded tensors
+                # )
                 
                 llama_model = LlamaForCausalLM.from_pretrained(
                     llama_model_path,
-                    quantization_config=quant_config,
+                    # quantization_config=quant_config,
                     device_map={'': low_res_device},                    
                     torch_dtype=torch.float16
                 )                                
