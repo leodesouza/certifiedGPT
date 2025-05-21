@@ -9,6 +9,7 @@ import argparse
 import os
 import random
 import clip
+from common.utils import FlatImageDatasetWithPaths
 import numpy as np
 import torch
 import torchvision
@@ -158,11 +159,12 @@ if __name__ == "__main__":
     epsilon       = args.epsilon
 
     # load adv image
-    adv_vit_data      = ImageFolderWithPaths(args.data_path, transform=transform)
+    # adv_vit_data      = ImageFolderWithPaths(args.data_path, transform=transform)
+    adv_vit_data = FlatImageDatasetWithPaths("/home/swf_developer/storage/attack/imagenet_clean_images/", transform=vis_processor)
     data_loader       = torch.utils.data.DataLoader(adv_vit_data, batch_size=batch_size, shuffle=False, num_workers=24)
 
     # load clean image
-    clean_data        = ImageFolderWithPaths("path to imagenet-val", transform=transform)
+    clean_data        = FlatImageDatasetWithPaths("path to imagenet-val", transform=transform)
     clean_data_loader = torch.utils.data.DataLoader(clean_data, batch_size=batch_size, shuffle=False, num_workers=24)
     
     chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id))     
