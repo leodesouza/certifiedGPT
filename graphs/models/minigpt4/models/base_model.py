@@ -198,12 +198,20 @@ class BaseModel(nn.Module):
                 #     offload_folder="offload_dir",            # folder to store offloaded tensors
                 # )
                 
+                # llama_model = LlamaForCausalLM.from_pretrained(
+                #     llama_model_path,
+                #     quantization_config=quant_config,
+                #     device_map={'': low_res_device},                    
+                #     torch_dtype=torch.float16
+                # )      
+
+                logging.info("Loading with low resource. dtype=16 and 8bit")
                 llama_model = LlamaForCausalLM.from_pretrained(
                     llama_model_path,
-                    # quantization_config=quant_config,
-                    device_map={'': low_res_device},                    
-                    torch_dtype=torch.float16
-                )                                
+                    torch_dtype=torch.float16,
+                    load_in_8bit=True,
+                    device_map={'': low_res_device},                        
+                )                          
 
             else:
                 logging.info("Default Loading with dbtype=16")
