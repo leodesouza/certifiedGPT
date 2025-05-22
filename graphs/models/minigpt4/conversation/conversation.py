@@ -151,16 +151,15 @@ class Chat:
     def ask(self, text, conv):
         if len(conv.messages) > 0 and conv.messages[-1][0] == conv.roles[0] \
                 and conv.messages[-1][1][-6:] == '</Img>':  # last message is image.            
-            conv.messages[-1][1] = ' '.join([conv.messages[-1][1], text])
-            flat_string = " ".join(s for pair in conv.messages for s in pair)
-            print(f"ASK MESSAGEM -> {flat_string}")            
+            conv.messages[-1][1] = ' '.join([conv.messages[-1][1], text])            
         else:
             conv.append_message(conv.roles[0], text)
 
     def answer_prepare(self, conv, img_list, max_new_tokens=300, num_beams=1, min_length=1, top_p=0.9,
                        repetition_penalty=1.05, length_penalty=1, temperature=1.0, max_length=2000):
         conv.append_message(conv.roles[1], None)        
-        prompt = conv.get_prompt()                
+        prompt = conv.get_prompt() 
+        print(f"[PROMPT] -> {prompt}")               
         embs = self.model.get_context_emb(prompt, img_list)
         
         current_max_len = embs.shape[1] + max_new_tokens

@@ -117,14 +117,8 @@ def main():
         # image = image.to(device)
        
         with torch.no_grad():
-            # conv = CONV_VISION_Vicuna0.copy()
-
-            conv = Conversation(
-                system="Give short and precise answers.",
-                messages=[],
-                sep_style=SeparatorStyle.SINGLE,
-            )
-            
+            conv = CONV_VISION_Vicuna0.copy()
+                        
             img_list = []      
             print("up load imgs")      
             chat.upload_img(image, conv, img_list)  # img embeddings, size() = [bs, 32, 5120]
