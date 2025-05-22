@@ -117,7 +117,7 @@ def main_worker(rank, world_size, args):
         elif args.mode == "query_based_attack":
             print(f"[Rank {rank}] Running query_based_attack from MiniGPT4.")            
             sys.argv = ["_train_adv_img_query.py"]
-            from  experiments.attacks._minigpt4_img2txt import main
+            from  experiments.attacks._train_adv_img_query import main
             main()
         
         if args.mode not in ["transfer_based_attack", "query_based_attack", "img_t2_text"]:             

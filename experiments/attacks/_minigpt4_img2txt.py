@@ -17,18 +17,17 @@ import torch
 import torchvision
 import torch.backends.cudnn as cudnn
 
-from common.config import Config
-from common.registry import registry
 
-from minigpt4.common.registry import registry
 from graphs.models.minigpt4.conversation.conversation import Chat, CONV_VISION_LLama2
 
 # imports modules for registration
-from minigpt4.datasets.builders import *
-from minigpt4.models import *
-from minigpt4.processors import *
-from minigpt4.runners import *
-from minigpt4.tasks import *
+# imports modules for registration
+from common.config import Config
+from common.registry import registry
+from datasets.builders import *
+from processors import blip_processors
+from graphs.models import *
+from graphs.models.minigpt4.common.optims import *
 
 
 # seed for everything
