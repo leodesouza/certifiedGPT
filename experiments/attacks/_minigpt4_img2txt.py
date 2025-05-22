@@ -125,7 +125,7 @@ def main():
         image = image.to(device)
        
         with torch.no_grad():
-            
+
             img_list = []      
             print("up load imgs")      
             chat.upload_img(image, conv, img_list)  # img embeddings, size() = [bs, 32, 5120]
@@ -134,7 +134,8 @@ def main():
             chat.encode_img(img_list)  # img embeddings, size() = [bs, 32, 5120]            
 
             print("ask to minigpt4")      
-            chat.ask(args.query, conv)            
+            
+            chat.ask("<Img><ImageHere></Img> {} ".format(args.query), conv)            
 
             print("answer")      
             captions, _  = chat.answer(conv, 
