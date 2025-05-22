@@ -55,6 +55,15 @@ def seedEverything(seed=DEFAULT_RANDOM_SEED):
     seedTorch(seed)
 # ------------------------------------------------------------------ #  
 
+def prepare_texts(texts, conv_temp):
+        convs = [conv_temp.copy() for _ in range(len(texts))]
+        [conv.append_message(
+            conv.roles[0], '<Img><ImageHere></Img> {}'.format(text)) for conv, text in zip(convs, texts)]
+        [conv.append_message(conv.roles[1], None) for conv in convs]
+        texts = [conv.get_prompt() for conv in convs]
+        return texts, conv        
+    
+
 
 class ImageFolderWithPaths(torchvision.datasets.ImageFolder):
     def __getitem__(self, index: int):
@@ -63,7 +72,9 @@ class ImageFolderWithPaths(torchvision.datasets.ImageFolder):
 
         image_processed = vis_processor(original_tuple[0])
         return image_processed, original_tuple[1], path
-    
+
+conv = CONV_VISION_Vicuna0.copy()
+
 def main():
     seedEverything()
     parser = argparse.ArgumentParser(description="Demo")
@@ -111,7 +122,7 @@ def main():
     dataloader    = torch.utils.data.DataLoader(imagenet_data, batch_size=args.batch_size, shuffle=False, num_workers=2)
 
     chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id))
-    conv = CONV_VISION_Vicuna0.copy()
+
     
     # img2txt
     print("start iteration...")
@@ -135,7 +146,9 @@ def main():
 
             print("ask to minigpt4")      
             
-            chat.ask("<Img><ImageHere></Img> {} ".format(args.query), conv)            
+            text, conv = prepare_texts(args.query, conv)
+            
+            chat.ask(text , conv)            
 
             print("answer")      
             captions, _  = chat.answer(conv, 
