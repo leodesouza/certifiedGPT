@@ -115,7 +115,7 @@ def main():
     
     # img2txt
     print("start iteration...")
-    for i, (image, _, path) in enumerate(dataloader):
+    for i, (image, _) in enumerate(dataloader):
         start = time.perf_counter()
         
         print(f"MiniGPT4 img2txt: {i}/{args.num_samples//args.batch_size}")
