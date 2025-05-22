@@ -19,7 +19,7 @@ import torchvision
 import torch.backends.cudnn as cudnn
 
 
-from graphs.models.minigpt4.conversation.conversation import Chat, CONV_VISION_LLama2
+from graphs.models.minigpt4.conversation.conversation import Chat, CONV_VISION_LLama2, CONV_VISION_Vicuna0
 
 # imports modules for registration
 # imports modules for registration
@@ -111,7 +111,7 @@ def main():
     dataloader    = torch.utils.data.DataLoader(imagenet_data, batch_size=args.batch_size, shuffle=False, num_workers=2)
 
     chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id))
-    conv = CONV_VISION_LLama2.copy()
+    conv = CONV_VISION_Vicuna0.copy()
     
     # img2txt
     print("start iteration...")
