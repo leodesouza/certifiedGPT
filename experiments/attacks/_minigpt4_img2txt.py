@@ -66,7 +66,7 @@ def load_finetuned_model(config, model):
     model.load_state_dict(checkpoint['model_state_dict'], strict=False)
     print("Loading model state. Done!")
 
-    print(f"Numbers of treinable parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad)}")    '
+    print(f"Numbers of treinable parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
 # ------------------------------------------------------------------ #  
 
 def main():
