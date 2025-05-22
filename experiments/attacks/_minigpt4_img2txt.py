@@ -142,6 +142,7 @@ def main():
                                     temperature=temperature,
                                     max_new_tokens=20,
                                     max_length=2000)
+            print(f"caption: {captions}")
         # write captions
         with open(os.path.join("/home/swf_developer/storage/attack/img_2_txt_output", args.output_path + '_pred.txt'), 'a') as f:
             print('\n'.join(captions), file=f)
