@@ -73,7 +73,7 @@ class ImageFolderWithPaths(torchvision.datasets.ImageFolder):
         image_processed = vis_processor(original_tuple[0])
         return image_processed, original_tuple[1], path
 
-conv = CONV_VISION_Vicuna0.copy()
+
 
 def main():
     seedEverything()
@@ -123,6 +123,7 @@ def main():
 
     chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id))
 
+    conv = CONV_VISION_Vicuna0.copy()
     
     # img2txt
     print("start iteration...")
@@ -147,7 +148,7 @@ def main():
             print("ask to minigpt4")      
             
             text, conv = prepare_texts(args.query, conv)
-            
+
             chat.ask(text , conv)            
 
             print("answer")      
