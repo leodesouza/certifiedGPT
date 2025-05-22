@@ -98,7 +98,7 @@ def main():
 
     # load image
     print(f"loading images from path: {args.img_path}")
-    imagenet_data = FlatImageDatasetWithPaths(args.img_path, transform=vis_processor)
+    imagenet_data = FlatImageDatasetWithPaths(args.img_path, transform=None)
     dataloader    = torch.utils.data.DataLoader(imagenet_data, batch_size=args.batch_size, shuffle=False, num_workers=2)
 
     chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id))
@@ -122,11 +122,10 @@ def main():
             print("up load imgs")      
             chat.upload_img(image, conv, img_list)  # img embeddings, size() = [bs, 32, 5120]
 
-            # print("econde imgs")      
-            # chat.encode_img(img_list)  # img embeddings, size() = [bs, 32, 5120]            
+            print("econde imgs")      
+            chat.encode_img(img_list)  # img embeddings, size() = [bs, 32, 5120]            
 
             print("ask to minigpt4")                              
-
             chat.ask(args.query, conv)            
 
             print("answer")      
