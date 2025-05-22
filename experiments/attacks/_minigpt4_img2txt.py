@@ -7,6 +7,7 @@
 
 import argparse
 import os
+os.environ["BITSANDBYTES_NOWELCOME"] = "1"
 import random
 from PIL import Image
 import time
