@@ -125,27 +125,29 @@ def main():
         image = image.to(device)
        
         with torch.no_grad():
-            # img_list = []      
-            # print("up load imgs")      
-            # chat.upload_img(image, conv, img_list)  # img embeddings, size() = [bs, 32, 5120]
+            
+            img_list = []      
+            print("up load imgs")      
+            chat.upload_img(image, conv, img_list)  # img embeddings, size() = [bs, 32, 5120]
 
-            # print("econde imgs")      
-            # chat.encode_img(img_list)  # img embeddings, size() = [bs, 32, 5120]            
+            print("econde imgs")      
+            chat.encode_img(img_list)  # img embeddings, size() = [bs, 32, 5120]            
 
-            # print("ask to minigpt4")      
-            # chat.ask(args.query, conv)            
+            print("ask to minigpt4")      
+            chat.ask(args.query, conv)            
 
-            # print("answer")      
-            # captions, _  = chat.answer(conv, 
-            #                         img_list, 
-            #                         num_beams=num_beams, 
-            #                         temperature=temperature,
-            #                         max_new_tokens=20,
-            #                         max_length=2000)
-            # print(f"caption: {captions}")
-            img_list   = chat.get_img_list(image)
-            mixed_embs = chat.get_mixed_embs(args, img_list=img_list)
-            captions   = chat.get_text(mixed_embs)
+            print("answer")      
+            captions, _  = chat.answer(conv, 
+                                    img_list, 
+                                    num_beams=num_beams, 
+                                    temperature=temperature,
+                                    max_new_tokens=20,
+                                    max_length=2000)
+            print(f"caption: {captions}")
+
+            # img_list   = chat.get_img_list(image)
+            # mixed_embs = chat.get_mixed_embs(args, img_list=img_list)
+            # captions   = chat.get_text(mixed_embs)
         # write captions
         with open(os.path.join("/home/swf_developer/storage/attack/img_2_txt_output", args.output_path + '_pred.txt'), 'a') as f:
             print('\n'.join(captions), file=f)

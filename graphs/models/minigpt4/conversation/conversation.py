@@ -243,14 +243,7 @@ class Chat:
                 
         image_emb, _ = self.model.encode_img(image_batch)
 
-        return image_emb
-    
-    # def get_img_list(self, image, img_list=None):
-    #     if img_list is None:
-    #         img_list = []
-    #     img_list.append(image)
-    #     self.encode_img(img_list=img_list)
-    #     return img_list
+        return image_emb       
 
     def get_img_list(self, image):        
         img_list=[image]
