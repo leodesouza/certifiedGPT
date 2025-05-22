@@ -114,7 +114,7 @@ def main():
         if i >= args.num_samples//args.batch_size:
             print(f"Successfully processed {args.num_samples} images to text!")
             break 
-        image = image.to(device)
+        # image = image.to(device)
        
         with torch.no_grad():
             conv = CONV_VISION_Vicuna0.copy()

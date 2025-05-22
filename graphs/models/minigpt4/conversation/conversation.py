@@ -214,6 +214,7 @@ class Chat:
             raw_image = Image.open(image).convert('RGB')
             image = self.vis_processor(raw_image).unsqueeze(0).to(self.device)
         elif isinstance(image, Image.Image):
+            print('############### pass image through vis_processor')
             raw_image = image
             image = self.vis_processor(raw_image).unsqueeze(0).to(self.device)
         elif isinstance(image, torch.Tensor):
