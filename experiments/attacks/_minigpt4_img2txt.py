@@ -19,7 +19,7 @@ import torchvision
 import torch.backends.cudnn as cudnn
 
 
-from graphs.models.minigpt4.conversation.conversation import Chat, CONV_VISION_LLama2, CONV_VISION_Vicuna0
+from graphs.models.minigpt4.conversation.conversation import Chat, CONV_VISION_LLama2, CONV_VISION_Vicuna0, Conversation, SeparatorStyle
 
 # imports modules for registration
 # imports modules for registration
@@ -117,7 +117,14 @@ def main():
         # image = image.to(device)
        
         with torch.no_grad():
-            conv = CONV_VISION_Vicuna0.copy()
+            # conv = CONV_VISION_Vicuna0.copy()
+
+            conv = Conversation(
+                system="Give short and precise answers.",
+                messages=[],
+                sep_style=SeparatorStyle.SINGLE,
+            )
+            
             img_list = []      
             print("up load imgs")      
             chat.upload_img(image, conv, img_list)  # img embeddings, size() = [bs, 32, 5120]
