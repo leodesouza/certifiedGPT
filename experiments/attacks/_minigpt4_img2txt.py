@@ -73,7 +73,7 @@ def main():
     # obtain text in batch
     parser.add_argument("--img_file", default='/raid/common/imagenet-raw/val/n01440764/ILSVRC2012_val_00003014.png', type=str)
     parser.add_argument("--img_path", default='/home/swf_developer/storage/attack/imagenet_adv_images/images/', type=str)
-    parser.add_argument("--query", default='what is the content of this image?', type=str)
+    parser.add_argument("--query", default='what is the content of this image? ', type=str)
     
     parser.add_argument("--output_path", default="minigpt4_tmp", type=str)
     parser.add_argument("--batch_size", default=1, type=int)
@@ -114,10 +114,10 @@ def main():
         if i >= args.num_samples//args.batch_size:
             print(f"Successfully processed {args.num_samples} images to text!")
             break 
-        # image = image.to(device)
-       
+               
         with torch.no_grad():
-            conv = CONV_VISION_Vicuna0.copy()
+            # conv = CONV_VISION_Vicuna0.copy()
+            conv = CONV_VISION_LLama2.copy()
                         
             img_list = []      
             print("up load imgs")      
