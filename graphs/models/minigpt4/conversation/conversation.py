@@ -160,10 +160,10 @@ class Chat:
         conv.append_message(conv.roles[1], None)
         print("get prompt")
         prompt = conv.get_prompt()
-        print(f"prompt: {prompt}")
-        print(f"img_list shape: {img_list.shape}")
-        
+        print(f"prompt: {prompt}")                
+        print("get_context_emb:")   
         embs = self.model.get_context_emb(prompt, img_list)
+        print("get_context_emb .. DONE!")   
 
         current_max_len = embs.shape[1] + max_new_tokens
         if current_max_len - max_length > 0:
