@@ -55,26 +55,6 @@ def seedEverything(seed=DEFAULT_RANDOM_SEED):
     seedTorch(seed)
 # ------------------------------------------------------------------ #  
 
-def prepare_texts(texts, conv_temp):
-        convs = [conv_temp.copy() for _ in range(len(texts))]
-        [conv.append_message(
-            conv.roles[0], '<Img><ImageHere></Img> {}'.format(text)) for conv, text in zip(convs, texts)]
-        [conv.append_message(conv.roles[1], None) for conv in convs]
-        texts = [conv.get_prompt() for conv in convs]
-        return texts, conv        
-    
-
-
-class ImageFolderWithPaths(torchvision.datasets.ImageFolder):
-    def __getitem__(self, index: int):
-        original_tuple = super().__getitem__(index)  # (img, label)
-        path, _ = self.samples[index]  # path: str
-
-        image_processed = vis_processor(original_tuple[0])
-        return image_processed, original_tuple[1], path
-
-
-
 def main():
     seedEverything()
     parser = argparse.ArgumentParser(description="Demo")
@@ -123,8 +103,8 @@ def main():
 
     chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id))
 
-    conv = CONV_VISION_Vicuna0.copy()
     
+
     # img2txt
     print("start iteration...")
     for i, (image, _) in enumerate(dataloader):
@@ -137,19 +117,17 @@ def main():
         image = image.to(device)
        
         with torch.no_grad():
-
+            conv = CONV_VISION_Vicuna0.copy()
             img_list = []      
             print("up load imgs")      
             chat.upload_img(image, conv, img_list)  # img embeddings, size() = [bs, 32, 5120]
 
-            print("econde imgs")      
-            chat.encode_img(img_list)  # img embeddings, size() = [bs, 32, 5120]            
+            # print("econde imgs")      
+            # chat.encode_img(img_list)  # img embeddings, size() = [bs, 32, 5120]            
 
-            print("ask to minigpt4")      
-            
-            text, conv = prepare_texts(args.query, conv)
+            print("ask to minigpt4")                              
 
-            chat.ask(text , conv)            
+            chat.ask(args.query, conv)            
 
             print("answer")      
             captions, _  = chat.answer(conv, 
