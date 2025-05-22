@@ -108,7 +108,8 @@ class StoppingCriteriaSub(StoppingCriteria):
 
 
 CONV_VISION_Vicuna0 = Conversation(
-    system="Give the following image: <Img>ImageContent</Img>. "
+    #system="Give the following image: <Img>ImageContent</Img>. "    
+    system="Give the following image: <Img><ImageHere></Img>. "
            "You will be able to see the image once I provide it to you. Please answer my questions.",
     roles=("Human: ", "Assistant: "),
     messages=[],
