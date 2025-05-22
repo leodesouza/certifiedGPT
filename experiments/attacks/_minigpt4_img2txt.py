@@ -57,7 +57,10 @@ def seedEverything(seed=DEFAULT_RANDOM_SEED):
 
 def load_finetuned_model(config, model):
     print("Loading finetuned VQAv2")
-    checkpoint = config.model.vqa_finetuned                
+    checkpoint = config.model.vqa_finetuned
+
+    if checkpoint is None:
+        raise ValueError("Checkpoint path is None! Please provide a valid checkpoint file path.")               
     
     with open(checkpoint, "rb") as f:
         checkpoint_bytes = f.read()
