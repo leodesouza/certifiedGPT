@@ -123,13 +123,18 @@ def main():
             print(f"Successfully processed {args.num_samples} images to text!")
             break 
         image = image.to(device)
+       
         with torch.no_grad():
             img_list = []            
             chat.upload_img(image, conv, img_list)  # img embeddings, size() = [bs, 32, 5120]
-            chat.encode_img(img_list)  # img embeddings, size() = [bs, 32, 5120]
-            # mixed_embs = chat.get_mixed_embs(args, img_list=img_list)
-            chat.ask(args.query, conv)
-            captions  = chat.answer(args, conv, img_list)
+            chat.encode_img(img_list)  # img embeddings, size() = [bs, 32, 5120]            
+            chat.ask(args.query, conv)            
+            captions  = chat.answer(conv, 
+                                    img_list, 
+                                    num_beams=num_beams, 
+                                    temperature=temperature,
+                                    max_new_tokens=20,
+                                    max_length=2000)
         # write captions
         with open(os.path.join("/home/swf_developer/storage/attack/img_2_txt_output", args.output_path + '_pred.txt'), 'a') as f:
             print('\n'.join(captions), file=f)
