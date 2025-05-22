@@ -78,7 +78,7 @@ class BaseAgent:
     def load_finetuned_model(self, model):
 
         print("Loading finetuned VQAv2")
-        checkpoint = self.config.model.vqa_finetuned                
+        checkpoint = self.config.model.vqa_finetuned
 
         print(f"Loading checkpoint from {checkpoint}")
         checkpoint = torch.load(checkpoint, map_location=torch.device('cpu'))

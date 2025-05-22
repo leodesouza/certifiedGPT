@@ -8,6 +8,7 @@
 import argparse
 import os
 os.environ["BITSANDBYTES_NOWELCOME"] = "1"
+import io
 import random
 from PIL import Image
 import time
@@ -57,10 +58,13 @@ def seedEverything(seed=DEFAULT_RANDOM_SEED):
 def load_finetuned_model(config, model):
     print("Loading finetuned VQAv2")
     checkpoint = config.model.vqa_finetuned                
+    
+    with open(checkpoint, "rb") as f:
+        checkpoint_bytes = f.read()
+    buffer = io.BytesIO(checkpoint_bytes)
 
     print(f"Loading checkpoint from {checkpoint}")
-    checkpoint = torch.load(checkpoint, map_location=torch.device('cpu'))
-
+    checkpoint = torch.load(buffer, map_location=torch.device('cpu'))
 
     print("Loading model state")
     model.load_state_dict(checkpoint['model_state_dict'], strict=False)
@@ -103,6 +107,7 @@ def main():
     model_config.device_8bit = args.gpu_id
     model_cls = registry.get_model_class(model_config.arch)
     model = model_cls.from_config(model_config).to('cuda:{}'.format(args.gpu_id))
+
     load_finetuned_model(config, model)
     
     vis_processor_cfg = config.datasets.evalvqav2.vis_processor.val
