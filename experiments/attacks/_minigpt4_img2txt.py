@@ -53,6 +53,20 @@ def seedTorch(seed=DEFAULT_RANDOM_SEED):
 def seedEverything(seed=DEFAULT_RANDOM_SEED):
     seedBasic(seed)
     seedTorch(seed)
+
+def load_finetuned_model(config, model):
+    print("Loading finetuned VQAv2")
+    checkpoint = config.model.vqa_finetuned                
+
+    print(f"Loading checkpoint from {checkpoint}")
+    checkpoint = torch.load(checkpoint, map_location=torch.device('cpu'))
+
+
+    print("Loading model state")
+    model.load_state_dict(checkpoint['model_state_dict'], strict=False)
+    print("Loading model state. Done!")
+
+    print(f"Numbers of treinable parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad)}")    '
 # ------------------------------------------------------------------ #  
 
 def main():
@@ -89,6 +103,7 @@ def main():
     model_config.device_8bit = args.gpu_id
     model_cls = registry.get_model_class(model_config.arch)
     model = model_cls.from_config(model_config).to('cuda:{}'.format(args.gpu_id))
+    load_finetuned_model(config, model)
     
     vis_processor_cfg = config.datasets.evalvqav2.vis_processor.val
     vis_processor = registry.get_processor_class(vis_processor_cfg.name).from_config(vis_processor_cfg)    
@@ -116,9 +131,8 @@ def main():
             break 
                
         with torch.no_grad():
-            # conv = CONV_VISION_Vicuna0.copy()
-            conv = CONV_VISION_LLama2.copy()
-                        
+            conv = CONV_VISION_Vicuna0.copy()                                    
+
             img_list = []      
             print("up load imgs")      
             chat.upload_img(image, conv, img_list)  # img embeddings, size() = [bs, 32, 5120]
