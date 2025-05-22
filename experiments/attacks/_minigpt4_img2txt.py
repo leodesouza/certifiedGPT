@@ -57,7 +57,8 @@ def seedEverything(seed=DEFAULT_RANDOM_SEED):
 
 def load_finetuned_model(config, model):
     print("Loading finetuned VQAv2")
-    checkpoint = config.model.vqa_finetuned
+    # checkpoint = config.model.vqa_finetuned
+    checkpoint = "/home/swf_developer/storage/checkpoints/certifiedgpt/vqav2_finetuning_noise_0/vqav2_finetuning_with_optim_noise_0.pth"
 
     if checkpoint is None:
         raise ValueError("Checkpoint path is None! Please provide a valid checkpoint file path.")               
