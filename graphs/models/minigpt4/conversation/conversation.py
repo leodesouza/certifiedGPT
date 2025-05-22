@@ -265,7 +265,7 @@ class Chat:
         embs = self.model.get_context_emb(prompt, img_list)
         return embs
     
-    def get_text(self, args, mixed_embs):
+    def get_text(self, mixed_embs):
         generation_kwargs = dict(
             inputs_embeds=mixed_embs,
             max_new_tokens=20,

@@ -145,7 +145,7 @@ def main():
             # print(f"caption: {captions}")
             img_list   = chat.get_img_list(image, img_list=[])
             mixed_embs = chat.get_mixed_embs(args, img_list=img_list)
-            captions   = chat.get_text(args, mixed_embs)
+            captions   = chat.get_text(mixed_embs)
         # write captions
         with open(os.path.join("/home/swf_developer/storage/attack/img_2_txt_output", args.output_path + '_pred.txt'), 'a') as f:
             print('\n'.join(captions), file=f)
