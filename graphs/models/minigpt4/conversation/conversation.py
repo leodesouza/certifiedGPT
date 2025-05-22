@@ -253,7 +253,7 @@ class Chat:
         return img_list
     
     def get_mixed_embs(self, args, img_list):
-        prompt = args.prompt if hasattr(args, 'prompt') else "Describe this image: <Image>."
+        prompt = args.prompt if hasattr(args, 'prompt') else "Describe this image: <ImageHere>."
         conv = Conversation(
             system="",
             roles=("<s>[INST] ", " [/INST]"),
