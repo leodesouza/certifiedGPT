@@ -158,7 +158,11 @@ class Chat:
     def answer_prepare(self, conv, img_list, max_new_tokens=300, num_beams=1, min_length=1, top_p=0.9,
                        repetition_penalty=1.05, length_penalty=1, temperature=1.0, max_length=2000):
         conv.append_message(conv.roles[1], None)
+        print("get prompt")
         prompt = conv.get_prompt()
+        print(f"prompt: {prompt}")
+        print(f"img_list shape: {img_list.shape}")
+        
         embs = self.model.get_context_emb(prompt, img_list)
 
         current_max_len = embs.shape[1] + max_new_tokens
