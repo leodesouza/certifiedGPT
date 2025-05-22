@@ -136,7 +136,7 @@ def main():
             chat.ask(args.query, conv)            
 
             print("answer")      
-            captions  = chat.answer(conv, 
+            captions, _  = chat.answer(conv, 
                                     img_list, 
                                     num_beams=num_beams, 
                                     temperature=temperature,
