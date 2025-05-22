@@ -126,7 +126,8 @@ def main():
             chat.upload_img(image, conv, img_list)  # img embeddings, size() = [bs, 32, 5120]
             chat.encode_img(img_list)  # img embeddings, size() = [bs, 32, 5120]
             # mixed_embs = chat.get_mixed_embs(args, img_list=img_list)
-            captions   = chat.answer(args, conv, img_list)
+            chat.ask(args.query, conv)
+            captions  = chat.answer(args, conv, img_list)
         # write captions
         with open(os.path.join("/home/swf_developer/storage/attack/img_2_txt_output", args.output_path + '_pred.txt'), 'a') as f:
             print('\n'.join(captions), file=f)
@@ -136,6 +137,6 @@ def main():
         print(f"query time for {args.batch_size} samples:", (end - start))
         
     print("Caption saved.")
-        
+
 if __name__ == "__main__":
     main()
