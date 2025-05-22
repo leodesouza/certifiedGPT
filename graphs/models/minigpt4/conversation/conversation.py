@@ -150,8 +150,10 @@ class Chat:
 
     def ask(self, text, conv):
         if len(conv.messages) > 0 and conv.messages[-1][0] == conv.roles[0] \
-                and conv.messages[-1][1][-6:] == '</Img>':  # last message is image.
+                and conv.messages[-1][1][-6:] == '</Img>':  # last message is image.            
             conv.messages[-1][1] = ' '.join([conv.messages[-1][1], text])
+            flat_string = " ".join(s for pair in messages for s in pair)
+            print(f"ASK MESSAGEM -> {flat_string}")            
         else:
             conv.append_message(conv.roles[0], text)
 
@@ -213,8 +215,7 @@ class Chat:
         if isinstance(image, str):  # is a image path
             raw_image = Image.open(image).convert('RGB')
             image = self.vis_processor(raw_image).unsqueeze(0).to(self.device)
-        elif isinstance(image, Image.Image):
-            print('############### pass image through vis_processor')
+        elif isinstance(image, Image.Image):            
             raw_image = image
             image = self.vis_processor(raw_image).unsqueeze(0).to(self.device)
         elif isinstance(image, torch.Tensor):
