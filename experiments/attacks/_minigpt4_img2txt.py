@@ -143,7 +143,7 @@ def main():
             #                         max_new_tokens=20,
             #                         max_length=2000)
             # print(f"caption: {captions}")
-            img_list   = chat.get_img_list(image, img_list=[])
+            img_list   = chat.get_img_list(image)
             mixed_embs = chat.get_mixed_embs(args, img_list=img_list)
             captions   = chat.get_text(mixed_embs)
         # write captions

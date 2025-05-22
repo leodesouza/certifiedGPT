@@ -245,8 +245,11 @@ class Chat:
 
         return image_emb
     
-    def get_img_list(self, image, img_list=[]):
-        self.encode_img(img_list=[image])
+    def get_img_list(self, image, img_list=None):
+        if img_list is None:
+            img_list = []
+        img_list.append(image)
+        self.encode_img(img_list=img_list)
         return img_list
     
     def get_mixed_embs(self, args, img_list):
