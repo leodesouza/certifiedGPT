@@ -244,5 +244,39 @@ class Chat:
         image_emb, _ = self.model.encode_img(image_batch)
 
         return image_emb
+    
+    def get_img_list(self, image, img_list=[]):
+        self.encode_img(img_list=[image])
+        return img_list
+    
+    def get_mixed_embs(self, args, img_list):
+        prompt = args.prompt if hasattr(args, 'prompt') else "Describe this image."
+        conv = Conversation(
+            system="",
+            roles=("<s>[INST] ", " [/INST]"),
+            messages=[],
+            offset=2,
+            sep_style=SeparatorStyle.SINGLE,
+            sep="",
+        )
+        conv.append_message(conv.roles[0], prompt)
+        conv.append_message(conv.roles[1], None)
+        prompt = conv.get_prompt()
+        embs = self.model.get_context_emb(prompt, img_list)
+        return embs
+    
+    def get_text(self, args, mixed_embs):
+        generation_kwargs = dict(
+            inputs_embeds=mixed_embs,
+            max_new_tokens=20,
+            stopping_criteria=self.stopping_criteria,
+            do_sample=True,
+            top_p=0.9,
+            temperature=1.0,
+        )
+        with self.model.maybe_autocast():
+            output_token = self.model.llama_model.generate(**generation_kwargs)[0]
+        output_text = self.model.llama_tokenizer.decode(output_token, skip_special_tokens=True)
+        return [output_text.strip()]
 
 
