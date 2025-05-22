@@ -85,7 +85,7 @@ def main():
     parser.add_argument("--query", default='what is the content of this image?', type=str)
     
     parser.add_argument("--output_path", default="minigpt4_tmp", type=str)
-    parser.add_argument("--batch_size", default=2, type=int)
+    parser.add_argument("--batch_size", default=1, type=int)
     parser.add_argument("--batch_size_in_gen", default=3, type=int)
     parser.add_argument("--num_samples", default=1000, type=int)
     args = parser.parse_args()
