@@ -66,9 +66,7 @@ class MiniGPTBase(BaseModel):
         self.visual_encoder.to("cpu")
         self.visual_encoder.float()
 
-    def get_context_emb(self, prompt, img_list):
-        
-        img_list = [img_list[0].squeeze(0)]
+    def get_context_emb(self, prompt, img_list):                
         device = img_list[0].device
         prompt_segs = prompt.split('<ImageHere>')
         print(f"prompt_segs: {prompt_segs}")        

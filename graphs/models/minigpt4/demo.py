@@ -9,22 +9,23 @@ import gradio as gr
 
 from transformers import StoppingCriteriaList
 
-from minigpt4.common.config import Config
 from minigpt4.common.dist_utils import get_rank
-from minigpt4.common.registry import registry
-from minigpt4.conversation.conversation import Chat, CONV_VISION_Vicuna0, CONV_VISION_LLama2, StoppingCriteriaSub
+
+from graphs.models.minigpt4.conversation.conversation import Chat, CONV_VISION_LLama2, CONV_VISION_Vicuna0, Conversation, SeparatorStyle, StoppingCriteriaSub
 
 # imports modules for registration
-from minigpt4.datasets.builders import *
-from minigpt4.models import *
-from minigpt4.processors import *
-from minigpt4.runners import *
-from minigpt4.tasks import *
+# imports modules for registration
+from common.config import Config
+from common.registry import registry
+from datasets.builders import *
+from processors import blip_processors
+from graphs.models import *
+from graphs.models.minigpt4.common.optims import *
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Demo")
-    parser.add_argument("--cfg-path", required=True, help="path to configuration file.")
+    parser.add_argument("--cfg-path", default="/home/swf_developer/certifiedGPT/configs/attack_configs/vqav2_eval_noise_0.yaml", required=True, help="path to configuration file.")
     parser.add_argument("--gpu-id", type=int, default=0, help="specify the gpu to load the model.")
     parser.add_argument(
         "--options",
