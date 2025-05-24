@@ -166,7 +166,7 @@ def main():
             )
                 
             print(f"caption ---> : {captions}")
-            # raise ValueError("stop")
+            raise ValueError("stop")
 
             # img_list   = chat.get_img_list(image)
             # mixed_embs = chat.get_mixed_embs(args, img_list=img_list)
