@@ -58,17 +58,9 @@ def seedEverything(seed=DEFAULT_RANDOM_SEED):
 def load_finetuned_model(config, model):
     print("Loading finetuned VQAv2")
     # checkpoint = config.model.vqa_finetuned
-    checkpoint = "/home/swf_developer/storage/checkpoints/certifiedgpt/vqav2_finetuning_noise_0/vqav2_finetuning_with_optim_noise_0.pth"
-
-    if checkpoint is None:
-        raise ValueError("Checkpoint path is None! Please provide a valid checkpoint file path.")               
-    
-    with open(checkpoint, "rb") as f:
-        checkpoint_bytes = f.read()
-    buffer = io.BytesIO(checkpoint_bytes)
-
-    print(f"Loading checkpoint from {checkpoint}")
-    checkpoint = torch.load(buffer, map_location=torch.device('cpu'))
+    chk_path = "/home/swf_developer/storage/checkpoints/certifiedgpt/vqav2_finetuning_noise_0/vqav2_finetuning_with_optim_noise_0.pth"
+        
+    checkpoint = torch.load(chk_path, map_location=torch.device('cpu'))
 
     print("Loading model state")
     model.load_state_dict(checkpoint['model_state_dict'], strict=False)
