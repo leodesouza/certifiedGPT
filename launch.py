@@ -122,7 +122,7 @@ def main_worker(rank, world_size, args):
         elif args.mode == "chat":
             print(f"[Rank {rank}] Running chat from MiniGPT4.")            
             sys.argv = ["demo_chat.py"]
-            from graphs.models.minigpt4.demo_v2 import main
+            from graphs.models.minigpt4.demo_chat import main
             main()
 
             
