@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #export PJRT_DEVICE=TPU
-# CONFIG_PATH='/home/swf_developer/certifiedGPT/configs/attack_configs/vqav2_eval_noise_0.yaml'
+CONFIG_PATH='/home/swf_developer/certifiedGPT/configs/attack_configs/vqav2_eval_noise_0.yaml'
 # CONFIG_PATH='/home/leonardosouza/certifiedGPT/configs/train_configs/vqav2_finetuning_noise_0.25.yaml'
 # CONFIG_PATH='/home/swf_developer/certifiedGPT/configs/predict_configs/vqav2_predict_noise_0.25_n_100.yaml'
 
