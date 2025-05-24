@@ -58,7 +58,8 @@ def seedEverything(seed=DEFAULT_RANDOM_SEED):
 def load_finetuned_model(config, model):
     print("Loading finetuned VQAv2")
     # checkpoint = config.model.vqa_finetuned
-    chk_path = "/home/swf_developer/storage/checkpoints/certifiedgpt/vqav2_finetuning_noise_0/vqav2_finetuning_with_optim_noise_0.pth"
+    # chk_path = "/home/swf_developer/storage/checkpoints/certifiedgpt/vqav2_finetuning_noise_0/vqav2_finetuning_with_optim_noise_0.pth"
+    chk_path = "home/swf_developer/storage/checkpoints/certifiedgpt/vqav2_finetuning_noise_0.25/vqav2_finetuning_with_optim_noise_0.25.pth"    
         
     checkpoint = torch.load(chk_path, map_location=torch.device('cpu'))
 
@@ -122,8 +123,7 @@ def main():
     # chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id))
     
     # img2txt
-    print("start iteration...")
-    print(f"vis_processor:{vis_processor}")
+    print("start iteration...")    
     for i, (image, _) in enumerate(dataloader):
         start = time.perf_counter()
         
@@ -131,7 +131,8 @@ def main():
         if i >= args.num_samples//args.batch_size:
             print(f"Successfully processed {args.num_samples} images to text!")
             break 
-               
+
+        model.eval() 
         with torch.no_grad():
             # conv = CONV_VISION_Vicuna0.copy()                                    
 
@@ -163,7 +164,7 @@ def main():
         
             print(f"INSTRUCTION: {instruction}")
             with torch.cuda.amp.autocast(enabled=config.run.amp):
-                captions,  _ = model.generate(
+                captions, _ = model.generate(
                     image, [instruction], max_new_tokens=config.run.max_new_tokens, do_sample=False, calc_probs=False
             )
                 
