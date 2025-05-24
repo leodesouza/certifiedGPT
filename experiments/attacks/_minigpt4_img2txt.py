@@ -115,7 +115,7 @@ def main():
     # load image
     print(f"loading images from path: {args.img_path}")
     imagenet_data = FlatImageDatasetWithPaths(args.img_path, transform=vis_processor)
-    dataloader    = torch.utils.data.DataLoader(imagenet_data, batch_size=args.batch_size, shuffle=False, num_workers=2)
+    dataloader    = torch.utils.data.DataLoader(imagenet_data, batch_size=args.batch_size, shuffle=False, num_workers=0)
 
     # chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id))
     
