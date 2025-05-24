@@ -1,5 +1,6 @@
 import argparse
 import os
+os.environ["BITSANDBYTES_NOWELCOME"] = "1"
 import random
 
 import numpy as np
