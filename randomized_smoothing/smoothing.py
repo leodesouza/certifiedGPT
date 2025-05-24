@@ -102,8 +102,7 @@ class Smooth(object):
                         noisy_image_batch, questions, max_new_tokens=max_tokens, do_sample=False
                     )
 
-                for answer, prob in zip(answers, probs):
-                    print(f"answer - {answer}")
+                for answer, prob in zip(answers, probs):                    
                     answer = answer.lower().replace('<unk>', '').strip()
                     clean_answer = answer.replace('#', '')
                     predictions.append((clean_answer, prob))

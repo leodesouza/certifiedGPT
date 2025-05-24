@@ -139,9 +139,7 @@ class MiniGPT4PredictionAgent(BaseAgent):
                     if qcorrects == 3:                    
                         self.logger.info("acertou pelo menos 3")
                         break
-            
-            raise ValueError("error")
-        
+                                
             self.logger.info("writing results..")
             self.results.append(f"{step}\t{image_id.item()}\t{question_id.item()}\t{question[0]}\t{answers}\t{prediction}\t{correct}\t{time_elapsed}")                
             self.logger.info(f"Prediction Step {step} ended in {time_elapsed}")
