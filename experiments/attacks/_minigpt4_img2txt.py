@@ -109,6 +109,7 @@ def main():
     
     vis_processor_cfg = config.datasets.evalvqav2.vis_processor.val
     vis_processor = registry.get_processor_class(vis_processor_cfg.name).from_config(vis_processor_cfg)    
+    
     num_beams = 1
     temperature = 1.0
     print("Done.")
@@ -122,6 +123,7 @@ def main():
     
     # img2txt
     print("start iteration...")
+    print(f"vis_processor:{vis_processor}")
     for i, (image, _) in enumerate(dataloader):
         start = time.perf_counter()
         
@@ -131,7 +133,7 @@ def main():
             break 
                
         with torch.no_grad():
-            conv = CONV_VISION_Vicuna0.copy()                                    
+            # conv = CONV_VISION_Vicuna0.copy()                                    
 
             # img_list = []      
 
