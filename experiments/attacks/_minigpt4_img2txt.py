@@ -159,13 +159,9 @@ def main():
             #                         max_length=2000)
 
              # Removed `xla_amp.autocast` and used PyTorch's native autocast
+            
 
-            instruction_template = [
-                "[vqa] Answer in English only {}",
-                "[vqa] Based on the image, respond to this question in English with a short answer: {}",
-            ]
-
-            instruction = random.choice(instruction_template).format(args.query)
+            instruction = f"[vqa] Based on the image, respond to this question in English with a short answer: {args.query}"
             instruction = "<Img><ImageHere></Img> {} ".format(instruction)
         
             print(f"INSTRUCTION: {instruction}")
