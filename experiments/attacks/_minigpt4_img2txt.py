@@ -59,7 +59,7 @@ def load_finetuned_model(config, model):
     print("Loading finetuned VQAv2")
     # checkpoint = config.model.vqa_finetuned
     # chk_path = "/home/swf_developer/storage/checkpoints/certifiedgpt/vqav2_finetuning_noise_0/vqav2_finetuning_with_optim_noise_0.pth"
-    chk_path = "home/swf_developer/storage/checkpoints/certifiedgpt/vqav2_finetuning_noise_0.25/vqav2_finetuning_with_optim_noise_0.25.pth"    
+    chk_path = "/home/swf_developer/storage/checkpoints/certifiedgpt/vqav2_finetuning_noise_0.25/vqav2_finetuning_with_optim_noise_0.25.pth"    
         
     checkpoint = torch.load(chk_path, map_location=torch.device('cpu'))
 
