@@ -190,7 +190,9 @@ class MiniGPT4(MiniGPTBase):
         )
 
         # ckpt_path = "/home/swf_developer/storage/checkpoints/minigpt4_stage2/cc_sbu_finetuning_noise_0.pth" # cfg.get("ckpt", "")  # load weights of MiniGPT-4
-        ckpt_path = "/home/swf_developer/storage/checkpoints/minigpt-4/prerained_minigpt4_7b.pth" # cfg.get("ckpt", "")  # load weights of MiniGPT-4
+        # ckpt_path = "/home/swf_developer/storage/checkpoints/minigpt-4/prerained_minigpt4_7b.pth" # cfg.get("ckpt", "")  # load weights of MiniGPT-4
+        ckpt_path = "/home/swf_developer/storage/checkpoints/certifiedgpt/vqav2_finetuning_noise_0/vqav2_finetuning_with_optim_noise_0.pth" # cfg.get("ckpt", "")  # load weights of MiniGPT-4
+        
         if ckpt_path:
             print("Load MiniGPT-4 Checkpoint: {}".format(ckpt_path))            
             ckpt = torch.load(ckpt_path, map_location="cpu", weights_only=False)
