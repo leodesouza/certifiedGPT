@@ -189,7 +189,7 @@ class MiniGPT4(MiniGPTBase):
             low_res_device=low_res_device,            
         )
 
-        ckpt_path = cfg.get("ckpt", "")  # load weights of MiniGPT-4
+        ckpt_path = "/home/swf_developer/storage/checkpoints/minigpt4_stage2/cc_sbu_finetuning_noise_0.pth" # cfg.get("ckpt", "")  # load weights of MiniGPT-4
         if ckpt_path:
             print("Load MiniGPT-4 Checkpoint: {}".format(ckpt_path))            
             ckpt = torch.load(ckpt_path, map_location="cpu", weights_only=False)
