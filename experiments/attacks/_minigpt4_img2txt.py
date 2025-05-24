@@ -95,8 +95,9 @@ def main():
     # obtain text in batch
     parser.add_argument("--img_file", default='/raid/common/imagenet-raw/val/n01440764/ILSVRC2012_val_00003014.png', type=str)
     parser.add_argument("--img_path", default='/home/swf_developer/storage/attack/imagenet_adv_images/images/', type=str)
-    parser.add_argument("--query", default='[vqa] Respond to this question in English with a short answer: what is the content of this image? ', type=str)
-    
+    # parser.add_argument("--query", default='[vqa] Respond to this question in English with a short answer: what is the content of this image? ', type=str)
+    parser.add_argument("--query", default='[vqa] What is shown in the image? ', type=str)
+        
     parser.add_argument("--output_path", default="minigpt4_tmp", type=str)
     parser.add_argument("--batch_size", default=1, type=int)
     parser.add_argument("--batch_size_in_gen", default=3, type=int)
@@ -169,7 +170,7 @@ def main():
             print(f"INSTRUCTION: {instruction}")
             with torch.cuda.amp.autocast(enabled=config.run.amp):
                 captions,  _ = model.generate(
-                    [image], [instruction], max_new_tokens=config.run.max_new_tokens, do_sample=False
+                    image, [instruction], max_new_tokens=config.run.max_new_tokens, do_sample=False
             )
                 
             print(f"caption ---> : {captions}")
