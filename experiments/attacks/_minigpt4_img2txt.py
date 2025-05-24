@@ -95,7 +95,7 @@ def main():
     # obtain text in batch
     parser.add_argument("--img_file", default='/raid/common/imagenet-raw/val/n01440764/ILSVRC2012_val_00003014.png', type=str)
     parser.add_argument("--img_path", default='/home/swf_developer/storage/attack/imagenet_adv_images/images/', type=str)
-    parser.add_argument("--query", default='what is the content of this image? ', type=str)
+    parser.add_argument("--query", default='[vqa] Based on the image, respond to this question in English with a short answer: what is the content of this image? ', type=str)
     
     parser.add_argument("--output_path", default="minigpt4_tmp", type=str)
     parser.add_argument("--batch_size", default=1, type=int)
@@ -125,7 +125,7 @@ def main():
     imagenet_data = FlatImageDatasetWithPaths(args.img_path, transform=vis_processor)
     dataloader    = torch.utils.data.DataLoader(imagenet_data, batch_size=args.batch_size, shuffle=False, num_workers=2)
 
-    # chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id))
+    chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id))
     
     # img2txt
     print("start iteration...")
@@ -138,24 +138,48 @@ def main():
             break 
                
         with torch.no_grad():
-            print(f"SHAPE ---- {image.shape}")                  
-            instruction = f"[vqa] Based on the image, respond to this question in English with a short answer: {args.query}"
-            instruction = "<Img><ImageHere></Img> {} ".format(instruction)
+            conv = CONV_VISION_Vicuna0.copy()                                    
+
+            img_list = []      
+
+            print("up load imgs")      
+            chat.upload_img(image, conv, img_list)  # img embeddings, size() = [bs, 32, 5120]
+
+            print("econde imgs")      
+            chat.encode_img(img_list)  # img embeddings, size() = [bs, 32, 5120]            
+
+            print("ask to minigpt4")                              
+            chat.ask(args.query, conv)            
+
+            print("answer")      
+            captions, _  = chat.answer(conv, 
+                                    img_list, 
+                                    num_beams=num_beams, 
+                                    temperature=temperature,
+                                    max_new_tokens=20,
+                                    max_length=2000)
+
+             # Removed `xla_amp.autocast` and used PyTorch's native autocast
+            
+
+            # instruction = f"[vqa] Based on the image, respond to this question in English with a short answer: {args.query}"
+            # instruction = "<Img><ImageHere></Img> {} ".format(instruction)
         
-            print(f"INSTRUCTION: {instruction}")
-            with torch.cuda.amp.autocast(enabled=config.run.amp):
-                answer = model.generate(
-                    image, instruction, max_new_tokens=config.run.max_new_tokens, do_sample=False
-            )
+            # print(f"INSTRUCTION: {instruction}")
+            # with torch.cuda.amp.autocast(enabled=config.run.amp):
+            #     answer = model.generate(
+            #         image, instruction, max_new_tokens=config.run.max_new_tokens, do_sample=False
+            # )
                 
-            print(f"caption: {answer}")
+            # print(f"caption: {answer}")
 
             # img_list   = chat.get_img_list(image)
             # mixed_embs = chat.get_mixed_embs(args, img_list=img_list)
             # captions   = chat.get_text(mixed_embs)
+            
         # write captions
         with open(os.path.join("/home/swf_developer/storage/attack/img_2_txt_output", args.output_path + '_pred.txt'), 'a') as f:
-            print('\n'.join(answer), file=f)
+            print('\n'.join(captions), file=f)
         f.close()
         
         end = time.perf_counter()
