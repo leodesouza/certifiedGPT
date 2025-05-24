@@ -168,6 +168,7 @@ def main():
             instruction = random.choice(instruction_template).format(args.query)
             instruction = "<Img><ImageHere></Img> {} ".format(instruction)
         
+            print(f"INSTRUCTION: {instruction}")
             with torch.cuda.amp.autocast(enabled=config.run.amp):
                 answer = model.generate(
                     image, instruction, max_new_tokens=config.run.max_new_tokens, do_sample=False
