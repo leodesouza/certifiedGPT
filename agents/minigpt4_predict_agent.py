@@ -125,6 +125,7 @@ class MiniGPT4PredictionAgent(BaseAgent):
             if prediction != self.smoothed_decoder.ABSTAIN:                                                                                    
                 qcorrects = 0
                 for a in answers: 
+                    print(f"answers: {a}")
                     text = a[0]                                                            
                     similarity_threshold = self.config.run.similarity_threshold                                
                     embp = self.sentence_transformer.encode(prediction, convert_to_tensor=True)
@@ -139,6 +140,8 @@ class MiniGPT4PredictionAgent(BaseAgent):
                         self.logger.info("acertou pelo menos 3")
                         break
             
+            raise ValueError("error")
+        
             self.logger.info("writing results..")
             self.results.append(f"{step}\t{image_id.item()}\t{question_id.item()}\t{question[0]}\t{answers}\t{prediction}\t{correct}\t{time_elapsed}")                
             self.logger.info(f"Prediction Step {step} ended in {time_elapsed}")
