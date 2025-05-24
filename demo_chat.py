@@ -23,7 +23,7 @@ from graphs.models.minigpt4.common.optims import *
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Demo")
-    parser.add_argument("--cfg-path", default="/home/swf_developer/certifiedGPT/configs/attack_configs/vqav2_eval_noise_0.yaml", required=True, help="path to configuration file.")
+    parser.add_argument("--cfg-path", default="/home/swf_developer/certifiedGPT/configs/attack_configs/vqav2_eval_noise_0.yaml", help="path to configuration file.")
     parser.add_argument("--gpu-id", type=int, default=0, help="specify the gpu to load the model.")
     parser.add_argument(
         "--options",
