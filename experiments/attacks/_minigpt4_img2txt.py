@@ -151,13 +151,14 @@ def main():
             print("ask to minigpt4")                              
             chat.ask(args.query, conv)            
 
-            print("answer")      
+            print("answer...")      
             captions, _  = chat.answer(conv, 
                                     img_list, 
                                     num_beams=num_beams, 
                                     temperature=temperature,
                                     max_new_tokens=20,
                                     max_length=2000)
+            print(f"caption: {captions}")
 
              # Removed `xla_amp.autocast` and used PyTorch's native autocast
             
@@ -176,7 +177,7 @@ def main():
             # img_list   = chat.get_img_list(image)
             # mixed_embs = chat.get_mixed_embs(args, img_list=img_list)
             # captions   = chat.get_text(mixed_embs)
-            
+
         # write captions
         with open(os.path.join("/home/swf_developer/storage/attack/img_2_txt_output", args.output_path + '_pred.txt'), 'a') as f:
             print('\n'.join(captions), file=f)
