@@ -138,29 +138,7 @@ def main():
             break 
                
         with torch.no_grad():
-            # conv = CONV_VISION_Vicuna0.copy()                                    
-
-            img_list = []      
-            # print("up load imgs")      
-            # chat.upload_img(image, conv, img_list)  # img embeddings, size() = [bs, 32, 5120]
-
-            # print("econde imgs")      
-            # chat.encode_img(img_list)  # img embeddings, size() = [bs, 32, 5120]            
-
-            # print("ask to minigpt4")                              
-            # chat.ask(args.query, conv)            
-
-            # print("answer")      
-            # captions, _  = chat.answer(conv, 
-            #                         img_list, 
-            #                         num_beams=num_beams, 
-            #                         temperature=temperature,
-            #                         max_new_tokens=20,
-            #                         max_length=2000)
-
-             # Removed `xla_amp.autocast` and used PyTorch's native autocast
-            
-
+            print(f"SHAPE ---- {image.shape}")                  
             instruction = f"[vqa] Based on the image, respond to this question in English with a short answer: {args.query}"
             instruction = "<Img><ImageHere></Img> {} ".format(instruction)
         
