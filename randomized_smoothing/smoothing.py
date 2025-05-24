@@ -103,6 +103,7 @@ class Smooth(object):
                     )
 
                 for answer, prob in zip(answers, probs):
+                    print(f"answer - {answer}")
                     answer = answer.lower().replace('<unk>', '').strip()
                     clean_answer = answer.replace('#', '')
                     predictions.append((clean_answer, prob))
