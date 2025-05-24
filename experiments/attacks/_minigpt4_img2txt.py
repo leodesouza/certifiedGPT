@@ -106,14 +106,11 @@ def main():
     model_cls = registry.get_model_class(model_config.arch)
     model = model_cls.from_config(model_config).to('cuda:{}'.format(args.gpu_id))
 
-    load_finetuned_model(config, model)
+    # load_finetuned_model(config, model)
     
     vis_processor_cfg = config.datasets.evalvqav2.vis_processor.val
     vis_processor = registry.get_processor_class(vis_processor_cfg.name).from_config(vis_processor_cfg)    
-    
-    num_beams = 1
-    temperature = 1.0
-    print("Done.")
+            
 
     # load image
     print(f"loading images from path: {args.img_path}")
