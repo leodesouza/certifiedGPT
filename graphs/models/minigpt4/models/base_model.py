@@ -206,6 +206,7 @@ class BaseModel(nn.Module):
                 # )      
 
                 logging.info("Loading with low resource. dtype=16 and 8bit")
+                logging.info(f"device_map: {low_res_device}")
                 llama_model = LlamaForCausalLM.from_pretrained(
                     llama_model_path,
                     torch_dtype=torch.float16,
