@@ -63,8 +63,8 @@ def main():
     model = model_cls.from_config(model_config).to('cuda:{}'.format(args.gpu_id))
 
     CONV_VISION = CONV_VISION_Vicuna0
-
-    vis_processor_cfg = cfg.datasets_cfg.cc_sbu_align.vis_processor.train
+    
+    vis_processor_cfg = cfg.datasets.evalvqav2.vis_processor.val
     vis_processor = registry.get_processor_class(vis_processor_cfg.name).from_config(vis_processor_cfg)
 
     stop_words_ids = [[835], [2277, 29937]]
