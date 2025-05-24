@@ -67,16 +67,8 @@ class MiniGPTBase(BaseModel):
         self.visual_encoder.float()
 
     def get_context_emb(self, prompt, img_list):
-
-        print(f"Received img_list of length: {len(img_list)}")
-        assert isinstance(img_list, list), "img_list is not a list!"
-        assert all(isinstance(img, torch.Tensor) for img in img_list), "All items in img_list should be torch.Tensors"
-
-        # Check shape and device of each image
-        for idx, img in enumerate(img_list):
-            print(f"[Image {idx}] shape: {img.shape}, device: {img.device}, dtype: {img.dtype}")
-
-
+        
+        img_list = [img_list[0].squeeze(0)]
         device = img_list[0].device
         prompt_segs = prompt.split('<ImageHere>')
         print(f"prompt_segs: {prompt_segs}")        
