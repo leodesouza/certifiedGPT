@@ -47,7 +47,8 @@ def setup_seeds(config):
     cudnn.deterministic = True
 
 
-# ========================================
+def main():
+    # ========================================
 #             Model Initialization
 # ========================================
 
@@ -168,3 +169,6 @@ with gr.Blocks() as demo:
     clear.click(gradio_reset, [chat_state, img_list], [chatbot, image, text_input, upload_button, chat_state, img_list], queue=False)
 
 demo.launch(share=True, enable_queue=True)
+
+if __name__ == "__main__":
+    main()

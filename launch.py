@@ -119,6 +119,13 @@ def main_worker(rank, world_size, args):
             sys.argv = ["_train_adv_img_query.py"]
             from  experiments.attacks._train_adv_img_query import main
             main()
+        elif args.mode == "chat":
+            print(f"[Rank {rank}] Running chat from MiniGPT4.")            
+            sys.argv = ["demo_chat.py"]
+            from graphs.models.minigpt4.demo_v2 import main
+            main()
+
+            
         
         if args.mode not in ["transfer_based_attack", "query_based_attack", "img_t2_text"]:             
             agent = setup_agent(config)
