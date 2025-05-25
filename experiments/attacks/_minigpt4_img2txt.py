@@ -145,13 +145,13 @@ def main():
 
             print("answer...")      
             with model.maybe_autocast():
-                captions, _  = chat.answer(conv, 
+                answer, _  = chat.answer(conv, 
                                         img_list, 
                                         num_beams=num_beams, 
                                         temperature=temperature,
                                         max_new_tokens=20,
                                         max_length=2000)
-            print(f"caption: {captions}")
+            print(f"caption: {answer}")
 
              # Removed `xla_amp.autocast` and used PyTorch's native autocast
             
@@ -170,9 +170,9 @@ def main():
             # captions   = chat.get_text(mixed_embs)
 
         # write captions
-        # with open(os.path.join("/home/swf_developer/storage/attack/img_2_txt_output", args.output_path + '_pred.txt'), 'a') as f:
-        #     print('\n'.join(captions), file=f)
-        # f.close()
+        with open(os.path.join("/home/swf_developer/storage/attack/img_2_txt_output", args.output_path + '_pred.txt'), 'a') as f:
+            print('\n'.join(answer), file=f)
+        f.close()
         
         end = time.perf_counter()
         print(f"query time for {args.batch_size} samples:", (end - start))
