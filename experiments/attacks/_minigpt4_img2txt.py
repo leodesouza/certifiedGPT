@@ -34,7 +34,7 @@ from graphs.models.minigpt4.common.optims import *
 
 # seed for everything
 # credit: https://www.kaggle.com/code/rhythmcam/random-seed-everything
-DEFAULT_RANDOM_SEED = 2023
+DEFAULT_RANDOM_SEED = 2025
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 # basic random seed

@@ -12,7 +12,7 @@ from omegaconf import OmegaConf
 import numpy as np
 import torch
 import torch.nn as nn
-from transformers import LlamaTokenizer, BitsAndBytesConfig
+from transformers import LlamaTokenizer
 from peft import (
     LoraConfig,
     get_peft_model,
