@@ -58,9 +58,7 @@ def seedEverything(seed=DEFAULT_RANDOM_SEED):
 def load_finetuned_model(config, model):
     print("Loading finetuned VQAv2")
     # checkpoint = config.model.vqa_finetuned
-    # chk_path = "/home/swf_developer/storage/checkpoints/certifiedgpt/vqav2_finetuning_noise_0/vqav2_finetuning_with_optim_noise_0.pth"
-    chk_path = "/home/swf_developer/storage/checkpoints/certifiedgpt/vqav2_finetuning_noise_0.25/vqav2_finetuning_with_optim_noise_0.25.pth"    
-        
+    chk_path = "/home/swf_developer/storage/checkpoints/certifiedgpt/vqav2_finetuning_noise_0/vqav2_finetuning_with_optim_noise_0.pth"            
     checkpoint = torch.load(chk_path, map_location=torch.device('cpu'))
 
     print("Loading model state")
@@ -87,9 +85,7 @@ def main():
     
     # obtain text in batch
     parser.add_argument("--img_file", default='/raid/common/imagenet-raw/val/n01440764/ILSVRC2012_val_00003014.png', type=str)
-    # parser.add_argument("--img_path", default='/home/swf_developer/storage/attack/imagenet_adv_images/images/', type=str)
-    parser.add_argument("--img_path", default='/home/swf_developer/storage/attack/imagenet_clean_images/', type=str)
-    # parser.add_argument("--query", default='[vqa] Respond to this question in English with a short answer: what is the content of this image? ', type=str)
+    parser.add_argument("--img_path", default='/home/swf_developer/storage/attack/imagenet_adv_images/images/', type=str)        
     parser.add_argument("--query", default='[vqa] what is the content of this image? ', type=str)
         
     parser.add_argument("--output_path", default="minigpt4_tmp", type=str)
