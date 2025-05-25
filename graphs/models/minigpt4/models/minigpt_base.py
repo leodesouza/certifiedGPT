@@ -2,7 +2,6 @@ import logging
 import random
 
 import torch
-torch.serialization.add_safe_globals(['numpy.core.multiarray._reconstruct'])
 
 from common.registry import registry
 from graphs.models.minigpt4.models.base_model import BaseModel
