@@ -132,15 +132,9 @@ def main():
         with torch.no_grad():
             conv = CONV_VISION_Vicuna0.copy()                                    
 
-            img_list = []      
-
-            print("up load imgs")      
-            chat.upload_img(image, conv, img_list)  # img embeddings, size() = [bs, 32, 5120]
-
-            print("econde imgs")      
-            chat.encode_img(img_list)  # img embeddings, size() = [bs, 32, 5120]            
-
-            print("ask to minigpt4")                              
+            img_list = []                  
+            chat.upload_img(image, conv, img_list)  # img embeddings, size() = [bs, 32, 5120]            
+            chat.encode_img(img_list)  # img embeddings, size() = [bs, 32, 5120]                        
             chat.ask(args.query, conv)            
 
             print("answer...")      
@@ -150,33 +144,16 @@ def main():
                                         num_beams=num_beams, 
                                         temperature=temperature,
                                         max_new_tokens=20,
-                                        max_length=2000)
-            print(f"caption: {answer}")
-
-             # Removed `xla_amp.autocast` and used PyTorch's native autocast
-            
-
-            # instruction = f"[vqa] Based on the image, respond to this question in English with a short answer: {args.query}"
-            # instruction = "<Img><ImageHere></Img> {} ".format(args.query)
-        
-            # print(f"INSTRUCTION: {instruction}")
-            # # with torch.cuda.amp.autocast(enabled=config.run.amp):
-            # with model.maybe_autocast():
-            #     captions, _ = model.generate(
-            #     image, [instruction], max_new_tokens=config.run.max_new_tokens, do_sample=False, calc_probs=False)
-                                                    
-            # img_list   = chat.get_img_list(image)
-            # mixed_embs = chat.get_mixed_embs(args, img_list=img_list)
-            # captions   = chat.get_text(mixed_embs)
+                                        max_length=2000)            
 
         # write captions
         with open(os.path.join("/home/swf_developer/storage/attack/img_2_txt_output", args.output_path + '_pred.txt'), 'a') as f:
-            f.write(answer)        
+            f.write('\n',answer)        
         
         end = time.perf_counter()
         print(f"query time for {args.batch_size} samples:", (end - start))
         
-    print("Caption saved.")
+    print("Answers saved.")
 
 if __name__ == "__main__":
     main()
