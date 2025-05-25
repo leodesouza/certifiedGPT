@@ -67,6 +67,20 @@ def setup_seeds(config):
     cudnn.benchmark = False
     cudnn.deterministic = True
 
+def load_finetuned_model(model):
+    print("Loading finetuned VQAv2")
+    # checkpoint = config.model.vqa_finetuned
+    # chk_path = "/home/swf_developer/storage/checkpoints/certifiedgpt/vqav2_finetuning_noise_0/vqav2_finetuning_with_optim_noise_0.pth"
+    chk_path = "/home/swf_developer/storage/checkpoints/certifiedgpt/vqav2_finetuning_noise_0.25/vqav2_finetuning_with_optim_noise_0.25.pth"    
+        
+    checkpoint = torch.load(chk_path, map_location=torch.device('cpu'))
+
+    print("Loading model state")
+    model.load_state_dict(checkpoint['model_state_dict'], strict=False)
+    print("Loading model state. Done!")
+
+    print(f"Numbers of treinable parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad)}")    
+
 
 def main():
     # ========================================
@@ -74,7 +88,7 @@ def main():
 # ========================================
 
     setup_logger(0)
-    
+
     print('Initializing Chat')
     args = parse_args()
     cfg = Config(args)
@@ -84,6 +98,8 @@ def main():
     model_cls = registry.get_model_class(model_config.arch)
     model = model_cls.from_config(model_config)
     model.to(('cuda:{}'.format(args.gpu_id)))
+    
+    load_finetuned_model(model)
 
     CONV_VISION = CONV_VISION_Vicuna0
     
