@@ -162,9 +162,11 @@ def main():
         
             print(f"INSTRUCTION: {instruction}")
             # with torch.cuda.amp.autocast(enabled=config.run.amp):
-            captions, _ = model.generate(
-                image, [instruction], max_new_tokens=config.run.max_new_tokens, do_sample=False, calc_probs=False
-            )
+            with model.maybe_autocast():
+                captions, _ = model.generate(
+                image, [instruction], max_new_tokens=config.run.max_new_tokens, do_sample=False, calc_probs=False)
+            
+            
                 
             print(f"caption ---> : {captions}")
             raise ValueError("stop")
