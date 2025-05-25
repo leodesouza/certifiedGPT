@@ -16,7 +16,7 @@ from transformers import LlamaTokenizer
 from peft import (
     LoraConfig,
     get_peft_model,
-    # prepare_model_for_int8_training,
+    prepare_model_for_int8_training,
 )
 
 import common
@@ -211,7 +211,7 @@ class BaseModel(nn.Module):
                     llama_model_path,
                     torch_dtype=torch.float16,
                     load_in_8bit=True,
-                    device_map={'': low_res_device},                        
+                    device_map={'': low_res_device}                        
                 )                          
 
             else:
@@ -221,28 +221,27 @@ class BaseModel(nn.Module):
                     torch_dtype=torch.float16,
                 )
 
-            if lora_r > 0:
-                pass
-                # logging.info("With lora parameter provided...")
-                # logging.info("Preparing the model for parameter efficient fine-tuning")
-                # llama_model = prepare_model_for_int8_training(llama_model)
-                # loraconfig = LoraConfig(
-                #     r=lora_r,
-                #     bias="none",
-                #     task_type="CAUSAL_LM",
-                #     target_modules=lora_target_modules,
-                #     **lora_kargs
-                # )
-                # llama_model = get_peft_model(llama_model, loraconfig)
-                #
-                # llama_model.print_trainable_parameters()
+            if lora_r > 0:                
+                logging.info("With lora parameter provided...")
+                logging.info("Preparing the model for parameter efficient fine-tuning")
+                llama_model = prepare_model_for_int8_training(llama_model)
+                loraconfig = LoraConfig(
+                    r=lora_r,
+                    bias="none",
+                    task_type="CAUSAL_LM",
+                    target_modules=lora_target_modules,
+                    **lora_kargs
+                )
+                llama_model = get_peft_model(llama_model, loraconfig)
+                
+                llama_model.print_trainable_parameters()
 
             else:
                 for name, param in llama_model.named_parameters():
                     param.requires_grad = False                
                 print('freeze LLM Done')
             
-            print('Loading LLM Done')
+            print('Loading LLAMA Done')
             return llama_model, llama_tokenizer
         except Exception as e:
             logging.error("Error on loading the LLM(LLAMA or VICUNA.", exc_info=True)
