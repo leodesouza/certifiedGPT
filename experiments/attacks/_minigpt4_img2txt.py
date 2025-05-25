@@ -148,7 +148,7 @@ def main():
 
         # write captions
         with open(os.path.join("/home/swf_developer/storage/attack/img_2_txt_output", args.output_path + '_pred.txt'), 'a') as f:
-            f.write('\n',answer)        
+            f.write('\n' + answer)        
         
         end = time.perf_counter()
         print(f"query time for {args.batch_size} samples:", (end - start))
