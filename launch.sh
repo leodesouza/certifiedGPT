@@ -7,6 +7,6 @@ CONFIG_PATH='/home/swf_developer/certifiedGPT/configs/attack_configs/vqav2_eval_
 
 # python3 launch.py smoothing_predict --config-path=${CONFIG_PATH}
 # python3 launch.py transfer_based_attack --config-path=${CONFIG_PATH}
-python3 launch.py img_t2_text --config-path=${CONFIG_PATH}
-# python3 launch.py chat --config-path=${CONFIG_PATH}
+# python3 launch.py img_t2_text --config-path=${CONFIG_PATH}
+python3 launch.py chat --config-path=${CONFIG_PATH}
 
