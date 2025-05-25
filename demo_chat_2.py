@@ -20,6 +20,7 @@ from datasets.builders import *
 from processors import blip_processors
 from graphs.models import *
 from graphs.models.minigpt4.common.optims import *
+import logging
 
 
 def parse_args():
@@ -37,7 +38,25 @@ def parse_args():
     torch.cuda.set_device(args.gpu_id)
     return args
 
+def setup_logger(rank):
+    logger = logging.getLogger(f"logger_rank_{rank}")
+    logger.setLevel(logging.INFO)
 
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    console_formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+    console_handler.setFormatter(console_formatter)
+
+    log_file_path = os.path.join(os.environ.get("OUTPUT_DIR", "."), f"certified_rank{rank}.log")
+    file_handler = logging.FileHandler(log_file_path)
+    file_handler.setLevel(logging.INFO)
+    file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    file_handler.setFormatter(file_formatter)
+
+    logger.addHandler(console_handler)
+    logger.addHandler(file_handler)
+
+    registry.register("logger", logger)
 def setup_seeds(config):
     seed = config.run_cfg.seed + get_rank()
 
@@ -54,6 +73,7 @@ def main():
 #             Model Initialization
 # ========================================
 
+    setup_logger(0)
     
     print('Initializing Chat')
     args = parse_args()
