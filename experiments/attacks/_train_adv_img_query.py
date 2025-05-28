@@ -257,10 +257,10 @@ def main():
     ## ----------
     
     if args.wandb:
-        wandb.login(key=config.run.wandb_api_key)        
+        wandb.login(key=config.run.wandb_api_key)       
         wandb.init(project=args.wandb_project_name, name=args.wandb_run_name, reinit=True)                
     
-    for i, ((image, _, path), (image_clean, _, _)) in enumerate(zip(data_loader, clean_data_loader)):
+    for i, ((image, _), (image_clean, _)) in enumerate(zip(data_loader, clean_data_loader)):
         if batch_size * (i+1) > args.num_samples:
             break
         image = image.to(device)  # size=(10, 3, args.input_res, args.input_res)
