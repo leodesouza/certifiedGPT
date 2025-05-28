@@ -283,6 +283,7 @@ def main():
         
         for step_idx in range(args.steps):
             print(f"{i}-th image - {step_idx}-th step")
+            print(f"adv_image_in_current_step: {adv_image_in_current_step.size()}")
             # step 1. obtain purturbed images
             if step_idx == 0:
                 image_repeat      = image.repeat(num_query, 1, 1, 1)  # size = (num_query x batch_size, 3, args.input_res, args.input_res)
