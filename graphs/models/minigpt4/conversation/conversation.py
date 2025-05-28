@@ -246,7 +246,7 @@ class Chat:
 
         return image_emb       
 
-    def get_img_list(self, image):        
+    def get_img_list(self, image, img_list=[]):        
         img_list=[image]
         self.encode_img(img_list)
         return img_list
