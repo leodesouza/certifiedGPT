@@ -20,7 +20,7 @@ from graphs.models.minigpt4.common.optims import *
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Training")
-    parser.add_argument("mode", choices=["train", "eval", "smoothing_predict", "certify", "transfer_based_attack", "img_t2_text", "chat"])
+    parser.add_argument("mode", choices=["train", "eval", "smoothing_predict", "certify", "transfer_based_attack", "query_based_attack", "img_t2_text", "chat"])
     parser.add_argument("--config-path", required=True, help="Path to configuration file.")
     return parser.parse_args()
 
