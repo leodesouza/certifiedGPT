@@ -171,11 +171,11 @@ def main():
     # load adv image
     # adv_vit_data      = ImageFolderWithPaths(args.data_path, transform=transform)
     adv_vit_data = FlatImageDatasetWithPaths("/home/swf_developer/storage/attack/imagenet_adv_images/images/", transform=transform)
-    data_loader       = torch.utils.data.DataLoader(adv_vit_data, batch_size=batch_size, shuffle=False, num_workers=2)
+    data_loader       = torch.utils.data.DataLoader(adv_vit_data, batch_size=batch_size, shuffle=False, num_workers=0)
 
     # load clean image
     clean_data        = FlatImageDatasetWithPaths("/home/swf_developer/storage/attack/imagenet_clean_images/", transform=transform)
-    clean_data_loader = torch.utils.data.DataLoader(clean_data, batch_size=batch_size, shuffle=False, num_workers=2)
+    clean_data_loader = torch.utils.data.DataLoader(clean_data, batch_size=batch_size, shuffle=False, num_workers=0)
     
     chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id))     
     
