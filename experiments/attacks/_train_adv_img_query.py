@@ -304,7 +304,7 @@ def main():
                         text_i = _i2t(args, chat, image_tensor=img_tensor_i)
                         if isinstance(text_i, list):
                             text_of_perturbed_imgs.extend(text_i)
-                        else                    
+                        else:                    
                             text_of_perturbed_imgs.append(text_i)
             
             # step 2. estimate grad
