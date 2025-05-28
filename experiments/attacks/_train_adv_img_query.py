@@ -254,9 +254,9 @@ def main():
         assert (vit_attack_results_vitl14 == query_attack_results_vitl14).all()
     ## ----------
     
-    if args.wandb:
-        wandb.login(key=config.run.wandb_api_key)       
-        wandb.init(project=args.wandb_project_name, name=args.wandb_run_name, reinit=True)                
+    # if args.wandb:
+    wandb.login(key=config.run.wandb_api_key)       
+    wandb.init(project=args.wandb_project_name, name=args.wandb_run_name, reinit=True)                
     
     for i, ((image, _), (image_clean, _)) in enumerate(zip(data_loader, clean_data_loader)):
         if batch_size * (i+1) > args.num_samples:
@@ -391,25 +391,25 @@ def main():
                     query_attack_results_vitl14[i] = adv_txt_tgt_txt_score_in_current_step_vitl14
                     # ----------------
 
-        if args.wandb:
-            wandb.log(
-                {   
-                    "moving-avg-adv-rn50"    : np.mean(vit_attack_results_rn50[:(i+1)]),
-                    "moving-avg-query-rn50"  : np.mean(query_attack_results_rn50[:(i+1)]),
-                    
-                    "moving-avg-adv-rn101"   : np.mean(vit_attack_results_rn101[:(i+1)]),
-                    "moving-avg-query-rn101" : np.mean(query_attack_results_rn101[:(i+1)]),
-                    
-                    "moving-avg-adv-vitb16"  : np.mean(vit_attack_results_vitb16[:(i+1)]),
-                    "moving-avg-query-vitb16": np.mean(query_attack_results_vitb16[:(i+1)]),
-                    
-                    "moving-avg-adv-vitb32"  : np.mean(vit_attack_results[:(i+1)]),
-                    "moving-avg-query-vitb32": np.mean(query_attack_results[:(i+1)]),
-                    
-                    "moving-avg-adv-vitl14"  : np.mean(vit_attack_results_vitl14[:(i+1)]),
-                    "moving-avg-query-vitl14": np.mean(query_attack_results_vitl14[:(i+1)]),
-                }
-            )
+        
+        wandb.log(
+            {   
+                "moving-avg-adv-rn50"    : np.mean(vit_attack_results_rn50[:(i+1)]),
+                "moving-avg-query-rn50"  : np.mean(query_attack_results_rn50[:(i+1)]),
+                
+                "moving-avg-adv-rn101"   : np.mean(vit_attack_results_rn101[:(i+1)]),
+                "moving-avg-query-rn101" : np.mean(query_attack_results_rn101[:(i+1)]),
+                
+                "moving-avg-adv-vitb16"  : np.mean(vit_attack_results_vitb16[:(i+1)]),
+                "moving-avg-query-vitb16": np.mean(query_attack_results_vitb16[:(i+1)]),
+                
+                "moving-avg-adv-vitb32"  : np.mean(vit_attack_results[:(i+1)]),
+                "moving-avg-query-vitb32": np.mean(query_attack_results[:(i+1)]),
+                
+                "moving-avg-adv-vitl14"  : np.mean(vit_attack_results_vitl14[:(i+1)]),
+                "moving-avg-query-vitl14": np.mean(query_attack_results_vitl14[:(i+1)]),
+            }
+        )
 
         # log text
         print("best caption of current image:", best_caption)
