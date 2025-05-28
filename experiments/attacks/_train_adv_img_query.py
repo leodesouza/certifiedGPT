@@ -82,7 +82,7 @@ class ImageFolderWithPaths(torchvision.datasets.ImageFolder):
 def _i2t(args, chat, image_tensor):
     
     # normalize image here
-    # image_tensor = normalize(image_tensor / 255.0)
+    image_tensor = normalize(image_tensor / 255.0)
     
     # img_list   = chat.get_img_list(image_tensor, img_list=[])  # img embeddings, size() = [bs, 32, 5120]
     # mixed_embs = chat.get_mixed_embs(args, img_list=img_list, caption_size=image_tensor.size()[0])
