@@ -6,6 +6,7 @@
 #
 
 import argparse
+import gc
 import os
 import random
 import clip
@@ -296,8 +297,7 @@ def main():
             # num_query is obtained via serveral iterations
             text_of_perturbed_imgs = []
             for query_idx in range(num_query//num_sub_query):
-                sub_perturbed_image_repeat = perturbed_image_repeat[num_sub_query * (query_idx) : num_sub_query * (query_idx+1)]
-                print("sub_perturbed_image_repeat size:", sub_perturbed_image_repeat.size())
+                sub_perturbed_image_repeat = perturbed_image_repeat[num_sub_query * (query_idx) : num_sub_query * (query_idx+1)]                
                 with torch.no_grad():
                     for i in range(sub_perturbed_image_repeat.size(0)):
                         img_tensor_i = sub_perturbed_image_repeat[i].unsqueeze(0) 
@@ -306,6 +306,11 @@ def main():
                             text_of_perturbed_imgs.extend(text_i)
                         else:                    
                             text_of_perturbed_imgs.append(text_i)
+                        
+                        # del img_tensor_i
+                        # del text_i
+                        # gc.collect()
+                        # torch.cuda.empty_cache()
             
             # step 2. estimate grad
             with torch.no_grad():
