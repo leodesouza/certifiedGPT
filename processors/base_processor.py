@@ -11,7 +11,7 @@ from torchvision.transforms.functional import InterpolationMode
 
 
 class BaseProcessor:
-    def __init__(self, image_size=448, mean=None, std=None):
+    def __init__(self, image_size=224, mean=None, std=None):
 
         if mean is None:
             mean = (0.48145466, 0.4578275, 0.40821073)
