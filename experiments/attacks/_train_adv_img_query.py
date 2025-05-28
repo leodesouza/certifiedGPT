@@ -19,7 +19,7 @@ import copy
 
 from common.config import Config
 from common.registry import registry
-from graphs.models.minigpt4.conversation.conversation import Chat, CONV_VISION_LLama2
+from graphs.models.minigpt4.conversation.conversation import Chat, CONV_VISION_LLama2, CONV_VISION_Vicuna0
 
 
 # imports modules for registration
@@ -85,11 +85,28 @@ class ImageFolderWithPaths(torchvision.datasets.ImageFolder):
 def _i2t(args, chat, image_tensor):
     
     # normalize image here
-    image_tensor = normalize(image_tensor / 255.0)
+    # image_tensor = normalize(image_tensor / 255.0)
     
-    img_list   = chat.get_img_list(image_tensor, img_list=[])  # img embeddings, size() = [bs, 32, 5120]
-    mixed_embs = chat.get_mixed_embs(args, img_list=img_list, caption_size=image_tensor.size()[0])
-    captions   = chat.get_text(args, mixed_embs, text_size=image_tensor.size()[0])
+    # img_list   = chat.get_img_list(image_tensor, img_list=[])  # img embeddings, size() = [bs, 32, 5120]
+    # mixed_embs = chat.get_mixed_embs(args, img_list=img_list, caption_size=image_tensor.size()[0])
+    # captions   = chat.get_text(args, mixed_embs, text_size=image_tensor.size()[0])
+    # return captions
+
+    conv = CONV_VISION_Vicuna0.copy()     
+    num_beams = 1
+    temperature = 1.0                               
+
+    img_list = []                  
+    chat.upload_img(image_tensor, conv, img_list)  # img embeddings, size() = [bs, 32, 5120]            
+    chat.encode_img(img_list)  # img embeddings, size() = [bs, 32, 5120]                        
+    chat.ask(args.query, conv)            
+
+    captions, _  = chat.answer(conv, 
+                            img_list, 
+                            num_beams=num_beams, 
+                            temperature=temperature,
+                            max_new_tokens=20,
+                            max_length=2000)  
     return captions
 
 def main():
@@ -115,7 +132,7 @@ def main():
     parser.add_argument("--steps", default=8, type=int)
     parser.add_argument("--output", default="/home/swf_developer/storage/attack/query_based_attack_output/output.txt", type=str)
     parser.add_argument("--data_path", default="temp", type=str)
-    parser.add_argument("--text_path", default="temp.txt", type=str)
+    parser.add_argument("--text_path", default="/home/swf_developer/storage/attack/img_2_txt_output/minigpt4_tmp_pred.txt", type=str)
     
     parser.add_argument("--delta", default="normal", type=str)
     parser.add_argument("--num_query", default=100, type=int)
@@ -139,9 +156,6 @@ def main():
 
     vis_processor_cfg = config.datasets.evalvqav2.vis_processor.val
     vis_processor     = registry.get_processor_class(vis_processor_cfg.name).from_config(vis_processor_cfg)       
-    num_beams = 1
-    temperature = 1.0
-    print("Done")
      
     # use clip text coder for attack
     clip_img_model_rn50,   _ = clip.load("RN50", device=device, jit=False)
@@ -159,12 +173,12 @@ def main():
 
     # load adv image
     # adv_vit_data      = ImageFolderWithPaths(args.data_path, transform=transform)
-    adv_vit_data = FlatImageDatasetWithPaths("/home/swf_developer/storage/attack/imagenet_adv_images/images/", transform=vis_processor)
-    data_loader       = torch.utils.data.DataLoader(adv_vit_data, batch_size=batch_size, shuffle=False, num_workers=24)
+    adv_vit_data = FlatImageDatasetWithPaths("/home/swf_developer/storage/attack/imagenet_adv_images/images/", transform=transform)
+    data_loader       = torch.utils.data.DataLoader(adv_vit_data, batch_size=batch_size, shuffle=False, num_workers=2)
 
     # load clean image
     clean_data        = FlatImageDatasetWithPaths("/home/swf_developer/storage/attack/imagenet_clean_images/", transform=transform)
-    clean_data_loader = torch.utils.data.DataLoader(clean_data, batch_size=batch_size, shuffle=False, num_workers=24)
+    clean_data_loader = torch.utils.data.DataLoader(clean_data, batch_size=batch_size, shuffle=False, num_workers=2)
     
     chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id))     
     
@@ -246,8 +260,8 @@ def main():
     ## ----------
     
     if args.wandb:
-        wandb.login(key=config.run.wandb_api_key)
-        run = wandb.init(project=args.wandb_project_name, name=args.wandb_run_name, reinit=True)                
+        wandb.login(key=config.run.wandb_api_key)        
+        wandb.init(project=args.wandb_project_name, name=args.wandb_run_name, reinit=True)                
     
     for i, ((image, _, path), (image_clean, _, _)) in enumerate(zip(data_loader, clean_data_loader)):
         if batch_size * (i+1) > args.num_samples:
