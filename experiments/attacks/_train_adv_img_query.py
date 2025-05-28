@@ -85,7 +85,7 @@ def _i2t(args, chat, image_tensor):
     image_tensor = normalize(image_tensor / 255.0)
     
     img_list   = chat.get_img_list(image_tensor, img_list=[])  # img embeddings, size() = [bs, 32, 5120]
-    mixed_embs = chat.get_mixed_embs(args, img_list=img_list, caption_size=image_tensor.size()[0])
+    mixed_embs = chat.get_mixed_embs(args, img_list=img_list)
     captions   = chat.get_text(args, mixed_embs, text_size=image_tensor.size()[0])
     # return captions
 
