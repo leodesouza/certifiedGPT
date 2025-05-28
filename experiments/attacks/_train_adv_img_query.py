@@ -130,7 +130,7 @@ def main():
     
     parser.add_argument("--delta", default="normal", type=str)
     parser.add_argument("--num_query", default=100, type=int)
-    parser.add_argument("--num_sub_query", default=1, type=int)
+    parser.add_argument("--num_sub_query", default=25, type=int)
     parser.add_argument("--sigma", default=8, type=float)
     
     parser.add_argument("--wandb", action="store_true")
@@ -279,11 +279,9 @@ def main():
             print(f"{i}-th image - {step_idx}-th step")            
             # step 1. obtain purturbed images
             if step_idx == 0:
-                image_repeat      = image.repeat(num_query, 1, 1, 1)  # size = (num_query x batch_size, 3, args.input_res, args.input_res)
-                print(f"image_repeat ---> : {image_repeat.size()}")
+                image_repeat      = image.repeat(num_query, 1, 1, 1)  # size = (num_query x batch_size, 3, args.input_res, args.input_res)                
             else:
-                image_repeat      = adv_image_in_current_step.repeat(num_query, 1, 1, 1)             
-                print(f"adv_image_in_current_step ---> : {adv_image_in_current_step.size()}")
+                image_repeat      = adv_image_in_current_step.repeat(num_query, 1, 1, 1)                             
                 text_of_adv_image_in_current_step       = _i2t(args, chat, image_tensor=adv_image_in_current_step)
                 adv_vit_text_token_in_current_step      = clip.tokenize(text_of_adv_image_in_current_step).to(device)
                 adv_vit_text_features_in_current_step   = clip_img_model_vitb32.encode_text(adv_vit_text_token_in_current_step)
@@ -301,8 +299,13 @@ def main():
                 sub_perturbed_image_repeat = perturbed_image_repeat[num_sub_query * (query_idx) : num_sub_query * (query_idx+1)]
                 print("sub_perturbed_image_repeat size:", sub_perturbed_image_repeat.size())
                 with torch.no_grad():
-                    text_of_sub_perturbed_imgs = _i2t(args, chat, image_tensor=sub_perturbed_image_repeat)
-                text_of_perturbed_imgs.extend(text_of_sub_perturbed_imgs)
+                    for i in range(sub_perturbed_image_repeat.size(0)):
+                        img_tensor_i = sub_perturbed_image_repeat[i].unsqueeze(0) 
+                        text_i = _i2t(args, chat, image_tensor=img_tensor_i)
+                        if isinstance(text_i, list):
+                            text_of_perturbed_imgs.extend(text_i)
+                        else                    
+                            text_of_perturbed_imgs.append(text_i)
             
             # step 2. estimate grad
             with torch.no_grad():
