@@ -84,28 +84,28 @@ def _i2t(args, chat, image_tensor):
     # normalize image here
     image_tensor = normalize(image_tensor / 255.0)
     
-    # img_list   = chat.get_img_list(image_tensor, img_list=[])  # img embeddings, size() = [bs, 32, 5120]
-    # mixed_embs = chat.get_mixed_embs(args, img_list=img_list, caption_size=image_tensor.size()[0])
-    # captions   = chat.get_text(args, mixed_embs, text_size=image_tensor.size()[0])
+    img_list   = chat.get_img_list(image_tensor, img_list=[])  # img embeddings, size() = [bs, 32, 5120]
+    mixed_embs = chat.get_mixed_embs(args, img_list=img_list, caption_size=image_tensor.size()[0])
+    captions   = chat.get_text(args, mixed_embs, text_size=image_tensor.size()[0])
     # return captions
 
-    conv = CONV_VISION_Vicuna0.copy()     
-    num_beams = 1
-    temperature = 1.0                               
+    # conv = CONV_VISION_Vicuna0.copy()     
+    # num_beams = 1
+    # temperature = 1.0                               
 
-    img_list = []                  
-    chat.upload_img(image_tensor, conv, img_list)  # img embeddings, size() = [bs, 32, 5120]            
-    chat.encode_img(img_list)  # img embeddings, size() = [bs, 32, 5120]                        
-    chat.ask(args.query, conv)            
+    # img_list = []                  
+    # chat.upload_img(image_tensor, conv, img_list)  # img embeddings, size() = [bs, 32, 5120]            
+    # chat.encode_img(img_list)  # img embeddings, size() = [bs, 32, 5120]                        
+    # chat.ask(args.query, conv)            
 
-    print(f"image_tensor size: {image_tensor.size()}")
-    print(f"img_list size: {len(img_list)}")
-    captions, _  = chat.answer(conv, 
-                            img_list, 
-                            num_beams=num_beams, 
-                            temperature=temperature,
-                            max_new_tokens=20,
-                            max_length=2000)  
+    # print(f"image_tensor size: {image_tensor.size()}")
+    # print(f"img_list size: {len(img_list)}")
+    # captions, _  = chat.answer(conv, 
+    #                         img_list, 
+    #                         num_beams=num_beams, 
+    #                         temperature=temperature,
+    #                         max_new_tokens=20,
+    #                         max_length=2000)  
     return captions
 
 def main():
