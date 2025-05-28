@@ -282,14 +282,14 @@ def main():
         better_flag = 0
         
         for step_idx in range(args.steps):
-            print(f"{i}-th image - {step_idx}-th step")
-            print(f"adv_image_in_current_step: {adv_image_in_current_step.size()}")
+            print(f"{i}-th image - {step_idx}-th step")            
             # step 1. obtain purturbed images
             if step_idx == 0:
                 image_repeat      = image.repeat(num_query, 1, 1, 1)  # size = (num_query x batch_size, 3, args.input_res, args.input_res)
+                print(f"image_repeat ---> : {image_repeat.size()}")
             else:
                 image_repeat      = adv_image_in_current_step.repeat(num_query, 1, 1, 1)             
-
+                print(f"adv_image_in_current_step ---> : {adv_image_in_current_step.size()}")
                 text_of_adv_image_in_current_step       = _i2t(args, chat, image_tensor=adv_image_in_current_step)
                 adv_vit_text_token_in_current_step      = clip.tokenize(text_of_adv_image_in_current_step).to(device)
                 adv_vit_text_features_in_current_step   = clip_img_model_vitb32.encode_text(adv_vit_text_token_in_current_step)
