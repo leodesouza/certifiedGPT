@@ -86,7 +86,7 @@ def main():
     # obtain text in batch
     parser.add_argument("--img_file", default='/raid/common/imagenet-raw/val/n01440764/ILSVRC2012_val_00003014.png', type=str)
     parser.add_argument("--img_path", default='/home/swf_developer/storage/attack/imagenet_adv_images/images/', type=str)        
-    parser.add_argument("--query", default='[vqa] what is the content of this image? ', type=str)
+    parser.add_argument("--query", default='what is the content of this image?', type=str)
         
     parser.add_argument("--output_path", default="minigpt4_tmp", type=str)
     parser.add_argument("--batch_size", default=1, type=int)
