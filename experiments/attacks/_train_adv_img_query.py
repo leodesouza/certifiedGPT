@@ -99,7 +99,7 @@ def _i2t(args, chat, image_tensor):
                             img_list, 
                             num_beams=num_beams, 
                             temperature=temperature,
-                            max_new_tokens=20,
+                            max_new_tokens=300,
                             max_length=2000)  
     return captions
 
@@ -127,7 +127,7 @@ def main():
     parser.add_argument("--output", default="/home/swf_developer/storage/attack/query_based_attack_output/output.txt", type=str)
     parser.add_argument("--data_path", default="temp", type=str)
     parser.add_argument("--text_path", default="/home/swf_developer/storage/attack/img_2_txt_output/minigpt4_tmp_pred.txt", type=str)
-    parser.add_argument("--query", default='[vqa] what is the content of this image? ', type=str)
+    parser.add_argument("--query", default='what is the content of this image?', type=str)
     
     parser.add_argument("--delta", default="normal", type=str)
     parser.add_argument("--num_query", default=20, type=int)
@@ -283,6 +283,7 @@ def main():
         best_caption = adv_vit_text[i]
         better_flag = 0
         
+        # MF-tt
         for step_idx in range(args.steps):
             print(f"{i}-th image - {step_idx}-th step")            
             # step 1. obtain purturbed images
@@ -303,22 +304,7 @@ def main():
             perturbed_image_repeat = torch.clamp(image_repeat + (sigma * query_noise), 0.0, 255.0)  # size = (num_query x batch_size, 3, args.input_res, args.input_res)
             
             # num_query is obtained via serveral iterations
-            text_of_perturbed_imgs = []
-            # for query_idx in range(num_query):
-            #     sub_perturbed_image_repeat = perturbed_image_repeat[query_idx : query_idx+1]                
-            #     with torch.no_grad():
-            #         for i in range(sub_perturbed_image_repeat.size(0)):
-            #             img_tensor_i = sub_perturbed_image_repeat[i].unsqueeze(0) 
-            #             text_i = _i2t(args, chat, image_tensor=img_tensor_i)
-            #         if isinstance(text_i, list):
-            #             text_of_perturbed_imgs.extend(text_i)
-            #         else:                    
-            #             text_of_perturbed_imgs.append(text_i)
-                    
-            #             del img_tensor_i
-            #             del text_i
-            #             gc.collect()
-            #             torch.cuda.empty_cache()
+            text_of_perturbed_imgs = []           
 
             print(f"Executing sub-query {i}-th image - {step_idx}-th step")
             for query_idx in range(num_query//num_sub_query):

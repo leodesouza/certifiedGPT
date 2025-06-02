@@ -169,6 +169,7 @@ def main():
             # requires_grad=True, PyTorch will track all operations involving delta and compute gradients for each element
             delta = torch.zeros_like(image_org, requires_grad=True)
             
+            # MF-ii
             for j in range(args.steps):
                 adv_image          = image_org + delta   # image is normalized to (0.0, 1.0)            
                 adv_image_features = chat.forward_encoder(adv_image)            
