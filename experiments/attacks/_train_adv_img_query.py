@@ -95,12 +95,12 @@ def _i2t(args, chat, image_tensor):
     chat.encode_img(img_list)  # img embeddings, size() = [bs, 32, 5120]                        
     chat.ask(args.query, conv)            
     
+    # max_new_tokens=300,
+    # max_length=2000
     captions, _  = chat.answer(conv, 
                             img_list, 
                             num_beams=num_beams, 
-                            temperature=temperature,
-                            max_new_tokens=300,
-                            max_length=2000)  
+                            temperature=temperature)  
     return captions
 
 def main():
@@ -120,7 +120,7 @@ def main():
     
     parser.add_argument("--batch_size", default=1, type=int)
     parser.add_argument("--num_samples", default=5, type=int)
-    parser.add_argument("--input_res", default=224, type=int)
+    parser.add_argument("--input_res", default=448, type=int)
     parser.add_argument("--alpha", default=1.0, type=float)
     parser.add_argument("--epsilon", default=8, type=int)
     parser.add_argument("--steps", default=1, type=int)
