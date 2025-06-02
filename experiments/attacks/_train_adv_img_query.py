@@ -119,7 +119,7 @@ def main():
     )
     
     parser.add_argument("--batch_size", default=1, type=int)
-    parser.add_argument("--num_samples", default=1000, type=int)
+    parser.add_argument("--num_samples", default=1, type=int)
     parser.add_argument("--input_res", default=224, type=int)
     parser.add_argument("--alpha", default=1.0, type=float)
     parser.add_argument("--epsilon", default=8, type=int)
@@ -130,8 +130,8 @@ def main():
     parser.add_argument("--query", default='[vqa] what is the content of this image? ', type=str)
     
     parser.add_argument("--delta", default="normal", type=str)
-    parser.add_argument("--num_query", default=100, type=int)
-    parser.add_argument("--num_sub_query", default=25, type=int)
+    parser.add_argument("--num_query", default=20, type=int)
+    parser.add_argument("--num_sub_query", default=5, type=int)
     parser.add_argument("--sigma", default=8, type=float)
     
     parser.add_argument("--wandb", action="store_true")
@@ -183,6 +183,7 @@ def main():
         adv_vit_text  = f.readlines()[:args.num_samples] 
         f.close()
     
+    # generating the text embeddings for org text/features 
     with torch.no_grad():
         adv_vit_text_token    = clip.tokenize(adv_vit_text, truncate=True).to(device)
         adv_vit_text_features = clip_img_model_vitb32.encode_text(adv_vit_text_token)
@@ -196,6 +197,7 @@ def main():
         f.close()
     
     # clip text features of the target
+    # generating the text embeddings for tgt text/features
     with torch.no_grad():
         target_text_token    = clip.tokenize(tgt_text, truncate=True).to(device)
         target_text_features = clip_img_model_vitb32.encode_text(target_text_token)
@@ -210,6 +212,7 @@ def main():
     ## other arch
     with torch.no_grad():
         # rn50
+        print ("Checking similarity rn50")
         adv_vit_text_features_rn50 = clip_img_model_rn50.encode_text(adv_vit_text_token)
         adv_vit_text_features_rn50 = adv_vit_text_features_rn50 / adv_vit_text_features_rn50.norm(dim=1, keepdim=True)
         adv_vit_text_features_rn50 = adv_vit_text_features_rn50.detach()
@@ -219,8 +222,9 @@ def main():
         vit_attack_results_rn50    = torch.sum(adv_vit_text_features_rn50 * target_text_features_rn50, dim=1).squeeze().detach().cpu().numpy()
         query_attack_results_rn50  = torch.sum(adv_vit_text_features_rn50 * target_text_features_rn50, dim=1).squeeze().detach().cpu().numpy()
         assert (vit_attack_results_rn50 == query_attack_results_rn50).all()
-
+        
         # rn101
+        print ("Checking similarity rn101")
         adv_vit_text_features_rn101 = clip_img_model_rn101.encode_text(adv_vit_text_token)
         adv_vit_text_features_rn101 = adv_vit_text_features_rn101 / adv_vit_text_features_rn101.norm(dim=1, keepdim=True)
         adv_vit_text_features_rn101 = adv_vit_text_features_rn101.detach()
@@ -230,8 +234,10 @@ def main():
         vit_attack_results_rn101    = torch.sum(adv_vit_text_features_rn101 * target_text_features_rn101, dim=1).squeeze().detach().cpu().numpy()
         query_attack_results_rn101  = torch.sum(adv_vit_text_features_rn101 * target_text_features_rn101, dim=1).squeeze().detach().cpu().numpy()
         assert (vit_attack_results_rn101 == query_attack_results_rn101).all()
+        
 
         # vitb16
+        print ("Checking similarity vitb16")
         adv_vit_text_features_vitb16 = clip_img_model_vitb16.encode_text(adv_vit_text_token)
         adv_vit_text_features_vitb16 = adv_vit_text_features_vitb16 / adv_vit_text_features_vitb16.norm(dim=1, keepdim=True)
         adv_vit_text_features_vitb16 = adv_vit_text_features_vitb16.detach()
@@ -243,6 +249,7 @@ def main():
         assert (vit_attack_results_vitb16 == query_attack_results_vitb16).all()
 
         # vitl14
+        print ("Checking similarity vitl14")
         adv_vit_text_features_vitl14 = clip_img_model_vitl14.encode_text(adv_vit_text_token)
         adv_vit_text_features_vitl14 = adv_vit_text_features_vitl14 / adv_vit_text_features_vitl14.norm(dim=1, keepdim=True)
         adv_vit_text_features_vitl14 = adv_vit_text_features_vitl14.detach()
@@ -292,20 +299,37 @@ def main():
                 torch.cuda.empty_cache()
                 
             query_noise            = torch.randn_like(image_repeat).sign() # Rademacher noise
+            # limits the values in a tensor to a specified range.
             perturbed_image_repeat = torch.clamp(image_repeat + (sigma * query_noise), 0.0, 255.0)  # size = (num_query x batch_size, 3, args.input_res, args.input_res)
             
             # num_query is obtained via serveral iterations
             text_of_perturbed_imgs = []
-            for query_idx in range(num_query//num_sub_query):
-                sub_perturbed_image_repeat = perturbed_image_repeat[num_sub_query * (query_idx) : num_sub_query * (query_idx+1)]                
+            for query_idx in range(num_query):
+                sub_perturbed_image_repeat = perturbed_image_repeat[query_idx : query_idx+1]                
                 with torch.no_grad():
                     for i in range(sub_perturbed_image_repeat.size(0)):
                         img_tensor_i = sub_perturbed_image_repeat[i].unsqueeze(0) 
                         text_i = _i2t(args, chat, image_tensor=img_tensor_i)
-                        if isinstance(text_i, list):
-                            text_of_perturbed_imgs.extend(text_i)
-                        else:                    
-                            text_of_perturbed_imgs.append(text_i)
+                    if isinstance(text_i, list):
+                        text_of_perturbed_imgs.extend(text_i)
+                    else:                    
+                        text_of_perturbed_imgs.append(text_i)
+                    
+                        del img_tensor_i
+                        del text_i
+                        gc.collect()
+                        torch.cuda.empty_cache()
+
+            # for query_idx in range(num_query//num_sub_query):
+            #     sub_perturbed_image_repeat = perturbed_image_repeat[num_sub_query * (query_idx) : num_sub_query * (query_idx+1)]                
+            #     with torch.no_grad():
+            #         for i in range(sub_perturbed_image_repeat.size(0)):
+            #             img_tensor_i = sub_perturbed_image_repeat[i].unsqueeze(0) 
+            #             text_i = _i2t(args, chat, image_tensor=img_tensor_i)
+            #             if isinstance(text_i, list):
+            #                 text_of_perturbed_imgs.extend(text_i)
+            #             else:                    
+            #                 text_of_perturbed_imgs.append(text_i)
                         
                         # del img_tensor_i
                         # del text_i
