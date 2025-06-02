@@ -337,7 +337,9 @@ def main():
             #             torch.cuda.empty_cache()
 
             text_of_perturbed_imgs = []
+            print(f"Executing sub-query {i}-th image - {step_idx}-th step")
             for query_idx in range(num_query//num_sub_query):
+                print(f"Executing query_idx {i}")
                 sub_perturbed_image_repeat = perturbed_image_repeat[num_sub_query * (query_idx) : num_sub_query * (query_idx+1)]
                 print("sub_perturbed_image_repeat size:", sub_perturbed_image_repeat.size())
                 with torch.no_grad():
