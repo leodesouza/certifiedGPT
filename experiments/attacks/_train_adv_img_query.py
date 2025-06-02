@@ -130,8 +130,8 @@ def main():
     parser.add_argument("--query", default='[vqa] what is the content of this image? ', type=str)
     
     parser.add_argument("--delta", default="normal", type=str)
-    parser.add_argument("--num_query", default=20, type=int)
-    parser.add_argument("--num_sub_query", default=5, type=int)
+    parser.add_argument("--num_query", default=1, type=int)
+    parser.add_argument("--num_sub_query", default=1, type=int)
     parser.add_argument("--sigma", default=8, type=float)
     
     parser.add_argument("--wandb", action="store_true")
@@ -320,21 +320,29 @@ def main():
             #             gc.collect()
             #             torch.cuda.empty_cache()
 
-            for query_idx in range(num_query//num_sub_query):
-                sub_perturbed_image_repeat = perturbed_image_repeat[num_sub_query * (query_idx) : num_sub_query * (query_idx+1)]                
-                with torch.no_grad():
-                    for i in range(sub_perturbed_image_repeat.size(0)):
-                        img_tensor_i = sub_perturbed_image_repeat[i].unsqueeze(0) 
-                        text_i = _i2t(args, chat, image_tensor=img_tensor_i)
-                        if isinstance(text_i, list):
-                            text_of_perturbed_imgs.extend(text_i)
-                        else:                    
-                            text_of_perturbed_imgs.append(text_i)
+            # for query_idx in range(num_query//num_sub_query):
+            #     sub_perturbed_image_repeat = perturbed_image_repeat[num_sub_query * (query_idx) : num_sub_query * (query_idx+1)]                
+            #     with torch.no_grad():
+            #         for i in range(sub_perturbed_image_repeat.size(0)):
+            #             img_tensor_i = sub_perturbed_image_repeat[i].unsqueeze(0) 
+            #             text_i = _i2t(args, chat, image_tensor=img_tensor_i)
+            #             if isinstance(text_i, list):
+            #                 text_of_perturbed_imgs.extend(text_i)
+            #             else:                    
+            #                 text_of_perturbed_imgs.append(text_i)
                         
-                        del img_tensor_i
-                        del text_i
-                        gc.collect()
-                        torch.cuda.empty_cache()
+            #             del img_tensor_i
+            #             del text_i
+            #             gc.collect()
+            #             torch.cuda.empty_cache()
+
+            text_of_perturbed_imgs = []
+            for query_idx in range(num_query//num_sub_query):
+                sub_perturbed_image_repeat = perturbed_image_repeat[num_sub_query * (query_idx) : num_sub_query * (query_idx+1)]
+                print("sub_perturbed_image_repeat size:", sub_perturbed_image_repeat.size())
+                with torch.no_grad():
+                    text_of_sub_perturbed_imgs = _i2t(args, chat, image_tensor=sub_perturbed_image_repeat)
+                text_of_perturbed_imgs.extend(text_of_sub_perturbed_imgs)
             
             # step 2. estimate grad
             with torch.no_grad():
