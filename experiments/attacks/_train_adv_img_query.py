@@ -62,7 +62,7 @@ def to_tensor(pic):
 transform = torchvision.transforms.Compose(
     [   
         torchvision.transforms.Lambda(lambda img: img.convert("RGB")),
-        torchvision.transforms.Resize(size=(224, 224), interpolation=torchvision.transforms.InterpolationMode.BICUBIC, max_size=None, antialias='warn'),
+        torchvision.transforms.Resize(size=(448, 448), interpolation=torchvision.transforms.InterpolationMode.BICUBIC, max_size=None, antialias='warn'),
         torchvision.transforms.Lambda(lambda img: to_tensor(img)),
         # torchvision.transforms.ToTensor(),
     ]
