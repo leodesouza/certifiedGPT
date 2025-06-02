@@ -320,31 +320,24 @@ def main():
             #             gc.collect()
             #             torch.cuda.empty_cache()
 
-            # for query_idx in range(num_query//num_sub_query):
-            #     sub_perturbed_image_repeat = perturbed_image_repeat[num_sub_query * (query_idx) : num_sub_query * (query_idx+1)]                
-            #     with torch.no_grad():
-            #         for i in range(sub_perturbed_image_repeat.size(0)):
-            #             img_tensor_i = sub_perturbed_image_repeat[i].unsqueeze(0) 
-            #             text_i = _i2t(args, chat, image_tensor=img_tensor_i)
-            #             if isinstance(text_i, list):
-            #                 text_of_perturbed_imgs.extend(text_i)
-            #             else:                    
-            #                 text_of_perturbed_imgs.append(text_i)
+            print(f"Executing sub-query {i}-th image - {step_idx}-th step")
+            for query_idx in range(num_query//num_sub_query):
+                sub_perturbed_image_repeat = perturbed_image_repeat[num_sub_query * (query_idx) : num_sub_query * (query_idx+1)]                
+                print(f"Executing query_idx {i}")
+                with torch.no_grad():
+                    for i in range(sub_perturbed_image_repeat.size(0)):
+                        img_tensor_i = sub_perturbed_image_repeat[i].unsqueeze(0) 
+                        print(f"passing img_tensor_i MiniGPT-4 - size {img_tensor_i.size()}")
+                        text_i = _i2t(args, chat, image_tensor=img_tensor_i)
+                        if isinstance(text_i, list):
+                            text_of_perturbed_imgs.extend(text_i)
+                        else:                    
+                            text_of_perturbed_imgs.append(text_i)
                         
             #             del img_tensor_i
             #             del text_i
             #             gc.collect()
-            #             torch.cuda.empty_cache()
-
-            text_of_perturbed_imgs = []
-            print(f"Executing sub-query {i}-th image - {step_idx}-th step")
-            for query_idx in range(num_query//num_sub_query):
-                print(f"Executing query_idx {i}")
-                sub_perturbed_image_repeat = perturbed_image_repeat[num_sub_query * (query_idx) : num_sub_query * (query_idx+1)]
-                print("sub_perturbed_image_repeat size:", sub_perturbed_image_repeat.size())
-                with torch.no_grad():
-                    text_of_sub_perturbed_imgs = _i2t(args, chat, image_tensor=sub_perturbed_image_repeat)
-                text_of_perturbed_imgs.extend(text_of_sub_perturbed_imgs)
+            #             torch.cuda.empty_cache()      
             
             # step 2. estimate grad
             with torch.no_grad():
