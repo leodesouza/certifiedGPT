@@ -119,11 +119,11 @@ def main():
     )
     
     parser.add_argument("--batch_size", default=1, type=int)
-    parser.add_argument("--num_samples", default=5, type=int)
+    parser.add_argument("--num_samples", default=1, type=int)
     parser.add_argument("--input_res", default=448, type=int)
     parser.add_argument("--alpha", default=1.0, type=float)
     parser.add_argument("--epsilon", default=8, type=int)
-    parser.add_argument("--steps", default=1, type=int)
+    parser.add_argument("--steps", default=5, type=int)
     parser.add_argument("--output", default="/home/swf_developer/storage/attack/query_based_attack_output/output.txt", type=str)
     parser.add_argument("--data_path", default="temp", type=str)
     parser.add_argument("--text_path", default="/home/swf_developer/storage/attack/img_2_txt_output/minigpt4_tmp_pred.txt", type=str)
@@ -266,8 +266,9 @@ def main():
     wandb.init(project=args.wandb_project_name, name=args.wandb_run_name, reinit=True)                
     
     for i, ((image, _), (image_clean, _)) in enumerate(zip(data_loader, clean_data_loader)):
-        if batch_size * (i+1) > args.num_samples:
-            break
+        if i % 50 != 0:
+            continue
+                
         image = image.to(device)  # size=(10, 3, args.input_res, args.input_res)
         image_clean = image_clean.to(device)  # size=(10, 3, 224, 224)
         
@@ -285,7 +286,8 @@ def main():
         
         # MF-tt
         for step_idx in range(args.steps):
-            print(f"{i}-th image - {step_idx}-th step")            
+            print(f"{i}-th image - {step_idx}-th step")    
+
             # step 1. obtain purturbed images
             if step_idx == 0:
                 image_repeat      = image.repeat(num_query, 1, 1, 1)  # size = (num_query x batch_size, 3, args.input_res, args.input_res)                
@@ -299,31 +301,29 @@ def main():
                 adv_text_features     = adv_vit_text_features_in_current_step
                 torch.cuda.empty_cache()
                 
-            query_noise            = torch.randn_like(image_repeat).sign() # Rademacher noise
+            # Rademacher noise distribution
+            query_noise = torch.randn_like(image_repeat).sign()
+
             # limits the values in a tensor to a specified range.
             perturbed_image_repeat = torch.clamp(image_repeat + (sigma * query_noise), 0.0, 255.0)  # size = (num_query x batch_size, 3, args.input_res, args.input_res)
             
             # num_query is obtained via serveral iterations
-            text_of_perturbed_imgs = []           
-
-            print(f"Executing sub-query {i}-th image - {step_idx}-th step")
+            text_of_perturbed_imgs = []                       
             for query_idx in range(num_query//num_sub_query):
-                sub_perturbed_image_repeat = perturbed_image_repeat[num_sub_query * (query_idx) : num_sub_query * (query_idx+1)]                
-                print(f"Executing query_idx {i}")
+                sub_perturbed_image_repeat = perturbed_image_repeat[num_sub_query * (query_idx) : num_sub_query * (query_idx+1)]                                
                 with torch.no_grad():
                     for i in range(sub_perturbed_image_repeat.size(0)):
-                        img_tensor_i = sub_perturbed_image_repeat[i].unsqueeze(0) 
-                        print(f"passing img_tensor_i MiniGPT-4 - size {img_tensor_i.size()}")
+                        img_tensor_i = sub_perturbed_image_repeat[i].unsqueeze(0)                         
                         text_i = _i2t(args, chat, image_tensor=img_tensor_i)
                         if isinstance(text_i, list):
                             text_of_perturbed_imgs.extend(text_i)
                         else:                    
                             text_of_perturbed_imgs.append(text_i)
                         
-            #             del img_tensor_i
-            #             del text_i
-            #             gc.collect()
-            #             torch.cuda.empty_cache()      
+                        del img_tensor_i
+                        del text_i
+                        gc.collect()
+                        torch.cuda.empty_cache()      
             
             # step 2. estimate grad
             with torch.no_grad():
@@ -336,11 +336,12 @@ def main():
             print("adv_text_features size:", adv_text_features.size())
             print("tgt_text_features size:", tgt_text_features.size())
             
-            coefficient = torch.sum((perturb_text_features - adv_text_features) * tgt_text_features, dim=-1)  # size = (num_query * batch_size)
+            # computes a projection coefficient
+            coefficient = torch.sum((perturb_text_features - adv_text_features) * tgt_text_features, dim=-1)
             coefficient = coefficient.reshape(num_query, batch_size, 1, 1, 1)
             query_noise = query_noise.reshape(num_query, batch_size, 3, args.input_res, args.input_res)
-            pseudo_gradient = coefficient * query_noise / sigma # size = (num_query, batch_size, 3, args.input_res, args.input_res)
-            pseudo_gradient = pseudo_gradient.mean(0) # size = (bs, 3, args.input_res, args.input_res)
+            pseudo_gradient = coefficient * query_noise / sigma 
+            pseudo_gradient = pseudo_gradient.mean(0) 
             
             # step 3. log metrics
             delta_data = torch.clamp(delta + alpha * torch.sign(pseudo_gradient), min=-epsilon, max=epsilon)
