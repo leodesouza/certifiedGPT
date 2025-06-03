@@ -267,6 +267,7 @@ def main():
     wandb.init(project=args.wandb_project_name, name=args.wandb_run_name, reinit=True)                
     
     print("Start attack..")
+    start_time = time.time()                
     for i, ((image, _), (image_clean, _)) in enumerate(zip(data_loader, clean_data_loader)):
         # if i % 50 != 0:
         #     continue
@@ -290,9 +291,7 @@ def main():
         better_flag = 0
         
         # MF-tt
-        for step_idx in range(args.steps):
-            start_time = time.time()
-            print(f"Start {step_idx}-th step")    
+        for step_idx in range(args.steps):            
             # step 1. obtain purturbed images
             if step_idx == 0:
                 image_repeat      = image.repeat(num_query, 1, 1, 1)  # size = (num_query x batch_size, 3, args.input_res, args.input_res)                
@@ -408,11 +407,7 @@ def main():
                 adv_txt_tgt_txt_score_in_current_step_vitl14 = torch.mean(torch.sum(text_features_of_adv_image_in_current_step_vitl14 * tgt_text_features_vitl14, dim=1)).item()
                 if adv_txt_tgt_txt_score_in_current_step_vitl14 > query_attack_results_vitl14[i]:
                     query_attack_results_vitl14[i] = adv_txt_tgt_txt_score_in_current_step_vitl14
-                    # ----------------
-                end_time = time.time()
-                duration = (end_time - start_time) / 60
-                print(f"{step_idx}-th step ended. {duration:2f} minutes")    
-            
+                    # ----------------                            
         
         wandb.log(
             {   
@@ -433,6 +428,7 @@ def main():
             }
         )
 
+        
         # log text
         print("best caption of current image:", best_caption)
         with open(os.path.join(args.output), 'a') as f:
@@ -442,5 +438,9 @@ def main():
             else:
                 f.write(best_caption)
         f.close()
+    end_time = time.time()
+    duration = (end_time - start_time) / 60
+    # print(f"{step_idx}-th step ended. {duration:2f} minutes")    
+    print(f"attack ended. {duration:2f} minutes")    
 if __name__ == "__main__":
     main()
