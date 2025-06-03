@@ -406,9 +406,9 @@ def main():
                 if adv_txt_tgt_txt_score_in_current_step_vitl14 > query_attack_results_vitl14[i]:
                     query_attack_results_vitl14[i] = adv_txt_tgt_txt_score_in_current_step_vitl14
                     # ----------------
-            end_time = time.time()
-            duration = (end_time - start_time) / 60
-            print(f"{step_idx}-th step ended. {duration:2.f} minutes")    
+                end_time = time.time()
+                duration = (end_time - start_time) / 60
+                print(f"{step_idx}-th step ended. {duration:2f} minutes")    
             
         
         wandb.log(
