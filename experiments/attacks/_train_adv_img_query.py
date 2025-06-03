@@ -268,8 +268,11 @@ def main():
     
     print("Start attack..")
     for i, ((image, _), (image_clean, _)) in enumerate(zip(data_loader, clean_data_loader)):
-        if i % 50 != 0:
-            continue
+        # if i % 50 != 0:
+        #     continue
+
+        if batch_size * (i+1) > args.num_samples:
+            break
 
         print(f"{i}-th image")                
         image = image.to(device)  # size=(10, 3, args.input_res, args.input_res)
