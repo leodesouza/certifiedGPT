@@ -265,10 +265,12 @@ def main():
     wandb.login(key=config.run.wandb_api_key)       
     wandb.init(project=args.wandb_project_name, name=args.wandb_run_name, reinit=True)                
     
+    print("Start attack..")
     for i, ((image, _), (image_clean, _)) in enumerate(zip(data_loader, clean_data_loader)):
         if i % 50 != 0:
             continue
-                
+
+        print(f"{i}-th image")                
         image = image.to(device)  # size=(10, 3, args.input_res, args.input_res)
         image_clean = image_clean.to(device)  # size=(10, 3, 224, 224)
         
@@ -276,8 +278,7 @@ def main():
         adv_text_features = adv_vit_text_features[batch_size * (i): batch_size * (i+1)]        
         tgt_text_features = target_text_features[batch_size * (i): batch_size * (i+1)]
         
-        # ------------------- random gradient-free method
-        print("init delta with diff(adv-clean)")
+        # ------------------- random gradient-free method        
         delta = torch.tensor((image - image_clean))
         torch.cuda.empty_cache()
         
@@ -286,8 +287,7 @@ def main():
         
         # MF-tt
         for step_idx in range(args.steps):
-            print(f"{i}-th image - {step_idx}-th step")    
-
+            print(f"{step_idx}-th step")    
             # step 1. obtain purturbed images
             if step_idx == 0:
                 image_repeat      = image.repeat(num_query, 1, 1, 1)  # size = (num_query x batch_size, 3, args.input_res, args.input_res)                
@@ -332,9 +332,9 @@ def main():
                 perturb_text_features = perturb_text_features / perturb_text_features.norm(dim=1, keepdim=True)
                 perturb_text_features = perturb_text_features.detach()
 
-            print("perturb_text_features size:", perturb_text_features.size())
-            print("adv_text_features size:", adv_text_features.size())
-            print("tgt_text_features size:", tgt_text_features.size())
+            # print("perturb_text_features size:", perturb_text_features.size())
+            # print("adv_text_features size:", adv_text_features.size())
+            # print("tgt_text_features size:", tgt_text_features.size())
             
             # computes a projection coefficient
             coefficient = torch.sum((perturb_text_features - adv_text_features) * tgt_text_features, dim=-1)
@@ -346,8 +346,8 @@ def main():
             # step 3. log metrics
             delta_data = torch.clamp(delta + alpha * torch.sign(pseudo_gradient), min=-epsilon, max=epsilon)
             delta.data = delta_data
-            print(f"img: {i:3d}-step {step_idx} max  delta", torch.max(torch.abs(delta)).item())
-            print(f"img: {i:3d}-step {step_idx} mean delta", torch.mean(torch.abs(delta)).item())
+            # print(f"img: {i:3d}-step {step_idx} max  delta", torch.max(torch.abs(delta)).item())
+            # print(f"img: {i:3d}-step {step_idx} mean delta", torch.mean(torch.abs(delta)).item())
             
             adv_image_in_current_step = torch.clamp(image_clean + delta, 0.0, 255.0)
             
