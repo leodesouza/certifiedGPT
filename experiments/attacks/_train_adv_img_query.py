@@ -17,6 +17,7 @@ import torchvision
 from PIL import Image
 import wandb
 import copy
+import time
 
 from graphs.models.minigpt4.conversation.conversation import Chat, CONV_VISION_LLama2, CONV_VISION_Vicuna0
 # imports modules for registration
@@ -287,7 +288,8 @@ def main():
         
         # MF-tt
         for step_idx in range(args.steps):
-            print(f"{step_idx}-th step")    
+            start_time = time.time()
+            print(f"Start {step_idx}-th step")    
             # step 1. obtain purturbed images
             if step_idx == 0:
                 image_repeat      = image.repeat(num_query, 1, 1, 1)  # size = (num_query x batch_size, 3, args.input_res, args.input_res)                
@@ -404,7 +406,10 @@ def main():
                 if adv_txt_tgt_txt_score_in_current_step_vitl14 > query_attack_results_vitl14[i]:
                     query_attack_results_vitl14[i] = adv_txt_tgt_txt_score_in_current_step_vitl14
                     # ----------------
-
+            end_time = time.time()
+            duration = (end_time - start_time) / 60
+            print(f"{step_idx}-th step ended. {duration:2.f} minutes")    
+            
         
         wandb.log(
             {   
