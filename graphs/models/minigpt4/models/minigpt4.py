@@ -151,7 +151,7 @@ class MiniGPT4(MiniGPTBase):
         vit_model = cfg.get("vit_model", "eva_clip_g")
         q_former_model = cfg.get("q_former_model", "https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP2/blip2_pretrained_flant5xxl.pth")        
                 
-        img_size = cfg.model.image_size if "image_size" in cfg.model else 448
+        img_size = cfg.image_size if "image_size" in cfg else 448
         num_query_token = cfg.get("num_query_token")
         llama_model = cfg.get("llama_model")
 
