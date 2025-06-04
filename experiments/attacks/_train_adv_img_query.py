@@ -213,8 +213,7 @@ def main():
     query_attack_results = torch.sum(adv_vit_text_features * target_text_features, dim=1).squeeze().detach().cpu().numpy()
 
     print(f"query_attack_results esim: {query_attack_results}")        
-    print(f"vit_attack_results esim : {vit_attack_results}") 
-    raise ValueError("teste")           
+    print(f"vit_attack_results esim : {vit_attack_results}")     
     assert (vit_attack_results == query_attack_results).all()
     
     ## other arch
