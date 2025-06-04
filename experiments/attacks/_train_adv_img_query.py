@@ -207,6 +207,8 @@ def main():
 
     # baseline results
     vit_attack_results   = torch.sum(adv_vit_text_features * target_text_features, dim=1).squeeze().detach().cpu().numpy()
+    print(f"adv_vit_text_features: {adv_vit_text_features.size()}")
+    print(f"target_text_features: {target_text_features.size()}")
     query_attack_results = torch.sum(adv_vit_text_features * target_text_features, dim=1).squeeze().detach().cpu().numpy()
     assert (vit_attack_results == query_attack_results).all()
     
@@ -367,7 +369,7 @@ def main():
                 
                 # update results
                 print(f"query_attack_results.shape: {query_attack_results.shape}")
-                
+
                 if adv_txt_tgt_txt_score_in_current_step > query_attack_results[i]:
                     query_attack_results[i] = adv_txt_tgt_txt_score_in_current_step
                     best_caption = text_of_adv_image_in_current_step[0]
