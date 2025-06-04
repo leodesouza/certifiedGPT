@@ -111,7 +111,7 @@ def main():
     )
     
     parser.add_argument("--batch_size", default=1, type=int)
-    parser.add_argument("--num_samples", default=5, type=int)
+    parser.add_argument("--num_samples", default=2, type=int)
     parser.add_argument("--input_res", default=16, type=int)
     parser.add_argument("--alpha", default=1.0, type=float)
     parser.add_argument("--epsilon", default=8, type=int)    
@@ -121,7 +121,7 @@ def main():
     parser.add_argument("--query", default='what is the content of this image?', type=str)
     
     parser.add_argument("--delta", default="normal", type=str)
-    parser.add_argument("--steps", default=1, type=int)
+    parser.add_argument("--steps", default=2, type=int)
     parser.add_argument("--num_query", default=10, type=int)
     parser.add_argument("--num_sub_query", default=5, type=int)
     parser.add_argument("--sigma", default=8, type=float)
