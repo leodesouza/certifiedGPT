@@ -77,9 +77,7 @@ class ImageFolderWithPaths(torchvision.datasets.ImageFolder):
 def _i2t(args, chat, image_tensor):
     
     # normalize image here
-    image_tensor = normalize(image_tensor / 255.0)
-    
-    
+    image_tensor = normalize(image_tensor / 255.0)        
     conv = CONV_VISION_Vicuna0.copy()     
     num_beams = 1
     temperature = 1.0                               
@@ -113,7 +111,7 @@ def main():
     )
     
     parser.add_argument("--batch_size", default=1, type=int)
-    parser.add_argument("--num_samples", default=1, type=int)
+    parser.add_argument("--num_samples", default=5, type=int)
     parser.add_argument("--input_res", default=16, type=int)
     parser.add_argument("--alpha", default=1.0, type=float)
     parser.add_argument("--epsilon", default=8, type=int)    
@@ -123,7 +121,7 @@ def main():
     parser.add_argument("--query", default='what is the content of this image?', type=str)
     
     parser.add_argument("--delta", default="normal", type=str)
-    parser.add_argument("--steps", default=2, type=int)
+    parser.add_argument("--steps", default=1, type=int)
     parser.add_argument("--num_query", default=10, type=int)
     parser.add_argument("--num_sub_query", default=5, type=int)
     parser.add_argument("--sigma", default=8, type=float)
@@ -209,13 +207,13 @@ def main():
         target_text_features = target_text_features.detach()
 
     # baseline results
-    vit_attack_results   = torch.sum(adv_vit_text_features * target_text_features, dim=1).squeeze().detach().cpu().numpy()
     print(f"adv_vit_text_features: {adv_vit_text_features.size()}")
     print(f"target_text_features: {target_text_features.size()}")    
+    vit_attack_results   = torch.sum(adv_vit_text_features * target_text_features, dim=1).squeeze().detach().cpu().numpy()    
     query_attack_results = torch.sum(adv_vit_text_features * target_text_features, dim=1).squeeze().detach().cpu().numpy()
+
     print(f"query_attack_results esim: {query_attack_results}")        
-    print(f"vit_attack_results esim : {vit_attack_results}")        
-    raise ValueError("teste")
+    print(f"vit_attack_results esim : {vit_attack_results}")            
     assert (vit_attack_results == query_attack_results).all()
     
     ## other arch
@@ -343,10 +341,6 @@ def main():
                 perturb_text_features = clip_img_model_vitb32.encode_text(perturb_text_token)
                 perturb_text_features = perturb_text_features / perturb_text_features.norm(dim=1, keepdim=True)
                 perturb_text_features = perturb_text_features.detach()
-
-            # print("perturb_text_features size:", perturb_text_features.size())
-            # print("adv_text_features size:", adv_text_features.size())
-            # print("tgt_text_features size:", tgt_text_features.size())
             
             # computes a projection coefficient and measures how much the movement from perturb_text_features to adv_text_features aligns with tgt_text_features.             
             coefficient = torch.sum((perturb_text_features - adv_text_features) * tgt_text_features, dim=-1)
@@ -360,7 +354,8 @@ def main():
             delta.data = delta_data
             print(f"img: {i:3d}-step {step_idx} max  delta", torch.max(torch.abs(delta)).item())
             print(f"img: {i:3d}-step {step_idx} mean delta", torch.mean(torch.abs(delta)).item())
-            
+
+            # clean image            
             adv_image_in_current_step = torch.clamp(image_clean + delta, 0.0, 255.0)
             
             # log sim
