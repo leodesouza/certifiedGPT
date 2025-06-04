@@ -120,11 +120,11 @@ def main():
     )
     
     parser.add_argument("--batch_size", default=1, type=int)
-    parser.add_argument("--num_samples", default=1, type=int)
+    parser.add_argument("--num_samples", default=2, type=int)
     parser.add_argument("--input_res", default=448, type=int)
     parser.add_argument("--alpha", default=1.0, type=float)
     parser.add_argument("--epsilon", default=8, type=int)
-    parser.add_argument("--steps", default=5, type=int)
+    parser.add_argument("--steps", default=2, type=int)
     parser.add_argument("--output", default="/home/swf_developer/storage/attack/query_based_attack_output/output.txt", type=str)
     parser.add_argument("--data_path", default="temp", type=str)
     parser.add_argument("--text_path", default="/home/swf_developer/storage/attack/img_2_txt_output/minigpt4_tmp_pred.txt", type=str)
@@ -209,6 +209,7 @@ def main():
     vit_attack_results   = torch.sum(adv_vit_text_features * target_text_features, dim=1).squeeze().detach().cpu().numpy()
     print(f"adv_vit_text_features: {adv_vit_text_features.size()}")
     print(f"target_text_features: {target_text_features.size()}")
+    raise ValueError("stop...")
     query_attack_results = torch.sum(adv_vit_text_features * target_text_features, dim=1).squeeze().detach().cpu().numpy()
     assert (vit_attack_results == query_attack_results).all()
     
