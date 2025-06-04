@@ -120,7 +120,7 @@ def main():
     )
     
     parser.add_argument("--batch_size", default=1, type=int)
-    parser.add_argument("--num_samples", default=2, type=int)
+    parser.add_argument("--num_samples", default=1, type=int)
     parser.add_argument("--input_res", default=448, type=int)
     parser.add_argument("--alpha", default=1.0, type=float)
     parser.add_argument("--epsilon", default=8, type=int)
@@ -206,10 +206,10 @@ def main():
         target_text_features = target_text_features.detach()
 
     # baseline results
-    vit_attack_results   = torch.sum(adv_vit_text_features * target_text_features, dim=1).squeeze().detach().cpu().numpy()
+    vit_attack_results   = torch.sum(adv_vit_text_features * target_text_features, dim=1).flatten().detach().cpu().numpy()
     print(f"adv_vit_text_features: {adv_vit_text_features.size()}")
     print(f"target_text_features: {target_text_features.size()}")    
-    query_attack_results = torch.sum(adv_vit_text_features * target_text_features, dim=1).squeeze().detach().cpu().numpy()
+    query_attack_results = torch.sum(adv_vit_text_features * target_text_features, dim=1).flatten().detach().cpu().numpy()
     assert (vit_attack_results == query_attack_results).all()
     
     ## other arch
