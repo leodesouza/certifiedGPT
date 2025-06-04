@@ -124,7 +124,7 @@ def main():
     
     parser.add_argument("--delta", default="normal", type=str)
     parser.add_argument("--steps", default=2, type=int)
-    parser.add_argument("--num_query", default=20, type=int)
+    parser.add_argument("--num_query", default=10, type=int)
     parser.add_argument("--num_sub_query", default=5, type=int)
     parser.add_argument("--sigma", default=8, type=float)
     
@@ -209,10 +209,12 @@ def main():
         target_text_features = target_text_features.detach()
 
     # baseline results
-    vit_attack_results   = torch.sum(adv_vit_text_features * target_text_features, dim=1).flatten().detach().cpu().numpy()
+    vit_attack_results   = torch.sum(adv_vit_text_features * target_text_features, dim=1).squeeze().detach().cpu().numpy()
     print(f"adv_vit_text_features: {adv_vit_text_features.size()}")
     print(f"target_text_features: {target_text_features.size()}")    
-    query_attack_results = torch.sum(adv_vit_text_features * target_text_features, dim=1).flatten().detach().cpu().numpy()
+    query_attack_results = torch.sum(adv_vit_text_features * target_text_features, dim=1).squeeze().detach().cpu().numpy()
+    print(f"query_attack_results shape: {query_attack_results.size()}")    
+    print(f"query_attack_results: {query_attack_results}")    
     assert (vit_attack_results == query_attack_results).all()
     
     ## other arch
@@ -345,7 +347,7 @@ def main():
             # print("adv_text_features size:", adv_text_features.size())
             # print("tgt_text_features size:", tgt_text_features.size())
             
-            # computes a projection coefficient
+            # computes a projection coefficient and measures how much the movement from perturb_text_features to adv_text_features aligns with tgt_text_features.             
             coefficient = torch.sum((perturb_text_features - adv_text_features) * tgt_text_features, dim=-1)
             coefficient = coefficient.reshape(num_query, batch_size, 1, 1, 1)
             query_noise = query_noise.reshape(num_query, batch_size, 3, args.input_res, args.input_res)
@@ -355,8 +357,8 @@ def main():
             # step 3. log metrics
             delta_data = torch.clamp(delta + alpha * torch.sign(pseudo_gradient), min=-epsilon, max=epsilon)
             delta.data = delta_data
-            # print(f"img: {i:3d}-step {step_idx} max  delta", torch.max(torch.abs(delta)).item())
-            # print(f"img: {i:3d}-step {step_idx} mean delta", torch.mean(torch.abs(delta)).item())
+            print(f"img: {i:3d}-step {step_idx} max  delta", torch.max(torch.abs(delta)).item())
+            print(f"img: {i:3d}-step {step_idx} mean delta", torch.mean(torch.abs(delta)).item())
             
             adv_image_in_current_step = torch.clamp(image_clean + delta, 0.0, 255.0)
             
@@ -372,6 +374,7 @@ def main():
                 
                 # update results
                 print(f"query_attack_results.shape: {query_attack_results.shape}")
+                print(f"adv_txt_tgt_txt_score_in_current_step.shape: {adv_txt_tgt_txt_score_in_current_step.shape}")
 
                 if adv_txt_tgt_txt_score_in_current_step > query_attack_results[i]:
                     query_attack_results[i] = adv_txt_tgt_txt_score_in_current_step
