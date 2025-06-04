@@ -60,14 +60,7 @@ def to_tensor(pic):
     img = img.permute((2, 0, 1)).contiguous()
     return img.to(dtype=torch.get_default_dtype())
 
-transform = torchvision.transforms.Compose(
-    [   
-        torchvision.transforms.Lambda(lambda img: img.convert("RGB")),
-        torchvision.transforms.Resize(size=(448, 448), interpolation=torchvision.transforms.InterpolationMode.BICUBIC, max_size=None, antialias='warn'),
-        torchvision.transforms.Lambda(lambda img: to_tensor(img)),
-        # torchvision.transforms.ToTensor(),
-    ]
-)
+
 normalize = torchvision.transforms.Compose(
     [   
         # torchvision.transforms.ToTensor(),
@@ -121,7 +114,7 @@ def main():
     
     parser.add_argument("--batch_size", default=1, type=int)
     parser.add_argument("--num_samples", default=1, type=int)
-    parser.add_argument("--input_res", default=448, type=int)
+    parser.add_argument("--input_res", default=224, type=int)
     parser.add_argument("--alpha", default=1.0, type=float)
     parser.add_argument("--epsilon", default=8, type=int)
     parser.add_argument("--steps", default=2, type=int)
@@ -166,6 +159,16 @@ def main():
     batch_size    = copy.deepcopy(args.batch_size)
     alpha         = args.alpha
     epsilon       = args.epsilon
+
+    image_size = config.datasets.evalvqav2.vis_processor.val.image_size
+    transform = torchvision.transforms.Compose(
+        [   
+            torchvision.transforms.Lambda(lambda img: img.convert("RGB")),
+            torchvision.transforms.Resize(size=(image_size, image_size), interpolation=torchvision.transforms.InterpolationMode.BICUBIC, max_size=None, antialias='warn'),
+            torchvision.transforms.Lambda(lambda img: to_tensor(img)),
+            # torchvision.transforms.ToTensor(),
+        ]
+    )
 
     # load adv image
     # adv_vit_data      = ImageFolderWithPaths(args.data_path, transform=transform)
