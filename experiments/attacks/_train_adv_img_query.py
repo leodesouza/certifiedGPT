@@ -369,6 +369,7 @@ def main():
                 adv_txt_tgt_txt_score_in_current_step = torch.mean(torch.sum(text_features_of_adv_image_in_current_step * tgt_text_features, dim=1)).item()
                 
                 # update results        
+                print(f"index: {i}")        
                 print(f"adv_txt_tgt_txt_score_in_current_step: {adv_txt_tgt_txt_score_in_current_step}")        
                 print(f"query_attack_results: {query_attack_results}")        
                 if adv_txt_tgt_txt_score_in_current_step > query_attack_results[i]:
