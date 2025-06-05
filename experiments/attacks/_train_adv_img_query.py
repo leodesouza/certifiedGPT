@@ -276,8 +276,7 @@ def main():
     start_time = time.time()                
     for i, ((image, _), (image_clean, _)) in enumerate(zip(data_loader, clean_data_loader)):
         # if i % 50 != 0:
-        #     continue
-
+        #     continue        
         if batch_size * (i+1) > args.num_samples:
             break
 
@@ -297,7 +296,8 @@ def main():
         better_flag = 0
         
         # MF-tt
-        for step_idx in range(args.steps):            
+        for step_idx in range(args.steps):      
+            print(f"step--: {i}")      
             # step 1. obtain purturbed images
             if step_idx == 0:
                 image_repeat      = image.repeat(num_query, 1, 1, 1)  # size = (num_query x batch_size, 3, args.input_res, args.input_res)                
