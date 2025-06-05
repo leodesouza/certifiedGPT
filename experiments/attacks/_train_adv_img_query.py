@@ -87,12 +87,13 @@ def _i2t(args, chat, image_tensor):
     chat.encode_img(img_list)  # img embeddings, size() = [bs, 32, 5120]                        
     chat.ask(args.query, conv)            
     
-    # max_new_tokens=300,
-    # max_length=2000
+    
     captions, _  = chat.answer(conv, 
                             img_list, 
                             num_beams=num_beams, 
-                            temperature=temperature)  
+                            temperature=temperature,
+                            max_new_tokens=300,
+                            max_length=2000)  
     return captions
 
 def main():
