@@ -92,8 +92,8 @@ def _i2t(args, chat, image_tensor):
                             img_list, 
                             num_beams=num_beams, 
                             temperature=temperature,
-                            max_new_tokens=20)  
-    # max_length=2000
+                            max_new_tokens=20,
+                            max_length=2000)    
     return captions
 
 def main():
