@@ -345,9 +345,16 @@ def main():
             
             # computes a projection coefficient and measures how much the movement from perturb_text_features to adv_text_features aligns with tgt_text_features.             
             coefficient = torch.sum((perturb_text_features - adv_text_features) * tgt_text_features, dim=-1)
+            print(f"coefficient: {coefficient}")
             coefficient = coefficient.reshape(num_query, batch_size, 1, 1, 1)
+            print(f"coefficient reshape: {coefficient}")
+
+            print(f"query_noise : {query_noise}")
             query_noise = query_noise.reshape(num_query, batch_size, 3, args.input_res, args.input_res)
+            print(f"query_noise reshape : {query_noise}")
+
             pseudo_gradient = coefficient * query_noise / sigma 
+            print(f"pseudo_gradient : {pseudo_gradient}")
             pseudo_gradient = pseudo_gradient.mean(0) 
             
             # step 3. log metrics
