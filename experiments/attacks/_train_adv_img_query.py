@@ -322,13 +322,18 @@ def main():
             for query_idx in range(num_query//num_sub_query):
                 sub_perturbed_image_repeat = perturbed_image_repeat[num_sub_query * (query_idx) : num_sub_query * (query_idx+1)]                                
                 with torch.no_grad():
-                    for i in range(sub_perturbed_image_repeat.size(0)):
-                        img_tensor_i = sub_perturbed_image_repeat[i].unsqueeze(0)                         
+                    for j in range(sub_perturbed_image_repeat.size(0)):
+                        img_tensor_i = sub_perturbed_image_repeat[j].unsqueeze(0)                         
                         text_i = _i2t(args, chat, image_tensor=img_tensor_i)
                         if isinstance(text_i, list):
                             text_of_perturbed_imgs.extend(text_i)
                         else:                    
-                            text_of_perturbed_imgs.append(text_i)                                                     
+                            text_of_perturbed_imgs.append(text_i)
+                        
+                        del img_tensor_i
+                        del text_i
+                        gc.collect()
+                        torch.cuda.empty_cache()      
             
             # step 2. estimate grad
             with torch.no_grad():
