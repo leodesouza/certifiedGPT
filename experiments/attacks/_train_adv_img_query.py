@@ -297,7 +297,7 @@ def main():
         
         # MF-tt
         for step_idx in range(args.steps):      
-            print(f"step--: {i}")      
+            print(f"step: {i}")      
             # step 1. obtain purturbed images
             if step_idx == 0:
                 image_repeat      = image.repeat(num_query, 1, 1, 1)  # size = (num_query x batch_size, 3, args.input_res, args.input_res)                
@@ -328,12 +328,7 @@ def main():
                         if isinstance(text_i, list):
                             text_of_perturbed_imgs.extend(text_i)
                         else:                    
-                            text_of_perturbed_imgs.append(text_i)
-                        
-                        del img_tensor_i
-                        del text_i
-                        gc.collect()
-                        torch.cuda.empty_cache()      
+                            text_of_perturbed_imgs.append(text_i)                                                     
             
             # step 2. estimate grad
             with torch.no_grad():
