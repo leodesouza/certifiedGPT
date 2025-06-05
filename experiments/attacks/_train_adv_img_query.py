@@ -356,6 +356,7 @@ def main():
             pseudo_gradient = coefficient * query_noise / sigma 
             print(f"pseudo_gradient : {pseudo_gradient.size()}")
             pseudo_gradient = pseudo_gradient.mean(0) 
+            print(f"pseudo_gradient : {pseudo_gradient}")
             
             # step 3. log metrics
             delta_data = torch.clamp(delta + alpha * torch.sign(pseudo_gradient), min=-epsilon, max=epsilon)
