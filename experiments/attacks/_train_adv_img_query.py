@@ -19,7 +19,7 @@ import wandb
 import copy
 import time
 
-from graphs.models.minigpt4.conversation.conversation import Chat, SmoothingChat,  CONV_VISION_Vicuna0
+from graphs.models.minigpt4.conversation.conversation import Chat, CONV_VISION_Vicuna0
 # imports modules for registration
 from common.config import Config
 from common.registry import registry
