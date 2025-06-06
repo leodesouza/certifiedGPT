@@ -233,13 +233,8 @@ def main():
         target_text_features = target_text_features.detach()
 
     # baseline results
-    print(f"adv_vit_text_features: {adv_vit_text_features.size()}")
-    print(f"target_text_features: {target_text_features.size()}")    
     vit_attack_results   = torch.sum(adv_vit_text_features * target_text_features, dim=1).squeeze().detach().cpu().numpy()    
-    query_attack_results = torch.sum(adv_vit_text_features * target_text_features, dim=1).squeeze().detach().cpu().numpy()
-
-    print(f"query_attack_results esim: {query_attack_results}")        
-    print(f"vit_attack_results esim : {vit_attack_results}")     
+    query_attack_results = torch.sum(adv_vit_text_features * target_text_features, dim=1).squeeze().detach().cpu().numpy()    
     assert (vit_attack_results == query_attack_results).all()
     
     ## other arch
