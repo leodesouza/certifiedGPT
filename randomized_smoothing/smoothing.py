@@ -73,8 +73,9 @@ class Smooth(object):
                 
 
     def _sample_noise(self, batch_sample: torch.tensor, num: int, batch_size, sample_type="estimation"):
-        question = batch_sample["instruction_input"]
         print(f'_sample_noise ============ instruction_input: {question}')
+        question = batch_sample["instruction_input"]
+        
         conv_temp = CONV_VISION_Vicuna0.copy()
         conv_temp.system = ""
 
