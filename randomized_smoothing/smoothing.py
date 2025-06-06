@@ -62,7 +62,7 @@ class Smooth(object):
             top = top2[0]
             text = sample_for_estimation[top][0]
             return text
-        
+    
     def is_similiar(self, text1, text2):
         similarity_threshold = 0.9
         embp = self.sentence_transformer.encode(text1, convert_to_tensor=True)
@@ -131,3 +131,8 @@ class Smooth(object):
     def logger(self):
         logger = registry.get_configuration_class("logger")
         return logger
+    
+    def generate(*args, **kwargs):
+        print('enter smoothing...')
+        print(f'args: {args}')
+        print(f'kwargs: {kwargs}')        

@@ -19,7 +19,7 @@ import wandb
 import copy
 import time
 
-from graphs.models.minigpt4.conversation.conversation import Chat, CONV_VISION_LLama2, CONV_VISION_Vicuna0
+from graphs.models.minigpt4.conversation.conversation import Chat, SmoothingChat,  CONV_VISION_LLama2, CONV_VISION_Vicuna0
 # imports modules for registration
 from common.config import Config
 from common.registry import registry
@@ -52,6 +52,21 @@ def seedEverything(seed=DEFAULT_RANDOM_SEED):
     seedBasic(seed)
     seedTorch(seed)
 # ------------------------------------------------------------------ #  
+
+def load_finetuned_model(config, model):
+
+    print("Loading finetuned VQAv2")
+    checkpoint = config.model.vqa_finetuned
+
+    print(f"Loading checkpoint from {checkpoint}")
+    checkpoint = torch.load(checkpoint, map_location=torch.device('cpu'))
+    
+
+    print("Loading model state")
+    model.load_state_dict(checkpoint['model_state_dict'], strict=False)
+    print("Loading model state. Done!")
+    
+    print(f"Numbers of treinable parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
 
 def to_tensor(pic):
     mode_to_nptype = {"I": np.int32, "I;16": np.int16, "F": np.float32}
@@ -143,8 +158,8 @@ def main():
     model = model_cls.from_config(model_config).to('cuda:{}'.format(args.gpu_id))
 
     vis_processor_cfg = config.datasets.evalvqav2.vis_processor.val
-    vis_processor     = registry.get_processor_class(vis_processor_cfg.name).from_config(vis_processor_cfg)       
-     
+    vis_processor     = registry.get_processor_class(vis_processor_cfg.name).from_config(vis_processor_cfg)
+             
     # use clip text coder for attack
     clip_img_model_rn50,   _ = clip.load("RN50", device=device, jit=False)
     clip_img_model_rn101,  _ = clip.load("RN101", device=device, jit=False)
@@ -178,7 +193,12 @@ def main():
     clean_data        = FlatImageDatasetWithPaths("/home/swf_developer/storage/attack/imagenet_clean_images/", transform=transform)
     clean_data_loader = torch.utils.data.DataLoader(clean_data, batch_size=batch_size, shuffle=False, num_workers=0)
     
-    chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id))     
+
+    if config.run.smoothing:
+        load_finetuned_model(config, model)
+        chat = SmoothingChat(model, vis_processor, device='cuda:{}'.format(args.gpu_id))     
+    else: 
+        chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id))     
     
     # org text/features
     adv_vit_text_path = args.text_path
