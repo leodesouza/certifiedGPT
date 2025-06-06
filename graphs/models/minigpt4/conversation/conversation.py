@@ -3,7 +3,6 @@ import time
 from threading import Thread
 from PIL import Image
 
-from randomized_smoothing.smoothing import Smooth
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, LlamaTokenizer
 from transformers import StoppingCriteria, StoppingCriteriaList, TextIteratorStreamer
@@ -138,11 +137,11 @@ CONV_VISION_minigptv2 = Conversation(
 )
 
 class Chat:
-    def __init__(self, model, vis_processor, device='cuda:0', stopping_criteria=None, noise_level=0):
+    def __init__(self, model, vis_processor, device='cuda:0', stopping_criteria=None, noise_level=0, smoothing=None):
         self.device = device
         self.model = model
         self.vis_processor = vis_processor
-        self.smoothing = Smooth(self.model, noise_level)
+        self.smoothing = smoothing(self.model, noise_level) if smoothing else None
 
         if stopping_criteria is not None:
             self.stopping_criteria = stopping_criteria
@@ -206,7 +205,11 @@ class Chat:
     def model_generate(self, *args, **kwargs):
         # for 8 bit and 16 bit compatibility
         with self.model.maybe_autocast():
-            output = self.model.llama_model.generate(*args, **kwargs)
+            if self.smoothing:
+                output = self.smoothing.generate(*args, **kwargs)            
+            else:
+                output = self.model.llama_model.generate(*args, **kwargs) 
+                  
         return output
 
     def encode_img(self, img_list):
@@ -282,93 +285,3 @@ class Chat:
         output_text = self.model.llama_tokenizer.decode(output_token, skip_special_tokens=True)
         return [output_text.strip()]
     
-
-class SmoothingChat:
-    def __init__(self, model, vis_processor, device='cuda:0', stopping_criteria=None, noise_level=0):
-        self.device = device
-        self.model = model
-        self.vis_processor = vis_processor
-        self.smoothing = Smooth(self.model, noise_level)
-
-        if stopping_criteria is not None:
-            self.stopping_criteria = stopping_criteria
-        else:
-            stop_words_ids = [torch.tensor([2]).to(self.device)]
-            self.stopping_criteria = StoppingCriteriaList([StoppingCriteriaSub(stops=stop_words_ids)])
-
-    def ask(self, text, conv):
-        if len(conv.messages) > 0 and conv.messages[-1][0] == conv.roles[0] \
-                and conv.messages[-1][1][-6:] == '</Img>':  # last message is image.            
-            conv.messages[-1][1] = ' '.join([conv.messages[-1][1], text])            
-        else:
-            conv.append_message(conv.roles[0], text)
-
-    def answer_prepare(self, conv, img_list, max_new_tokens=300, num_beams=1, min_length=1, top_p=0.9,
-                       repetition_penalty=1.05, length_penalty=1, temperature=1.0, max_length=2000):
-        conv.append_message(conv.roles[1], None)        
-        prompt = conv.get_prompt()         
-        embs = self.model.get_context_emb(prompt, img_list)
-        
-        current_max_len = embs.shape[1] + max_new_tokens
-        if current_max_len - max_length > 0:
-            print('Warning: The number of tokens in current conversation exceeds the max length. '
-                  'The model will not see the contexts outside the range.')
-        begin_idx = max(0, current_max_len - max_length)
-        embs = embs[:, begin_idx:]
-
-        generation_kwargs = dict(
-            inputs_embeds=embs,
-            max_new_tokens=max_new_tokens,
-            stopping_criteria=self.stopping_criteria,
-            num_beams=num_beams,
-            do_sample=True,
-            min_length=min_length,
-            top_p=top_p,
-            repetition_penalty=repetition_penalty,
-            length_penalty=length_penalty,
-            temperature=float(temperature),
-        )
-        return generation_kwargs
-
-    def answer(self, conv, img_list, **kargs):
-        generation_dict = self.answer_prepare(conv, img_list, **kargs)
-        output_token = self.model_generate(**generation_dict)[0]
-        output_text = self.model.llama_tokenizer.decode(output_token, skip_special_tokens=True)
-
-        output_text = output_text.split('###')[0]  # remove the stop sign '###'
-        output_text = output_text.split('Assistant:')[-1].strip()
-
-        conv.messages[-1][1] = output_text
-        return output_text, output_token.cpu().numpy()
-
-
-    def model_generate(self, *args, **kwargs):
-        # for 8 bit and 16 bit compatibility
-        with self.model.maybe_autocast():            
-            output = self.smoothing.generate(*args, **kwargs)
-        return output
-
-    def encode_img(self, img_list):
-        image = img_list[0]
-        img_list.pop(0)
-        if isinstance(image, str):  # is a image path
-            raw_image = Image.open(image).convert('RGB')
-            image = self.vis_processor(raw_image).unsqueeze(0).to(self.device)
-        elif isinstance(image, Image.Image):            
-            raw_image = image
-            image = self.vis_processor(raw_image).unsqueeze(0).to(self.device)
-        elif isinstance(image, torch.Tensor):
-            if len(image.shape) == 3:
-                image = image.unsqueeze(0)
-            image = image.to(self.device)
-
-        image_emb, _ = self.model.encode_img(image)
-        img_list.append(image_emb)
-
-    def upload_img(self, image, conv, img_list):
-        conv.append_message(conv.roles[0], "<Img><ImageHere></Img>")
-        img_list.append(image)
-        msg = "Received."
-
-        return msg
-
