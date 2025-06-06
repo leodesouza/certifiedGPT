@@ -153,12 +153,11 @@ class Chat:
             stop_words_ids = [torch.tensor([2]).to(self.device)]
             self.stopping_criteria = StoppingCriteriaList([StoppingCriteriaSub(stops=stop_words_ids)])
 
+    
     def ask(self, text, conv):
         self.inner_text = text        
         print('calling smoothed_decoder')
-        prediction = self.smoothing.predict(
-            self.inner_img_list[0], 100, 0.001, batch_size=48
-        )
+        prediction = self.smooth_decoder()
         if prediction == self.smoothing.ABSTAIN:
             self._abstain = True
             return
@@ -300,4 +299,20 @@ class Chat:
             output_token = self.model.llama_model.generate(**generation_kwargs)[0]
         output_text = self.model.llama_tokenizer.decode(output_token, skip_special_tokens=True)
         return [output_text.strip()]
+    
+    def smooth_decoder(self):
+        data = {
+            "image": self.inner_img_list[0],
+            "question_id": 0,
+            "instruction_input": self.inner_text,
+            "answer": "",
+            "image_id": 0
+        }
+
+        prediction = self.smoothing.predict(
+            data, 100, 0.001, batch_size=48
+        )
+
+        return prediction
+        
     
