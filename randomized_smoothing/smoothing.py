@@ -56,8 +56,8 @@ class Smooth(object):
         text1 = sample_for_estimation[top2[0]][0]
         text2 = sample_for_estimation[top2[1]][0]
 
-        print(f'text1:' {text1}')
-        print(f'text2:' {text2}')
+        print(f'text1: {text1}')
+        print(f'text2: {text2}')
                                         
         count1 = sum(1 for row in sample_for_estimation if row[0] == text1)
         count2 = sum(1 for row in sample_for_estimation if row[0] == text2)
