@@ -12,6 +12,7 @@ import random
 import clip
 from common.utils import FlatImageDatasetWithPaths
 import numpy as np
+from randomized_smoothing.smoothing import Smooth
 import torch
 import torchvision
 from PIL import Image
@@ -195,9 +196,10 @@ def main():
     
 
     if config.run.smoothing:
-        print('running with SmoothingChat ')
+        print('running smoothing chat')
         load_finetuned_model(config, model)
-        chat = SmoothingChat(model, vis_processor, device='cuda:{}'.format(args.gpu_id))     
+        smoothing = Smooth(model, sigma=config.run.noise_level)
+        chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id), smoothing=smoothing)     
     else: 
         print('running default Chat ')
         chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id))     
