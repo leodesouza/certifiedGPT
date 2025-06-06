@@ -6,7 +6,7 @@ from math import ceil
 from statsmodels.stats.proportion import proportion_confint
 
 from common.registry import registry
-from graphs.models.minigpt4.conversation.conversation import CONV_VISION_LLama2
+from graphs.models.minigpt4.conversation.conversation import CONV_VISION_Vicuna0
 
 from sentence_transformers import SentenceTransformer, util
 
@@ -74,7 +74,7 @@ class Smooth(object):
 
     def _sample_noise(self, batch_sample: torch.tensor, num: int, batch_size, sample_type="estimation"):
         question = batch_sample["instruction_input"]
-        conv_temp = CONV_VISION_LLama2.copy()
+        conv_temp = CONV_VISION_Vicuna0.copy()
         conv_temp.system = ""
 
         with torch.no_grad():
