@@ -185,8 +185,7 @@ def main():
         ]
     )
 
-    # load adv image
-    # adv_vit_data      = ImageFolderWithPaths(args.data_path, transform=transform)
+    # load adv image    
     adv_vit_data = FlatImageDatasetWithPaths("/home/swf_developer/storage/attack/imagenet_adv_images/images/", transform=transform)
     data_loader       = torch.utils.data.DataLoader(adv_vit_data, batch_size=batch_size, shuffle=False, num_workers=0)
 
@@ -194,22 +193,10 @@ def main():
     clean_data        = FlatImageDatasetWithPaths("/home/swf_developer/storage/attack/imagenet_clean_images/", transform=transform)
     clean_data_loader = torch.utils.data.DataLoader(clean_data, batch_size=batch_size, shuffle=False, num_workers=0)
     
-
-    # print(f'config.run.smoothing: {config.run.smoothing}')
-    # if config.run.smoothing == True:
-    #     print('running smoothing chat')
-    #     load_finetuned_model(config, model)
-    #     smoothing = Smooth(model, sigma=config.run.noise_level)
-    #     chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id), smoothing=smoothing)     
-    # else: 
-    #     print('running default Chat ')
-    #     chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id))     
     
-    load_finetuned_model(config, model)
-    # smoothing = Smooth(model, sigma=config.run.noise_level)    
+    load_finetuned_model(config, model)    
     chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id), noise_level=config.run.noise_level, smoothing=Smooth)     
-    
-    
+        
     # org text/features
     adv_vit_text_path = args.text_path
     with open(os.path.join(adv_vit_text_path), 'r') as f:

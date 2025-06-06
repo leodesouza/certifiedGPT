@@ -143,6 +143,9 @@ class Chat:
         self.vis_processor = vis_processor
         print(f'loading chat with noise level={noise_level}')
         self.smoothing = smoothing(self.model, noise_level) if smoothing else None
+        self.inner_img_list = []
+        self.inner_text = None
+        self._abstain = False
 
         if stopping_criteria is not None:
             self.stopping_criteria = stopping_criteria
@@ -151,6 +154,17 @@ class Chat:
             self.stopping_criteria = StoppingCriteriaList([StoppingCriteriaSub(stops=stop_words_ids)])
 
     def ask(self, text, conv):
+        self.inner_text = text
+        self.smoothing.predict()
+        print('calling smoothed_decoder')
+        prediction = self.smoothing.predict(
+            self.inner_img_list[0], 100, 0.001, batch_size=48
+        )
+        if prediction == self.smoothing.ABSTAIN:
+            self._abstain = True
+            return
+        print('smoothed_decoder OK')
+
         if len(conv.messages) > 0 and conv.messages[-1][0] == conv.roles[0] \
                 and conv.messages[-1][1][-6:] == '</Img>':  # last message is image.            
             conv.messages[-1][1] = ' '.join([conv.messages[-1][1], text])            
@@ -185,6 +199,11 @@ class Chat:
         return generation_kwargs
 
     def answer(self, conv, img_list, **kargs):
+        if self._abstain:
+            self._abstain = False
+            print('abstain')
+            return "abstain"
+        
         generation_dict = self.answer_prepare(conv, img_list, **kargs)
         output_token = self.model_generate(**generation_dict)[0]
         output_text = self.model.llama_tokenizer.decode(output_token, skip_special_tokens=True)
@@ -205,12 +224,8 @@ class Chat:
 
     def model_generate(self, *args, **kwargs):
         # for 8 bit and 16 bit compatibility
-        with self.model.maybe_autocast():
-            if self.smoothing:
-                output = self.smoothing.generate(*args, **kwargs)            
-            else:
-                output = self.model.llama_model.generate(*args, **kwargs) 
-                  
+        with self.model.maybe_autocast():            
+            output = self.model.llama_model.generate(*args, **kwargs)                   
         return output
 
     def encode_img(self, img_list):
@@ -226,13 +241,14 @@ class Chat:
             if len(image.shape) == 3:
                 image = image.unsqueeze(0)
             image = image.to(self.device)
+            self.inner_img_list.append(image)
 
         image_emb, _ = self.model.encode_img(image)
         img_list.append(image_emb)
 
     def upload_img(self, image, conv, img_list):
         conv.append_message(conv.roles[0], "<Img><ImageHere></Img>")
-        img_list.append(image)
+        img_list.append(image)        
         msg = "Received."
 
         return msg
