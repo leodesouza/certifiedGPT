@@ -154,8 +154,7 @@ class Chat:
             self.stopping_criteria = StoppingCriteriaList([StoppingCriteriaSub(stops=stop_words_ids)])
 
     def ask(self, text, conv):
-        self.inner_text = text
-        self.smoothing.predict()
+        self.inner_text = text        
         print('calling smoothed_decoder')
         prediction = self.smoothing.predict(
             self.inner_img_list[0], 100, 0.001, batch_size=48
