@@ -311,7 +311,7 @@ class Chat:
         data = {
             "image": self.inner_img_list[0],
             "question_id": 0,
-            "instruction_input": instruction,
+            "instruction_input": [instruction],
             "answer": "",
             "image_id": 0
         }
