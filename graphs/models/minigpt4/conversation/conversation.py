@@ -301,6 +301,7 @@ class Chat:
         return [output_text.strip()]
     
     def smooth_decoder(self):
+        print(f"SHAPE ---- inner_img_list[0]: {self.inner_img_list[0].shape}")
         message = f"[vqa] Based on the image, respond to this question in English with with a short answer: {self.inner_text}"        
         instruction = "<Img><ImageHere></Img> {} ".format(message)
         data = {
