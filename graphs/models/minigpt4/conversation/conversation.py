@@ -199,7 +199,7 @@ class Chat:
         if self._abstain:
             self._abstain = False
             print('abstain')
-            return "abstain"
+            return "abstain", ""
         
         generation_dict = self.answer_prepare(conv, img_list, **kargs)
         output_token = self.model_generate(**generation_dict)[0]
