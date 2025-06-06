@@ -156,14 +156,12 @@ class Chat:
 
     
     def ask(self, text, conv):
-        self.inner_text = text        
-        print('calling smoothed_decoder')
+        self.inner_text = text                
         prediction = self.smooth_decoder()
         if prediction == self.smoothing.ABSTAIN:
             self._abstain = True
             return
-        print('smoothed_decoder OK')
-
+        
         if len(conv.messages) > 0 and conv.messages[-1][0] == conv.roles[0] \
                 and conv.messages[-1][1][-6:] == '</Img>':  # last message is image.            
             conv.messages[-1][1] = ' '.join([conv.messages[-1][1], text])            
@@ -303,11 +301,9 @@ class Chat:
         output_text = self.model.llama_tokenizer.decode(output_token, skip_special_tokens=True)
         return [output_text.strip()]
     
-    def smooth_decoder(self):
-        print(f"SHAPE ---- inner_img_list[0]: {self.inner_img_list[0].shape}")
+    def smooth_decoder(self):        
         message = f"[vqa] Based on the image, respond to this question in English with with a short answer: {self.inner_text}"        
-        instruction = "<Img><ImageHere></Img> {} ".format(message)
-        print(f'instruction: {instruction}')
+        instruction = "<Img><ImageHere></Img> {} ".format(message)        
         data = {
             "image": self.inner_img_list[0],
             "question_id": 0,
@@ -317,7 +313,7 @@ class Chat:
         }
         
         prediction = self.smoothing.predict(
-            data, 100, 0.001, batch_size=48
+            data, 5, 0.001, batch_size=48
         )
 
         return prediction

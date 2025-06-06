@@ -42,25 +42,35 @@ class Smooth(object):
             return text, radius
 
     def predict(self, x: torch.tensor, n: int, alpha: float, batch_size: int):
+        print('entering prediction')
         self.base_decoder.eval()
+
+        print('_sample_noise')        
         sample_for_estimation = self._sample_noise(x, n, batch_size)
         
+        print('selecting probs_selection')
         probs_selection = np.array(sample_for_estimation[:, 1], dtype=float)
+        
         top2 = probs_selection.argsort()[::-1][:2]
         
         text1 = sample_for_estimation[top2[0]][0]
         text2 = sample_for_estimation[top2[1]][0]
+
+        print(f'text1:' {text1}')
+        print(f'text2:' {text2}')
                                         
         count1 = sum(1 for row in sample_for_estimation if row[0] == text1)
         count2 = sum(1 for row in sample_for_estimation if row[0] == text2)
         
         # binom_test > alpha (non-significant): the difference in occurrences of text1 and text2 is not statistically significant         
         if binom_test(count1, count1 + count2, p=0.5) > alpha:
+            print(f'abstain')
             return Smooth.ABSTAIN
         else:
             #reject the null hypothesis and conclude that
             top = top2[0]
             text = sample_for_estimation[top][0]
+            print(f'answer: {text}')
             return text
     
     def is_similiar(self, text1, text2):
@@ -73,8 +83,7 @@ class Smooth(object):
                 
 
     def _sample_noise(self, batch_sample: torch.tensor, num: int, batch_size, sample_type="estimation"):
-        
-        
+                
         question = batch_sample["instruction_input"]                                
         conv_temp = CONV_VISION_Vicuna0.copy()
         conv_temp.system = ""
@@ -86,7 +95,7 @@ class Smooth(object):
             for _ in range(ceil(num / batch_size)):
                 this_batch_size = min(batch_size, num)
                 num -= this_batch_size
-
+                print(f'_sample_noise step: {step}')
                 self.logger.info(f"Sample: {step} of size: {this_batch_size}")
                 
                 image = batch_sample["image"].to(self._device)
