@@ -141,6 +141,7 @@ class Chat:
         self.device = device
         self.model = model
         self.vis_processor = vis_processor
+        print(f'loading chat with noise level={noise_level}')
         self.smoothing = smoothing(self.model, noise_level) if smoothing else None
 
         if stopping_criteria is not None:

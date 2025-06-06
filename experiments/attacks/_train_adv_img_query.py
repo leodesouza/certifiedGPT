@@ -206,8 +206,8 @@ def main():
     #     chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id))     
     
     load_finetuned_model(config, model)
-    smoothing = Smooth(model, sigma=config.run.noise_level)    
-    chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id), smoothing=smoothing)     
+    # smoothing = Smooth(model, sigma=config.run.noise_level)    
+    chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id), noise_level=config.run.noise_level, smoothing=Smooth)     
     
     
     # org text/features
