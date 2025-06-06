@@ -195,9 +195,11 @@ def main():
     
 
     if config.run.smoothing:
+        print('running with SmoothingChat ')
         load_finetuned_model(config, model)
         chat = SmoothingChat(model, vis_processor, device='cuda:{}'.format(args.gpu_id))     
     else: 
+        print('running default Chat ')
         chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id))     
     
     # org text/features
