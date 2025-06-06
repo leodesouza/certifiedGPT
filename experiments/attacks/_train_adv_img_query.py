@@ -195,15 +195,20 @@ def main():
     clean_data_loader = torch.utils.data.DataLoader(clean_data, batch_size=batch_size, shuffle=False, num_workers=0)
     
 
-    print(f'config.run.smoothing: {config.run.smoothing}')
-    if config.run.smoothing:
-        print('running smoothing chat')
-        load_finetuned_model(config, model)
-        smoothing = Smooth(model, sigma=config.run.noise_level)
-        chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id), smoothing=smoothing)     
-    else: 
-        print('running default Chat ')
-        chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id))     
+    # print(f'config.run.smoothing: {config.run.smoothing}')
+    # if config.run.smoothing == True:
+    #     print('running smoothing chat')
+    #     load_finetuned_model(config, model)
+    #     smoothing = Smooth(model, sigma=config.run.noise_level)
+    #     chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id), smoothing=smoothing)     
+    # else: 
+    #     print('running default Chat ')
+    #     chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id))     
+    
+    load_finetuned_model(config, model)
+    smoothing = Smooth(model, sigma=config.run.noise_level)    
+    chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id), smoothing=smoothing)     
+    
     
     # org text/features
     adv_vit_text_path = args.text_path
