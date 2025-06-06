@@ -130,9 +130,4 @@ class Smooth(object):
     @property
     def logger(self):
         logger = registry.get_configuration_class("logger")
-        return logger
-    
-    def generate(*args, **kwargs):
-        print('enter smoothing...')
-        print(f'args: {args}')
-        print(f'kwargs: {kwargs}')        
+        return logger        
