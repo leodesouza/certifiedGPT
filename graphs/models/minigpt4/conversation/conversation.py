@@ -230,6 +230,7 @@ class Chat:
     def encode_img(self, img_list):
         image = img_list[0]
         img_list.pop(0)
+        self.inner_img_list.pop(0)
         if isinstance(image, str):  # is a image path
             raw_image = Image.open(image).convert('RGB')
             image = self.vis_processor(raw_image).unsqueeze(0).to(self.device)
@@ -307,18 +308,15 @@ class Chat:
         instruction = "<Img><ImageHere></Img> {} ".format(message)
         print(f'instruction: {instruction}')
         data = {
-            "image": self.inner_img_list[0],
+            "image": self.inner_img_list,
             "question_id": 0,
             "instruction_input": instruction,
             "answer": "",
             "image_id": 0
         }
-
-        transform = transforms.ToTensor()
-        data_tensor = transform(data) 
-
+        
         prediction = self.smoothing.predict(
-            data_tensor, 100, 0.001, batch_size=48
+            data, 100, 0.001, batch_size=48
         )
 
         return prediction
