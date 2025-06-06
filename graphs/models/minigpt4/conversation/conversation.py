@@ -6,6 +6,7 @@ from PIL import Image
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, LlamaTokenizer
 from transformers import StoppingCriteria, StoppingCriteriaList, TextIteratorStreamer
+from torchvision import transforms
 
 import dataclasses
 from enum import auto, Enum
@@ -304,6 +305,7 @@ class Chat:
         print(f"SHAPE ---- inner_img_list[0]: {self.inner_img_list[0].shape}")
         message = f"[vqa] Based on the image, respond to this question in English with with a short answer: {self.inner_text}"        
         instruction = "<Img><ImageHere></Img> {} ".format(message)
+        print(f'instruction: {instruction}')
         data = {
             "image": self.inner_img_list[0],
             "question_id": 0,
@@ -312,8 +314,11 @@ class Chat:
             "image_id": 0
         }
 
+        transform = transforms.ToTensor()
+        data_tensor = transform(data) 
+
         prediction = self.smoothing.predict(
-            data, 100, 0.001, batch_size=48
+            data_tensor, 100, 0.001, batch_size=48
         )
 
         return prediction

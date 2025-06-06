@@ -62,7 +62,6 @@ def load_finetuned_model(config, model):
     print(f"Loading checkpoint from {checkpoint}")
     checkpoint = torch.load(checkpoint, map_location=torch.device('cpu'))
     
-
     print("Loading model state")
     model.load_state_dict(checkpoint['model_state_dict'], strict=False)
     print("Loading model state. Done!")
