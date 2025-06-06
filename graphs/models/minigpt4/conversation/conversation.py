@@ -313,7 +313,7 @@ class Chat:
         }
         
         prediction = self.smoothing.predict(
-            data, 5, 0.001, batch_size=48
+            data, 50, 0.001, batch_size=25
         )
 
         return prediction
