@@ -195,6 +195,7 @@ def main():
     clean_data_loader = torch.utils.data.DataLoader(clean_data, batch_size=batch_size, shuffle=False, num_workers=0)
     
 
+    print(f'config.run.smoothing: {config.run.smoothing}')
     if config.run.smoothing:
         print('running smoothing chat')
         load_finetuned_model(config, model)
