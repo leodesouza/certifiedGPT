@@ -76,8 +76,9 @@ class Smooth(object):
         
         print('reading batch_sample  instruction_input')
         question = batch_sample["instruction_input"]
-        raise ValueError("foda se")
         print(question)
+        raise ValueError("foda se")
+        
         print(f'_sample_noise ============ instruction_input: {question}')
         
         conv_temp = CONV_VISION_Vicuna0.copy()
