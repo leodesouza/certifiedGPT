@@ -301,10 +301,12 @@ class Chat:
         return [output_text.strip()]
     
     def smooth_decoder(self):
+        message = f"[vqa] Based on the image, respond to this question in English with with a short answer: {self.inner_text}"        
+        instruction = "<Img><ImageHere></Img> {} ".format(message)
         data = {
             "image": self.inner_img_list[0],
             "question_id": 0,
-            "instruction_input": self.inner_text,
+            "instruction_input": instruction,
             "answer": "",
             "image_id": 0
         }
