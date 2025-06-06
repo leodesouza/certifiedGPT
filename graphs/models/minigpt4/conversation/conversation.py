@@ -309,7 +309,7 @@ class Chat:
         instruction = "<Img><ImageHere></Img> {} ".format(message)
         print(f'instruction: {instruction}')
         data = {
-            "image": self.inner_img_list,
+            "image": self.inner_img_list[0],
             "question_id": 0,
             "instruction_input": instruction,
             "answer": "",
