@@ -230,7 +230,8 @@ class Chat:
     def encode_img(self, img_list):
         image = img_list[0]
         img_list.pop(0)
-        self.inner_img_list.pop(0)
+        if self.inner_img_list:
+            self.inner_img_list.pop(0)
         if isinstance(image, str):  # is a image path
             raw_image = Image.open(image).convert('RGB')
             image = self.vis_processor(raw_image).unsqueeze(0).to(self.device)
