@@ -28,6 +28,21 @@ from minigpt4.runners import *
 from minigpt4.tasks import *
 
 
+
+def load_finetuned_model(config, model):
+
+    print("Loading finetuned VQAv2")
+    checkpoint = config.model.vqa_finetuned
+
+    print(f"Loading checkpoint from {checkpoint}")
+    checkpoint = torch.load(checkpoint, map_location=torch.device('cpu'))
+    
+    print("Loading model state")
+    model.load_state_dict(checkpoint['model_state_dict'], strict=False)
+    print("Loading model state. Done!")
+    
+    print(f"Numbers of treinable parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Demo")
     parser.add_argument("--cfg-path", default='eval_configs/minigptv2_eval.yaml',
@@ -61,6 +76,9 @@ model_config = cfg.model_cfg
 model_config.device_8bit = args.gpu_id
 model_cls = registry.get_model_class(model_config.arch)
 model = model_cls.from_config(model_config).to(device)
+
+load_finetuned_model(cfg, model)
+
 bounding_box_size = 100
 
 vis_processor_cfg = cfg.datasets_cfg.cc_sbu_align.vis_processor.train
