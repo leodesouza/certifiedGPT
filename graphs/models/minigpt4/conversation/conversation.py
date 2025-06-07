@@ -157,6 +157,7 @@ class Chat:
     
     def ask(self, text, conv):
         if self.smoothing is not None:
+            print('asking with smoothing')
             self.inner_text = text                
             prediction = self.smooth_decoder()
             if prediction == self.smoothing.ABSTAIN:

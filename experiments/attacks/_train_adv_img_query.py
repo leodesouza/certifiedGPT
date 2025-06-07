@@ -194,7 +194,7 @@ def main():
     
     
     load_finetuned_model(config, model)    
-    chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id), noise_level=config.run.noise_level, smoothing=Smooth)     
+    chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id), noise_level=config.run.noise_level, smoothing=Smooth)    
         
     # org text/features
     adv_vit_text_path = args.text_path
