@@ -156,11 +156,12 @@ class Chat:
 
     
     def ask(self, text, conv):
-        self.inner_text = text                
-        prediction = self.smooth_decoder()
-        if prediction == self.smoothing.ABSTAIN:
-            self._abstain = True
-            return
+        if self.smoothing is not None:
+            self.inner_text = text                
+            prediction = self.smooth_decoder()
+            if prediction == self.smoothing.ABSTAIN:
+                self._abstain = True
+                return
         
         if len(conv.messages) > 0 and conv.messages[-1][0] == conv.roles[0] \
                 and conv.messages[-1][1][-6:] == '</Img>':  # last message is image.            
@@ -196,10 +197,11 @@ class Chat:
         return generation_kwargs
 
     def answer(self, conv, img_list, **kargs):
-        if self._abstain:
-            self._abstain = False
-            print('abstain')
-            return "abstain", ""
+        if self.smoothing is not None:
+            if self._abstain:
+                self._abstain = False
+                print('abstain')
+                return "abstain", ""
         
         generation_dict = self.answer_prepare(conv, img_list, **kargs)
         output_token = self.model_generate(**generation_dict)[0]
@@ -240,7 +242,8 @@ class Chat:
             if len(image.shape) == 3:
                 image = image.unsqueeze(0)
             image = image.to(self.device)
-            self.inner_img_list.append(image)
+            if self.smoothing is not None: 
+                self.inner_img_list.append(image)
 
         image_emb, _ = self.model.encode_img(image)
         img_list.append(image_emb)
