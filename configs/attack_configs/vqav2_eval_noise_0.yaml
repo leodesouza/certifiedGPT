@@ -4,7 +4,7 @@ model:
   end_sym: "###"
   prompt_path: "prompts/alignment.txt"
   prompt_template: '###Human: {} ###Assistant: '  
-  ckpt: ${env:MINIGPT_4}
+  # ckpt: ${env:MINIGPT_4}
     
   drop_path_rate: 0
   use_grad_checkpoint: false
