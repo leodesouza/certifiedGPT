@@ -46,7 +46,7 @@ def load_finetuned_model(config, model):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Demo")
-    parser.add_argument("--cfg-path", default='eval_configs/minigptv2_eval.yaml',
+    parser.add_argument("--config-path", default='eval_configs/minigptv2_eval.yaml',
                         help="path to configuration file.")
     parser.add_argument("--gpu-id", type=int, default=0, help="specify the gpu to load the model.")
     parser.add_argument(
