@@ -48,6 +48,20 @@ def setup_seeds(config):
     cudnn.benchmark = False
     cudnn.deterministic = True
 
+def load_finetuned_model(config, model):
+
+    print("Loading finetuned VQAv2")
+    checkpoint = config.model.vqa_finetuned
+
+    print(f"Loading checkpoint from {checkpoint}")
+    checkpoint = torch.load(checkpoint, map_location=torch.device('cpu'))
+    
+    print("Loading model state")
+    model.load_state_dict(checkpoint['model_state_dict'], strict=False)
+    print("Loading model state. Done!")
+    
+    print(f"Numbers of treinable parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
+
 
 def main():
     # ========================================
@@ -64,6 +78,8 @@ def main():
     model_cls = registry.get_model_class(model_config.arch)
     model = model_cls.from_config(model_config)
     model.to(('cuda:{}'.format(args.gpu_id)))
+
+    load_finetuned_model(cfg, model)
 
     CONV_VISION = CONV_VISION_Vicuna0
     
