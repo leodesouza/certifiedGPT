@@ -34,6 +34,7 @@ class Smooth(object):
         sample_for_estimation = self._sample_noise(x, n, batch_size, "estimation")
         nA = sum(1 for row in sample_for_estimation if row[0] == text)
 
+        #calculate confidence level
         pABar = self._lower_confidence_bound(nA, n, alpha)
         if pABar < 0.5:
             return Smooth.ABSTAIN, 0.0
@@ -45,32 +46,38 @@ class Smooth(object):
         print('entering prediction')
         self.base_decoder.eval()
 
-        print('_sample_noise')        
+        print(f'generating sample of size: {n}')        
         sample_for_estimation = self._sample_noise(x, n, batch_size)
+        print(f'predictions and probs: {sample_for_estimation}')
         
-        print('selecting probs_selection')
+        texts = [row[0] for row in sample_for_estimation]
+        all_text_embeds = self.sentence_transformer.encode(texts, convert_to_tensor=True)
+                        
         probs_selection = np.array(sample_for_estimation[:, 1], dtype=float)
         
         top2 = probs_selection.argsort()[::-1][:2]
         
-        text1 = sample_for_estimation[top2[0]][0]
-        text2 = sample_for_estimation[top2[1]][0]
+        text1_embs = all_text_embeds[top2[0]]
+        text2_embs = all_text_embeds[top2[1]]
+                                            
+        text1_count = self.count_similar(text1_embs, all_text_embeds)
+        text_2_count = self.count_similar(text2_embs, all_text_embeds)       
 
-        print(f'text1: {text1}')
-        print(f'text2: {text2}')
-                                        
-        count1 = sum(1 for row in sample_for_estimation if row[0] == text1)
-        count2 = sum(1 for row in sample_for_estimation if row[0] == text2)
+        trials_count = text1_count + text_2_count
         
         # binom_test > alpha (non-significant): the difference in occurrences of text1 and text2 is not statistically significant         
-        if binom_test(count1, count1 + count2, p=0.5) > alpha:
-            print(f'abstain')
+        # test if text1 and text2 are equally probable(h_0)
+        # h0 null hypothesis
+        # h1 alternative hypothesis(text1 shows different prob(p != 0.5))
+        if binom_test(text1_count, trials_count, p=0.5) > alpha:            
+            print('abstain')
             return Smooth.ABSTAIN
         else:
-            #reject the null hypothesis and conclude that
+            #statistically significant
+            #reject the null hypothesis
             top = top2[0]
             text = sample_for_estimation[top][0]
-            print(f'answer: {text}')
+            print(f'top answer: {text}')
             return text
     
     def is_similiar(self, text1, text2):
@@ -95,9 +102,7 @@ class Smooth(object):
             for _ in range(ceil(num / batch_size)):
                 this_batch_size = min(batch_size, num)
                 num -= this_batch_size
-                print(f'_sample_noise step: {step}')
-                self.logger.info(f"Sample: {step} of size: {this_batch_size}")
-                
+
                 image = batch_sample["image"].to(self._device)
                 batch_image = image.repeat((this_batch_size, 1, 1, 1))
                 noise = torch.randn_like(batch_image, device=self._device) * self.sigma
@@ -127,8 +132,13 @@ class Smooth(object):
         for idx in arr:
             counts[idx] += 1
         return counts
+    
+    def count_similar(self, target_emb, all_embs, threshold=0.85):
+        sims = util.cos_sim(target_emb, all_embs)[0]
+        return (sims >= threshold).sum().item()
 
     def _lower_confidence_bound(self, NA: int, N: int, alpha: float) -> float:
+        #calculate lower level confidence
         return proportion_confint(NA, N, alpha=2 * alpha, method="beta")[0]
 
     def prepare_texts(self, texts, conv_temp):
@@ -142,3 +152,41 @@ class Smooth(object):
     def logger(self):
         logger = registry.get_configuration_class("logger")
         return logger        
+    
+
+    # def predict(self, x: torch.tensor, n: int, alpha: float, batch_size: int):
+    #     print('entering prediction')
+    #     self.base_decoder.eval()
+
+    #     print('_sample_noise')        
+    #     sample_for_estimation = self._sample_noise(x, n, batch_size)
+        
+    #     print('selecting probs_selection')
+    #     probs_selection = np.array(sample_for_estimation[:, 1], dtype=float)
+        
+    #     top2 = probs_selection.argsort()[::-1][:2]
+        
+    #     text1 = sample_for_estimation[top2[0]][0]
+    #     text2 = sample_for_estimation[top2[1]][0]
+
+    #     print(f'text1: {text1}')
+    #     print(f'text2: {text2}')
+                                        
+    #     text1_count = sum(1 for row in sample_for_estimation if row[0] == text1)
+    #     text_2_count = sum(1 for row in sample_for_estimation if row[0] == text2)
+    #     trials_count = text1_count + text_2_count
+        
+    #     # binom_test > alpha (non-significant): the difference in occurrences of text1 and text2 is not statistically significant         
+    #     # test if text1 and text2 are equally probable(h_0)
+    #     # h0 null hypothesis
+    #     # h1 alternative hypothesis(text1 shows different prob(p != 0.5))
+    #     if binom_test(text1_count, trials_count, p=0.5) > alpha:            
+    #         print('abstain')
+    #         return Smooth.ABSTAIN
+    #     else:
+    #         #statistically significant
+    #         #reject the null hypothesis
+    #         top = top2[0]
+    #         text = sample_for_estimation[top][0]
+    #         print(f'answer: {text}')
+    #         return text
