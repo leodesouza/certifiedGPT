@@ -92,8 +92,8 @@ def main():
     stop_words_ids = [torch.tensor(ids).to(device='cuda:{}'.format(args.gpu_id)) for ids in stop_words_ids]
     stopping_criteria = StoppingCriteriaList([StoppingCriteriaSub(stops=stop_words_ids)])
     
-    # chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id), stopping_criteria=stopping_criteria, noise_level=cfg.run.noise_level, alpha=cfg.run.alpha, monte_carlo_size=cfg.run.monte_carlo_size, batch_size=cfg.run.batch_size, smoothing=Smooth)    
-    chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id), stopping_criteria=stopping_criteria)    
+    chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id), stopping_criteria=stopping_criteria, noise_level=cfg.run.noise_level, alpha=cfg.run.alpha, monte_carlo_size=cfg.run.monte_carlo_size, batch_size=cfg.run.batch_size, smoothing=Smooth)    
+    # chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id), stopping_criteria=stopping_criteria)    
     print('Initialization Finished')
 
 
@@ -129,10 +129,19 @@ def main():
 
 
     def gradio_answer(chatbot, chat_state, img_list, num_beams, temperature):
+        # llm_message = chat.answer(conv=chat_state,
+        #                         img_list=img_list,
+        #                         num_beams=num_beams,
+        #                         temperature=temperature,
+        #                         max_new_tokens=20,
+        #                         max_length=2000)[0]
+
         llm_message = chat.answer(conv=chat_state,
                                 img_list=img_list,
                                 num_beams=num_beams,
-                                temperature=temperature,
+                                temperature=0.7,
+                                do_sample=True,
+                                top_p=0.9,
                                 max_new_tokens=20,
                                 max_length=2000)[0]
         chatbot[-1][1] = llm_message
