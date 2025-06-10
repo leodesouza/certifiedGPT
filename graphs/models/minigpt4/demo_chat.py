@@ -92,7 +92,8 @@ def main():
     stop_words_ids = [torch.tensor(ids).to(device='cuda:{}'.format(args.gpu_id)) for ids in stop_words_ids]
     stopping_criteria = StoppingCriteriaList([StoppingCriteriaSub(stops=stop_words_ids)])
     
-    chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id), stopping_criteria=stopping_criteria, noise_level=cfg.run.noise_level, alpha=cfg.run.alpha, monte_carlo_size=cfg.run.monte_carlo_size, batch_size=cfg.run.batch_size, smoothing=Smooth)    
+    # chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id), stopping_criteria=stopping_criteria, noise_level=cfg.run.noise_level, alpha=cfg.run.alpha, monte_carlo_size=cfg.run.monte_carlo_size, batch_size=cfg.run.batch_size, smoothing=Smooth)    
+    chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id), stopping_criteria=stopping_criteria)    
     print('Initialization Finished')
 
 
