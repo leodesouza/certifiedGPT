@@ -233,6 +233,7 @@ class Chat:
         return output
 
     def encode_img(self, img_list):
+        print('uploading image')
         image = img_list[0]
         img_list.pop(0)
         if self.inner_img_list:
@@ -240,10 +241,13 @@ class Chat:
         if isinstance(image, str):  # is a image path
             raw_image = Image.open(image).convert('RGB')
             image = self.vis_processor(raw_image).unsqueeze(0).to(self.device)
+            print('image is a path')
         elif isinstance(image, Image.Image):            
+            print('image is a PIL')
             raw_image = image
             image = self.vis_processor(raw_image).unsqueeze(0).to(self.device)
         elif isinstance(image, torch.Tensor):
+            print('image is a tensor')
             if len(image.shape) == 3:
                 image = image.unsqueeze(0)
             image = image.to(self.device)
@@ -322,7 +326,7 @@ class Chat:
 
            
         prediction = self.smoothing.predict(
-            data, 100, self._alpha, batch_size=48
+            data, self._monte_carlo_size, self._alpha, batch_size=self._batch_size
         )
 
         return prediction
