@@ -138,7 +138,7 @@ CONV_VISION_minigptv2 = Conversation(
 )
 
 class Chat:
-    def __init__(self, model, vis_processor, device='cuda:0', stopping_criteria=None, noise_level=0, smoothing=None):
+    def __init__(self, model, vis_processor, device='cuda:0', stopping_criteria=None, noise_level=0.25, smoothing=None):
         self.device = device
         self.model = model
         self.vis_processor = vis_processor
