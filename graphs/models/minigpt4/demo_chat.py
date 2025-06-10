@@ -139,11 +139,12 @@ def main():
         llm_message = chat.answer(conv=chat_state,
                                 img_list=img_list,
                                 num_beams=1,
-                                temperature=1,
+                                temperature=1.3,
                                 do_sample=True,
-                                top_p=0.9,
+                                top_p=0.8,
                                 max_new_tokens=20,
-                                max_length=2000)[0]
+                                max_length=2000,
+                                repetition_penalty=1.1)[0]
         chatbot[-1][1] = llm_message
         return chatbot, chat_state, img_list
 
