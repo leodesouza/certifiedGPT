@@ -151,6 +151,9 @@ def main():
 
     config = Config(args)
     print("Loading MiniGPT-4 models..")
+    print(config.run.noise_level)
+    raise ValueError("stop")
+    
          
     model_config = config.model
     model_config.device_8bit = args.gpu_id
@@ -193,7 +196,7 @@ def main():
     clean_data_loader = torch.utils.data.DataLoader(clean_data, batch_size=batch_size, shuffle=False, num_workers=0)
     
     
-    load_finetuned_model(config, model)    
+    load_finetuned_model(config, model)        
     chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id), noise_level=config.run.noise_level, smoothing=Smooth)    
         
     # org text/features
