@@ -425,6 +425,7 @@ class MiniGPTBase(BaseModel):
                 chosen_probs = torch.stack([p[i, idx] for p, idx in zip(probs, generated_tokens_id[i])])
                 answer_prob = torch.prod(chosen_probs).item() 
                 answer_probs.append(answer_prob)
+        print(f'answer_probs: {answer_probs}')
                 
         answers = []
         for output_token in outputs.sequences:
