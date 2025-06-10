@@ -315,9 +315,9 @@ class Chat:
             "answer": "",
             "image_id": 0
         }
-        
+                
         prediction = self.smoothing.predict(
-            data, 50, 0.001, batch_size=25
+            data, 100, 0.001, batch_size=48
         )
 
         return prediction
