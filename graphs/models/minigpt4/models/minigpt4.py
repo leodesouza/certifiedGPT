@@ -193,7 +193,6 @@ class MiniGPT4(MiniGPTBase):
             print("Load MiniGPT-4 Checkpoint: {}".format(ckpt_path))                 
             print(f'loading model with image_size: {img_size}')            
             ckpt = torch.load(ckpt_path, map_location="cpu", weights_only=False)
-            #msg = model.load_state_dict(ckpt['model_state_dict'], strict=False)        
-            msg = model.load_state_dict(ckpt['model'], strict=False)        
-
+            msg = model.load_state_dict(ckpt['model_state_dict'], strict=False)        
+            
         return model
