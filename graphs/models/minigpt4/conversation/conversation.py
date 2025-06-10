@@ -145,7 +145,7 @@ class Chat:
         self.vis_processor = vis_processor
         if smoothing is not None:
             print(f"loading chat with params noise level={noise_level}. alpha={alpha}. monte_carlo_size={monte_carlo_size}. batch_size={batch_size}")
-            self.smoothing = smoothing(self.model, noise_level)
+        self.smoothing = smoothing(self.model, noise_level) if smoothing else None
         self.inner_img_list = []
         self.inner_text = None
         self._abstain = False
