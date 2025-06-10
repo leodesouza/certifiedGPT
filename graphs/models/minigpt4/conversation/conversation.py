@@ -138,16 +138,19 @@ CONV_VISION_minigptv2 = Conversation(
 )
 
 class Chat:
-    def __init__(self, model, vis_processor, device='cuda:0', stopping_criteria=None, noise_level=0.25, alpha=0.001,smoothing=None):
+    def __init__(self, model, vis_processor, device='cuda:0', stopping_criteria=None, noise_level=0.25, alpha=0.001, monte_carlo_size=100, batch_size=48, smoothing=None):
+        
         self.device = device
         self.model = model
         self.vis_processor = vis_processor
-        print(f"loading chat with noise level={noise_level} and alpha={alpha}")
+        print(f"loading chat with params noise level={noise_level}. alpha={alpha}. monte_carlo_size={monte_carlo_size}. batch_size={batch_size}")
         self.smoothing = smoothing(self.model, noise_level) if smoothing else None
         self.inner_img_list = []
         self.inner_text = None
         self._abstain = False
         self._alpha=alpha
+        self._monte_carlo_size = monte_carlo_size,
+        self._batch_size = batch_size
 
         if stopping_criteria is not None:
             self.stopping_criteria = stopping_criteria

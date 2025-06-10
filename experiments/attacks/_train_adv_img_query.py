@@ -193,8 +193,8 @@ def main():
     clean_data_loader = torch.utils.data.DataLoader(clean_data, batch_size=batch_size, shuffle=False, num_workers=0)
     
     
-    load_finetuned_model(config, model)        
-    chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id), noise_level=config.run.noise_level, alpha=config.run.alpha, smoothing=Smooth)    
+    load_finetuned_model(config, model)            
+    chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id), noise_level=config.run.noise_level, alpha=config.run.alpha, monte_carlo_size=config.run.monte_carlo_size, batch_size=config.run.batch_size, smoothing=Smooth)    
         
     # org text/features
     adv_vit_text_path = args.text_path
