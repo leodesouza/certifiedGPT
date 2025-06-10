@@ -149,7 +149,7 @@ class Chat:
         self.inner_text = None
         self._abstain = False
         self._alpha=alpha
-        self._monte_carlo_size = monte_carlo_size,
+        self._monte_carlo_size = monte_carlo_size
         self._batch_size = batch_size
 
         if stopping_criteria is not None:
