@@ -46,7 +46,7 @@ class Smooth(object):
         
         self.base_decoder.eval()        
         sample_for_estimation = self._sample_noise(x, n, batch_size)
-        # print(f'predictions and probs: {sample_for_estimation}')
+        print(f'predictions and probs: {sample_for_estimation}')
         
         texts = [row[0] for row in sample_for_estimation]
         all_text_embeds = self.sentence_transformer.encode(texts, convert_to_tensor=True)
