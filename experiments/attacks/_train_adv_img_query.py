@@ -345,7 +345,8 @@ def main():
                         del img_tensor_i
                         del text_i
                         gc.collect()
-                        torch.cuda.empty_cache()      
+                        torch.cuda.empty_cache()
+            print(f'text_of_perturbed_imgs: {text_of_perturbed_imgs}')      
             
             # step 2. estimate grad
             with torch.no_grad():
