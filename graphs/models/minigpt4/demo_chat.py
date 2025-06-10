@@ -139,7 +139,7 @@ def main():
         llm_message = chat.answer(conv=chat_state,
                                 img_list=img_list,
                                 num_beams=1,
-                                temperature=0.7,
+                                temperature=1,
                                 do_sample=True,
                                 top_p=0.9,
                                 max_new_tokens=20,
