@@ -345,10 +345,8 @@ def main():
                         del img_tensor_i
                         del text_i
                         gc.collect()
-                        torch.cuda.empty_cache()
-            print(f'text_of_perturbed_imgs: {text_of_perturbed_imgs}')   
-            raise ValueError("parou")   
-            
+                        torch.cuda.empty_cache()            
+                        
             # step 2. estimate grad
             with torch.no_grad():
                 perturb_text_token    = clip.tokenize(text_of_perturbed_imgs, truncate=True).to(device)
@@ -386,7 +384,7 @@ def main():
                 # update results                        
                 if adv_txt_tgt_txt_score_in_current_step > query_attack_results[i]:
                     query_attack_results[i] = adv_txt_tgt_txt_score_in_current_step
-                    best_caption = text_of_adv_image_in_current_step[0]
+                    best_caption = text_of_adv_image_in_current_step
                     better_flag  = 1
                     
                 # other clip archs
