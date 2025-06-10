@@ -57,7 +57,7 @@ run:
   smoothing: True
   noise_level: 0.25  
   alpha: 0.001 # the failure probability  
-  monte_carlo_size: 1000 #number_monte_carlo_samples_for_estimation: 100
+  monte_carlo_size: 100 #number_monte_carlo_samples_for_estimation: 100
   batch_size: 48 # for certification
 
   dataset_config_name: eval_vqa.yaml
