@@ -151,7 +151,7 @@ def main():
 
     config = Config(args)
     print("Loading MiniGPT-4 models..")
-    print(config)
+    print(config.run)
     raise ValueError("stop")
     
          
