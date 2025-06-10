@@ -151,7 +151,7 @@ def main():
 
     config = Config(args)
     print("Loading MiniGPT-4 models..")
-    print(config.run.noise_level)
+    print(config)
     raise ValueError("stop")
     
          
