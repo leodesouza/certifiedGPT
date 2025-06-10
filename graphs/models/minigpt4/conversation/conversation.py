@@ -200,6 +200,10 @@ class Chat:
             length_penalty=length_penalty,
             temperature=float(temperature),
         )
+        
+        print("answer_prepare")
+        print(generation_kwargs)
+
         return generation_kwargs
 
     def answer(self, conv, img_list, **kargs):
