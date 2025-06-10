@@ -246,6 +246,8 @@ class Chat:
             print('image is a PIL')
             raw_image = image
             image = self.vis_processor(raw_image).unsqueeze(0).to(self.device)
+            if self.smoothing is not None: 
+                self.inner_img_list.append(image)
         elif isinstance(image, torch.Tensor):
             print('image is a tensor')
             if len(image.shape) == 3:
