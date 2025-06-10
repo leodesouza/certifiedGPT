@@ -52,14 +52,21 @@ class Smooth(object):
         all_text_embeds = self.sentence_transformer.encode(texts, convert_to_tensor=True)
                         
         probs_selection = np.array(sample_for_estimation[:, 1], dtype=float)
+        print(f"probs_selection: {probs_selection}")
         
         top2 = probs_selection.argsort()[::-1][:2]
+        print(f"top2: {top2}")
+
+        print(f"top1: {top2[0]}")
+        print(f"top2: {top2[1]}")
         
         text1_embs = all_text_embeds[top2[0]]
         text2_embs = all_text_embeds[top2[1]]
                                             
         text1_count = self.count_similar(text1_embs, all_text_embeds)
+        print(f"text1_count: {text1_count}")
         text_2_count = self.count_similar(text2_embs, all_text_embeds)       
+        print(f"text_2_count: {text_2_count}")
 
         trials_count = text1_count + text_2_count
         
@@ -67,8 +74,10 @@ class Smooth(object):
         # test if text1 and text2 are equally probable(h_0)
         # h0 null hypothesis
         # h1 alternative hypothesis(text1 shows different prob(p != 0.5))
-        print(f"alpha: {alpha}")
-        if binom_test(text1_count, trials_count, p=0.5) > alpha:            
+        
+        p = binom_test(text1_count, trials_count, p=0.5)
+        print(f"p_value: {p}")
+        if p > alpha:            
             print('abstain')
             return Smooth.ABSTAIN
         else:
