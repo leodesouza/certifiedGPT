@@ -427,7 +427,6 @@ class MiniGPTBase(BaseModel):
                 answer_prob = torch.prod(chosen_probs).item() 
                 answer_probs.append(answer_prob)
         print(f'answer_probs: {answer_probs}')
-        raise ValueError("parou...")
                 
         answers = []
         for output_token in outputs.sequences:

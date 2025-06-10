@@ -151,10 +151,7 @@ def main():
 
     config = Config(args)
     print("Loading MiniGPT-4 models..")
-    print(config.run)
-    raise ValueError("stop")
-    
-         
+             
     model_config = config.model
     model_config.device_8bit = args.gpu_id
     model_cls = registry.get_model_class(model_config.arch)
@@ -349,7 +346,8 @@ def main():
                         del text_i
                         gc.collect()
                         torch.cuda.empty_cache()
-            print(f'text_of_perturbed_imgs: {text_of_perturbed_imgs}')      
+            print(f'text_of_perturbed_imgs: {text_of_perturbed_imgs}')   
+            raise ValueError("parou")   
             
             # step 2. estimate grad
             with torch.no_grad():
