@@ -49,6 +49,7 @@ class Smooth(object):
         print(f'predictions and probs: {sample_for_estimation}')
         
         texts = [row[0] for row in sample_for_estimation]
+        print(f'texts: {texts}')
         all_text_embeds = self.sentence_transformer.encode(texts, convert_to_tensor=True)
                         
         probs_selection = np.array(sample_for_estimation[:, 1], dtype=float)
@@ -141,7 +142,7 @@ class Smooth(object):
             counts[idx] += 1
         return counts
     
-    def count_similar(self, target_emb, all_embs, threshold=100):
+    def count_similar(self, target_emb, all_embs, threshold=0.5):
         sims = util.cos_sim(target_emb, all_embs)[0]
         return (sims >= threshold).sum().item()
 
