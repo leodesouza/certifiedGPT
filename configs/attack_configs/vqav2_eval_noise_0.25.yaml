@@ -56,8 +56,7 @@ run:
   wandb_api_key: ${env:WANDB_API_KEY}
   wandb_name: "adv_img_query_attack_noise_0.25"
   smoothing: True
-  alpha: 0.001 # the failure probability
-  #alpha: 0.05 # the failure probability
+  alpha: 0.001 # the failure probability  
 
   dataset_config_name: eval_vqa.yaml
 # DataLoader

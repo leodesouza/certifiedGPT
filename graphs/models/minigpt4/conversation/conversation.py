@@ -142,7 +142,7 @@ class Chat:
         self.device = device
         self.model = model
         self.vis_processor = vis_processor
-        print(f"loading chat with noise level={noise_level}")
+        print(f"loading chat with noise level={noise_level} and alpha={alpha}")
         self.smoothing = smoothing(self.model, noise_level) if smoothing else None
         self.inner_img_list = []
         self.inner_text = None

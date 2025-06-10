@@ -1,5 +1,7 @@
 import argparse
 import os
+
+from randomized_smoothing.smoothing import Smooth
 os.environ["BITSANDBYTES_NOWELCOME"] = "1"
 import random
 
@@ -79,7 +81,7 @@ def main():
     model = model_cls.from_config(model_config)
     model.to(('cuda:{}'.format(args.gpu_id)))
 
-    # load_finetuned_model(cfg, model)
+    load_finetuned_model(cfg, model)
 
     CONV_VISION = CONV_VISION_Vicuna0
     
@@ -90,7 +92,7 @@ def main():
     stop_words_ids = [torch.tensor(ids).to(device='cuda:{}'.format(args.gpu_id)) for ids in stop_words_ids]
     stopping_criteria = StoppingCriteriaList([StoppingCriteriaSub(stops=stop_words_ids)])
 
-    chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id), stopping_criteria=stopping_criteria)
+    chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id), stopping_criteria=stopping_criteria, noise_level=cfg.run.noise_level, alpha=cfg.run.alpha, smoothing=Smooth)
     print('Initialization Finished')
 
 
