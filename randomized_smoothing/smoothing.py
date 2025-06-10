@@ -43,10 +43,8 @@ class Smooth(object):
             return text, radius
 
     def predict(self, x: torch.tensor, n: int, alpha: float, batch_size: int):
-        print('entering prediction')
-        self.base_decoder.eval()
-
-        print(f'generating sample of size: {n}')        
+        
+        self.base_decoder.eval()        
         sample_for_estimation = self._sample_noise(x, n, batch_size)
         # print(f'predictions and probs: {sample_for_estimation}')
         
