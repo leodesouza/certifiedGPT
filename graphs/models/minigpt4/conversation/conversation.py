@@ -138,7 +138,7 @@ CONV_VISION_minigptv2 = Conversation(
 )
 
 class Chat:
-    def __init__(self, model, vis_processor, device='cuda:0', stopping_criteria=None, noise_level=0.25, smoothing=None):
+    def __init__(self, model, vis_processor, device='cuda:0', stopping_criteria=None, noise_level=0.25, alpha=0.001,smoothing=None):
         self.device = device
         self.model = model
         self.vis_processor = vis_processor
@@ -147,6 +147,7 @@ class Chat:
         self.inner_img_list = []
         self.inner_text = None
         self._abstain = False
+        self._alpha=alpha
 
         if stopping_criteria is not None:
             self.stopping_criteria = stopping_criteria
@@ -315,9 +316,10 @@ class Chat:
             "answer": "",
             "image_id": 0
         }
-                
+
+           
         prediction = self.smoothing.predict(
-            data, 100, 0.001, batch_size=48
+            data, 100, self._alpha, batch_size=48
         )
 
         return prediction

@@ -67,6 +67,7 @@ class Smooth(object):
         # test if text1 and text2 are equally probable(h_0)
         # h0 null hypothesis
         # h1 alternative hypothesis(text1 shows different prob(p != 0.5))
+        print(f"alpha: {alpha}")
         if binom_test(text1_count, trials_count, p=0.5) > alpha:            
             print('abstain')
             return Smooth.ABSTAIN
