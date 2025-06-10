@@ -42,52 +42,52 @@ class Smooth(object):
             radius = self.sigma * norm.ppf(pABar)
             return text, radius
 
-    def predict(self, x: torch.tensor, n: int, alpha: float, batch_size: int):
+    # def predict(self, x: torch.tensor, n: int, alpha: float, batch_size: int):
         
-        self.base_decoder.eval()        
-        sample_for_estimation = self._sample_noise(x, n, batch_size)
-        print(f'predictions and probs: {sample_for_estimation}')
+    #     self.base_decoder.eval()        
+    #     sample_for_estimation = self._sample_noise(x, n, batch_size)
+    #     print(f'predictions and probs: {sample_for_estimation}')
         
-        texts = [row[0] for row in sample_for_estimation]
-        print(f'texts: {texts}')
-        all_text_embeds = self.sentence_transformer.encode(texts, convert_to_tensor=True)
+    #     texts = [row[0] for row in sample_for_estimation]
+    #     print(f'texts: {texts}')
+    #     all_text_embeds = self.sentence_transformer.encode(texts, convert_to_tensor=True)
                         
-        probs_selection = np.array(sample_for_estimation[:, 1], dtype=float)
-        print(f"probs_selection: {probs_selection}")
+    #     probs_selection = np.array(sample_for_estimation[:, 1], dtype=float)
+    #     print(f"probs_selection: {probs_selection}")
         
-        top2 = probs_selection.argsort()[::-1][:2]
-        print(f"top2: {top2}")
+    #     top2 = probs_selection.argsort()[::-1][:2]
+    #     print(f"top2: {top2}")
 
-        print(f"top1: {top2[0]}")
-        print(f"top2: {top2[1]}")
+    #     print(f"top1: {top2[0]}")
+    #     print(f"top2: {top2[1]}")
         
-        text1_embs = all_text_embeds[top2[0]]
-        text2_embs = all_text_embeds[top2[1]]
+    #     text1_embs = all_text_embeds[top2[0]]
+    #     text2_embs = all_text_embeds[top2[1]]
                                             
-        text1_count = self.count_similar(text1_embs, all_text_embeds)
-        print(f"text1_count: {text1_count}")
-        text_2_count = self.count_similar(text2_embs, all_text_embeds)       
-        print(f"text_2_count: {text_2_count}")
+    #     text1_count = self.count_similar(text1_embs, all_text_embeds)
+    #     print(f"text1_count: {text1_count}")
+    #     text_2_count = self.count_similar(text2_embs, all_text_embeds)       
+    #     print(f"text_2_count: {text_2_count}")
 
-        trials_count = text1_count + text_2_count
+    #     trials_count = text1_count + text_2_count
         
-        # binom_test > alpha (non-significant): the difference in occurrences of text1 and text2 is not statistically significant         
-        # test if text1 and text2 are equally probable(h_0)
-        # h0 null hypothesis
-        # h1 alternative hypothesis(text1 shows different prob(p != 0.5))
+    #     # binom_test > alpha (non-significant): the difference in occurrences of text1 and text2 is not statistically significant         
+    #     # test if text1 and text2 are equally probable(h_0)
+    #     # h0 null hypothesis
+    #     # h1 alternative hypothesis(text1 shows different prob(p != 0.5))
         
-        p = binom_test(text1_count, trials_count, p=0.5)
-        print(f"p_value: {p}")
-        if p > alpha:            
-            print('abstain')
-            return Smooth.ABSTAIN
-        else:
-            #statistically significant
-            #reject the null hypothesis
-            top = top2[0]
-            text = sample_for_estimation[top][0]
-            print(f'top answer: {text}')
-            return text
+    #     p = binom_test(text1_count, trials_count, p=0.5)
+    #     print(f"p_value: {p}")
+    #     if p > alpha:            
+    #         print('abstain')
+    #         return Smooth.ABSTAIN
+    #     else:
+    #         #statistically significant
+    #         #reject the null hypothesis
+    #         top = top2[0]
+    #         text = sample_for_estimation[top][0]
+    #         print(f'top answer: {text}')
+    #         return text
     
     def is_similiar(self, text1, text2):
         similarity_threshold = 0.9
@@ -163,39 +163,37 @@ class Smooth(object):
         return logger        
     
 
-    # def predict(self, x: torch.tensor, n: int, alpha: float, batch_size: int):
-    #     print('entering prediction')
-    #     self.base_decoder.eval()
+    def predict(self, x: torch.tensor, n: int, alpha: float, batch_size: int):
+        
+        self.base_decoder.eval()        
+        
+        sample_for_estimation = self._sample_noise(x, n, batch_size)        
+        print(f'predictions and probs: {sample_for_estimation}')
+        probs_selection = np.array(sample_for_estimation[:, 1], dtype=float)
+        
+        top2 = probs_selection.argsort()[::-1][:2]
+        
+        text1 = sample_for_estimation[top2[0]][0]
+        text2 = sample_for_estimation[top2[1]][0]
 
-    #     print('_sample_noise')        
-    #     sample_for_estimation = self._sample_noise(x, n, batch_size)
-        
-    #     print('selecting probs_selection')
-    #     probs_selection = np.array(sample_for_estimation[:, 1], dtype=float)
-        
-    #     top2 = probs_selection.argsort()[::-1][:2]
-        
-    #     text1 = sample_for_estimation[top2[0]][0]
-    #     text2 = sample_for_estimation[top2[1]][0]
-
-    #     print(f'text1: {text1}')
-    #     print(f'text2: {text2}')
+        print(f'text1: {text1}')
+        print(f'text2: {text2}')
                                         
-    #     text1_count = sum(1 for row in sample_for_estimation if row[0] == text1)
-    #     text_2_count = sum(1 for row in sample_for_estimation if row[0] == text2)
-    #     trials_count = text1_count + text_2_count
+        text1_count = sum(1 for row in sample_for_estimation if row[0] == text1)
+        text_2_count = sum(1 for row in sample_for_estimation if row[0] == text2)
+        trials_count = text1_count + text_2_count
         
-    #     # binom_test > alpha (non-significant): the difference in occurrences of text1 and text2 is not statistically significant         
-    #     # test if text1 and text2 are equally probable(h_0)
-    #     # h0 null hypothesis
-    #     # h1 alternative hypothesis(text1 shows different prob(p != 0.5))
-    #     if binom_test(text1_count, trials_count, p=0.5) > alpha:            
-    #         print('abstain')
-    #         return Smooth.ABSTAIN
-    #     else:
-    #         #statistically significant
-    #         #reject the null hypothesis
-    #         top = top2[0]
-    #         text = sample_for_estimation[top][0]
-    #         print(f'answer: {text}')
-    #         return text
+        # binom_test > alpha (non-significant): the difference in occurrences of text1 and text2 is not statistically significant         
+        # test if text1 and text2 are equally probable(h_0)
+        # h0 null hypothesis
+        # h1 alternative hypothesis(text1 shows different prob(p != 0.5))
+        if binom_test(text1_count, trials_count, p=0.5) > alpha:            
+            print('abstain')
+            return Smooth.ABSTAIN
+        else:
+            #statistically significant
+            #reject the null hypothesis
+            top = top2[0]
+            text = sample_for_estimation[top][0]
+            print(f'answer: {text}')
+            return text
