@@ -128,10 +128,10 @@ class Smooth(object):
                             questions, 
                             max_new_tokens=max_tokens, 
                             num_beams=1,
-                            temperature=1.3,
+                            temperature=0.7,
                             do_sample=True,
-                            top_p=0.8,                                                        
-                            repetition_penalty=1.1
+                            top_p=0.9,                                                        
+                            # repetition_penalty=1.1
                     )
 
                 for answer, prob in zip(answers, probs):                    
