@@ -587,9 +587,9 @@ def main():
         with gr.Row():
             with gr.Column():
                 gr.Examples(examples=[
-                    ["examples_v2/office.jpg", "[grounding] describe this image in detail", upload_flag, replace_flag,
+                    ["/examples_v2/office.jpg", "[grounding] describe this image in detail", upload_flag, replace_flag,
                     img_list],
-                    ["examples_v2/sofa.jpg", "[detection] sofas", upload_flag, replace_flag, img_list],
+                    ["/examples_v2/sofa.jpg", "[detection] sofas", upload_flag, replace_flag, img_list],
                     ["examples_v2/2000x1372_wmkn_0012149409555.jpg", "[refer] the world cup", upload_flag, replace_flag,
                     img_list],
                     ["examples_v2/KFC-20-for-20-Nuggets.jpg", "[identify] what is this {<4><50><30><65>}", upload_flag,
