@@ -141,7 +141,7 @@ def main():
                                 img_list=img_list,
                                 num_beams=1,
                                 temperature=1.3,                                
-                                top_p=0.9,
+                                top_p=0.7,
                                 max_new_tokens=20,
                                 max_length=2000)[0]
         chatbot[-1][1] = llm_message
