@@ -130,8 +130,8 @@ class Smooth(object):
                             num_beams=1,
                             temperature=0.7,
                             do_sample=True,
-                            top_p=0.9,                                                        
-                            repetition_penalty=1.1
+                            top_p=1.0,                                                        
+                            repetition_penalty=1.2
                     )
 
                 for answer, prob in zip(answers, probs):                    
