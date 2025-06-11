@@ -124,7 +124,16 @@ class Smooth(object):
                 # Removed `xla_amp.autocast` and used PyTorch's native autocast
                 with torch.cuda.amp.autocast(enabled=self.config.run.amp):
                     answers, probs = self.base_decoder.generate(
-                        noisy_image_batch, questions, max_new_tokens=max_tokens, do_sample=False
+                            noisy_image_batch, 
+                            questions, 
+                            max_new_tokens=max_tokens, 
+                            num_beams=1,
+                            temperature=1.3,
+                            do_sample=True,
+                            top_p=0.8,
+                            max_new_tokens=20,
+                            max_length=2000,
+                            repetition_penalty=1.1
                     )
 
                 for answer, prob in zip(answers, probs):                    
