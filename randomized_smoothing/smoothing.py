@@ -149,7 +149,7 @@ class Smooth(object):
             counts[idx] += 1
         return counts
     
-    def count_similar(self, target_emb, all_embs, threshold=0.5):
+    def count_similar(self, target_emb, all_embs, threshold=0.98):
         sims = util.cos_sim(target_emb, all_embs)[0]
         return (sims >= threshold).sum().item()
 
