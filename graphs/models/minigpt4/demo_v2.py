@@ -587,22 +587,22 @@ def main():
         with gr.Row():
             with gr.Column():
                 gr.Examples(examples=[
-                    ["/examples_v2/office.jpg", "[grounding] describe this image in detail", upload_flag, replace_flag,
+                    ["/home/swf_developer/certifiedGPT/graphs/models/minigpt4/examples_v2/office.jpg", "[grounding] describe this image in detail", upload_flag, replace_flag,
                     img_list],
-                    ["/examples_v2/sofa.jpg", "[detection] sofas", upload_flag, replace_flag, img_list],
-                    ["examples_v2/2000x1372_wmkn_0012149409555.jpg", "[refer] the world cup", upload_flag, replace_flag,
+                    ["/home/swf_developer/certifiedGPT/graphs/models/minigpt4/examples_v2/sofa.jpg", "[detection] sofas", upload_flag, replace_flag, img_list],
+                    ["/home/swf_developer/certifiedGPT/graphs/models/minigpt4/examples_v2/2000x1372_wmkn_0012149409555.jpg", "[refer] the world cup", upload_flag, replace_flag,
                     img_list],
-                    ["examples_v2/KFC-20-for-20-Nuggets.jpg", "[identify] what is this {<4><50><30><65>}", upload_flag,
+                    ["/home/swf_developer/certifiedGPT/graphs/models/minigpt4/examples_v2/KFC-20-for-20-Nuggets.jpg", "[identify] what is this {<4><50><30><65>}", upload_flag,
                     replace_flag, img_list],
                 ], inputs=[image, text_input, upload_flag, replace_flag, img_list], fn=example_trigger,
                     outputs=[upload_flag, replace_flag])
             with gr.Column():
                 gr.Examples(examples=[
-                    ["examples_v2/glip_test.jpg", "[vqa] where should I hide in this room when playing hide and seek",
+                    ["/home/swf_developer/certifiedGPT/graphs/models/minigpt4/examples_v2/glip_test.jpg", "[vqa] where should I hide in this room when playing hide and seek",
                     upload_flag, replace_flag, img_list],
-                    ["examples_v2/float.png", "Please write a poem about the image", upload_flag, replace_flag, img_list],
-                    ["examples_v2/thief.png", "Is the weapon fateful", upload_flag, replace_flag, img_list],
-                    ["examples_v2/cockdial.png", "What might happen in this image in the next second", upload_flag,
+                    ["/home/swf_developer/certifiedGPT/graphs/models/minigpt4/examples_v2/float.png", "Please write a poem about the image", upload_flag, replace_flag, img_list],
+                    ["/home/swf_developer/certifiedGPT/graphs/models/minigpt4/examples_v2/thief.png", "Is the weapon fateful", upload_flag, replace_flag, img_list],
+                    ["/home/swf_developer/certifiedGPT/graphs/models/minigpt4/examples_v2/cockdial.png", "What might happen in this image in the next second", upload_flag,
                     replace_flag, img_list],
                 ], inputs=[image, text_input, upload_flag, replace_flag, img_list], fn=example_trigger,
                     outputs=[upload_flag, replace_flag])
