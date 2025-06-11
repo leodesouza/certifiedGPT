@@ -26,7 +26,9 @@ from graphs.models.minigpt4.common.optims import *
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Demo")
-    parser.add_argument("--config-path", default="./configs/attack_configs/vqav2_eval_noise_0.25.yaml", help="path to configuration file.")
+    
+    # parser.add_argument("--config-path", default="./configs/attack_configs/vqav2_eval_noise_0.25.yaml", help="path to configuration file.")
+    parser.add_argument("--config-path", default="./configs/attack_configs/vqav2_eval_noise_0.yaml", help="path to configuration file.")
     parser.add_argument("--gpu-id", type=int, default=0, help="specify the gpu to load the model.")
     parser.add_argument(
         "--options",
@@ -129,20 +131,20 @@ def main():
 
 
     def gradio_answer(chatbot, chat_state, img_list, num_beams, temperature):
-        # llm_message = chat.answer(conv=chat_state,
-        #                         img_list=img_list,
-        #                         num_beams=num_beams,
-        #                         temperature=temperature,
-        #                         max_new_tokens=20,
-        #                         max_length=2000)[0]
-
         llm_message = chat.answer(conv=chat_state,
                                 img_list=img_list,
-                                num_beams=1,
-                                temperature=1.3,                                
-                                top_p=0.8,
+                                num_beams=num_beams,
+                                temperature=temperature,
                                 max_new_tokens=20,
                                 max_length=2000)[0]
+
+        # llm_message = chat.answer(conv=chat_state,
+        #                         img_list=img_list,
+        #                         num_beams=1,
+        #                         temperature=1.3,                                
+        #                         top_p=0.8,
+        #                         max_new_tokens=20,
+        #                         max_length=2000)[0]
         chatbot[-1][1] = llm_message
         return chatbot, chat_state, img_list
 
