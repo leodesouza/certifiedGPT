@@ -60,7 +60,7 @@ cfg = Config(args)
 
 device = 'cuda:{}'.format(args.gpu_id)
 
-model_config = cfg.model_cfg
+model_config = cfg.model
 model_config.device_8bit = args.gpu_id
 model_cls = registry.get_model_class(model_config.arch)
 model = model_cls.from_config(model_config).to(device)
