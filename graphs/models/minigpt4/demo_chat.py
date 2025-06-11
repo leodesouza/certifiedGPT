@@ -83,7 +83,7 @@ def main():
     model = model_cls.from_config(model_config)
     model.to(('cuda:{}'.format(args.gpu_id)))
 
-    #load_finetuned_model(cfg, model)
+    load_finetuned_model(cfg, model)
 
     CONV_VISION = CONV_VISION_Vicuna0
     
