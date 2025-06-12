@@ -142,12 +142,6 @@ class Smooth(object):
             
             predictions = np.array(predictions, dtype=object)                
             return predictions
-
-    def _count_arr(self, arr: np.ndarray, length: int) -> np.ndarray:
-        counts = np.zeros(length, dtype=int)
-        for idx in arr:
-            counts[idx] += 1
-        return counts
     
     def count_similar(self, target_emb, all_embs, threshold=0.98):
         sims = util.cos_sim(target_emb, all_embs)[0]
