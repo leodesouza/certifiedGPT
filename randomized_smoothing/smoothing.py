@@ -177,7 +177,8 @@ class Smooth(object):
         text1_count = sum(1 for row in sample_for_estimation if row[0] == text1)
         print(f'text1: {text1}')
 
-        sub_sample_for_estimation = [t[0] for t in sample_for_estimation if t != text1]
+        sub_sample_for_estimation = [t for t in sample_for_estimation if t[0] != text1]
+        print(f'sub_sample_for_estimation: {sub_sample_for_estimation}')
         sub_probs_selection = np.array(sub_sample_for_estimation[:, 1], dtype=float)
         top2 = sub_probs_selection.argsort()[::-1][:1]    
 
