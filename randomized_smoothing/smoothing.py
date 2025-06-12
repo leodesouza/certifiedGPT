@@ -143,7 +143,7 @@ class Smooth(object):
             predictions = np.array(predictions, dtype=object)                
             return predictions
     
-    def count_similar(self, target_emb, all_embs, threshold=0.98):
+    def count_similar(self, target_emb, all_embs, threshold=0.99):
         sims = util.cos_sim(target_emb, all_embs)[0]
         return (sims >= threshold).sum().item()
 
