@@ -43,7 +43,7 @@ datasets:
 
 run:
   agent: image_text_eval
-  max_new_tokens: 20  
+  max_new_tokens: 300  
   seed: 42  
   output_dir: ${env:OUTPUT_DIR}          
   amp: True
