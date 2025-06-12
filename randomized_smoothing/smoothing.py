@@ -168,6 +168,7 @@ class Smooth(object):
         
         self.base_decoder.eval()        
         
+        # predictions.append((clean_answer, prob))
         sample_for_estimation = self._sample_noise(x, n, batch_size)        
         print(f'predictions and probs: {sample_for_estimation}')
         probs_selection = np.array(sample_for_estimation[:, 1], dtype=float)
@@ -179,7 +180,7 @@ class Smooth(object):
 
         sub_sample_for_estimation = [t for t in sample_for_estimation if t[0] != text1]
         print(f'sub_sample_for_estimation: {sub_sample_for_estimation}')
-        sub_probs_selection = np.array(sub_sample_for_estimation[:, 1], dtype=float)
+        sub_probs_selection = np.array([row[1] for row in sub_sample_for_estimation], dtype=float)
         top2 = sub_probs_selection.argsort()[::-1][:1]    
 
         text2 = sub_sample_for_estimation[top2[0]][0]
