@@ -128,8 +128,8 @@ class Smooth(object):
                             questions, 
                             max_new_tokens=max_tokens, 
                             num_beams=1,
-                            temperature=1.3,
-                            do_sample=True,
+                            temperature=0.3,
+                            do_sample=False,
                             top_p=0.8,                                                        
                             repetition_penalty=1
                     )
