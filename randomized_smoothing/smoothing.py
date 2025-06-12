@@ -172,16 +172,19 @@ class Smooth(object):
         print(f'predictions and probs: {sample_for_estimation}')
         probs_selection = np.array(sample_for_estimation[:, 1], dtype=float)
         
-        top2 = probs_selection.argsort()[::-1][:2]
-        
-        text1 = sample_for_estimation[top2[0]][0]
-        text2 = sample_for_estimation[top2[1]][0]
-
-        print(f'text1: {text1}')
-        print(f'text2: {text2}')
-                                        
+        top1 = probs_selection.argsort()[::-1][:1]        
+        text1 = sample_for_estimation[top1[0]][0]
         text1_count = sum(1 for row in sample_for_estimation if row[0] == text1)
+        print(f'text1: {text1}')
+
+        sub_sample_for_estimation = [t[0] for t in sample_for_estimation if t != text1]
+        sub_probs_selection = np.array(sub_sample_for_estimation[:, 1], dtype=float)
+        top2 = sub_probs_selection.argsort()[::-1][:1]    
+
+        text2 = sub_sample_for_estimation[top2[0]][0]
+        print(f'text1: {text2}')
         text_2_count = sum(1 for row in sample_for_estimation if row[0] == text2)
+                
         trials_count = text1_count + text_2_count
         
         # binom_test > alpha (non-significant): the difference in occurrences of text1 and text2 is not statistically significant         
