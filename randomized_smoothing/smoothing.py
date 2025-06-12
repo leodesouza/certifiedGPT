@@ -130,7 +130,7 @@ class Smooth(object):
                             num_beams=1,
                             temperature=0.3,
                             do_sample=False,
-                            top_p=0.8,                                                        
+                            top_p=1.0,                                                        
                             repetition_penalty=1
                     )
 
