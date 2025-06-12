@@ -108,9 +108,19 @@ class StoppingCriteriaSub(StoppingCriteria):
         return False
 
 
+# CONV_VISION_Vicuna0 = Conversation(    
+#     system="Give the following image: <Img>ImageContent</Img>. "
+#            "You will be able to see the image once I provide it to you. Please answer my questions.",
+#     roles=("Human: ", "Assistant: "),
+#     messages=[],
+#     offset=2,
+#     sep_style=SeparatorStyle.SINGLE,
+#     sep="###",
+# )
+
 CONV_VISION_Vicuna0 = Conversation(    
-    system="Give the following image: <Img>ImageContent</Img>. "
-           "You will be able to see the image once I provide it to you. Please answer my questions.",
+    system="You are given an image as follows: <Img>ImageContent</Img>. "
+           "You can see the image and must answer questions about it clearly and accurately.",
     roles=("Human: ", "Assistant: "),
     messages=[],
     offset=2,
