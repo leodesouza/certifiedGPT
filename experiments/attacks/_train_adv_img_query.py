@@ -134,7 +134,7 @@ def main():
     parser.add_argument("--output", default="/home/swf_developer/storage/attack/query_based_attack_output/output.txt", type=str)
     parser.add_argument("--data_path", default="temp", type=str)
     parser.add_argument("--text_path", default="/home/swf_developer/storage/attack/img_2_txt_output/minigpt4_tmp_pred.txt", type=str)
-    parser.add_argument("--query", default='what is the content of this image?', type=str)
+    parser.add_argument("--query", default='Question: What is in the image?\nAnswer:', type=str)
     
     parser.add_argument("--delta", default="normal", type=str)
     parser.add_argument("--steps", default=5, type=int)
