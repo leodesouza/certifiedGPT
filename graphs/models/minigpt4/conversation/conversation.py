@@ -166,8 +166,7 @@ class Chat:
             self.inner_text = text                
             prediction = self.smooth_decoder()
             if prediction == self.smoothing.ABSTAIN:
-                self._abstain = True
-                raise ValueError("stop")
+                self._abstain = True                
                 return
         
         if len(conv.messages) > 0 and conv.messages[-1][0] == conv.roles[0] \
