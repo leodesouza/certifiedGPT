@@ -176,25 +176,25 @@ class Chat:
             conv.messages[-1][1] = ' '.join([conv.messages[-1][1], text])            
         else:
             conv.append_message(conv.roles[0], text)
-
+            
         if self.smoothing is not None:
             self.inner_text = text
-        
-    def answer_prepare(self, conv, img_list, max_new_tokens=300, num_beams=1, min_length=1, top_p=0.9,
+            
+    def answer(self, conv):
+                                       
+        output_text = self.model_smooth_generate()
+        if output_text == self.smoothing.ABSTAIN:
+            return output_text, None
+      
+        conv.messages[-1][1] = output_text
+        print(f"answer: {output_text}")
+        return output_text
+    
+    def answer_prepare(self, conv, max_new_tokens=300, num_beams=1, min_length=1, top_p=0.9,
                        repetition_penalty=1.05, length_penalty=1, temperature=1.0, max_length=2000, do_sample=False):
-        conv.append_message(conv.roles[1], None)        
-        prompt = conv.get_prompt()         
-        embs = self.model.get_context_emb(prompt, img_list)
-        
-        current_max_len = embs.shape[1] + max_new_tokens
-        if current_max_len - max_length > 0:
-            print('Warning: The number of tokens in current conversation exceeds the max length. '
-                  'The model will not see the contexts outside the range.')
-        begin_idx = max(0, current_max_len - max_length)
-        embs = embs[:, begin_idx:]
+        conv.append_message(conv.roles[1], None)                
 
-        generation_kwargs = dict(
-            inputs_embeds=embs,
+        generation_kwargs = dict(            
             max_new_tokens=max_new_tokens,
             stopping_criteria=self.stopping_criteria,
             num_beams=num_beams,
@@ -207,23 +207,6 @@ class Chat:
         )
         
         return generation_kwargs
-
-    def answer(self, conv, img_list, **kargs):
-               
-        generation_dict = self.answer_prepare(conv, img_list, **kargs)
-        
-        if self.smoothing is not None:
-            output_text = self.model_smooth_generate()
-            if output_text == self.smoothing.ABSTAIN:
-                return output_text, None
-        else:                 
-            output_token = self.model_generate(**generation_dict)[0]
-            output_text = self.model.llama_tokenizer.decode(output_token, skip_special_tokens=True)
-            output_text = output_text.split('###')[0]  # remove the stop sign '###'
-            output_text = output_text.split('Assistant:')[-1].strip()
-
-        conv.messages[-1][1] = output_text
-        return output_text, None if self.smoothing is not None else output_token.cpu().numpy()
 
     def stream_answer(self, conv, img_list, **kargs):
         generation_kwargs = self.answer_prepare(conv, img_list, **kargs)
@@ -322,7 +305,20 @@ class Chat:
         output_text = self.model.llama_tokenizer.decode(output_token, skip_special_tokens=True)
         return [output_text.strip()]
     
-    def model_smooth_generate(self):        
+    def model_smooth_generate(self, chat):        
+
+        
+        # CONV_VISION_Vicuna0 = Conversation(    
+        #     system="You are given an image as follows: <Img>ImageContent</Img>. "
+        #            "You can see the image and must answer questions about it clearly and accurately.",
+        #     roles=("Human: ", "Assistant: "),
+        #     messages=[],
+        #     offset=2,
+        #     sep_style=SeparatorStyle.SINGLE,
+        #     sep="###",
+        # )
+
+
         message = f"[vqa] Based on the image, respond to this question in English with with a short answer: {self.inner_text}"        
         instruction = "<Img><ImageHere></Img> {} ".format(message)        
         data = {

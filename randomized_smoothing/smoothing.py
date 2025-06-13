@@ -41,54 +41,7 @@ class Smooth(object):
         else:
             radius = self.sigma * norm.ppf(pABar)
             return text, radius
-
-    # def predict(self, x: torch.tensor, n: int, alpha: float, batch_size: int):
-        
-    #     self.base_decoder.eval()        
-    #     sample_for_estimation = self._sample_noise(x, n, batch_size)
-    #     print(f'predictions and probs: {sample_for_estimation}')
-        
-    #     texts = [row[0] for row in sample_for_estimation]
-    #     print(f'texts: {texts}')
-    #     all_text_embeds = self.sentence_transformer.encode(texts, convert_to_tensor=True)
-                        
-    #     probs_selection = np.array(sample_for_estimation[:, 1], dtype=float)
-    #     print(f"probs_selection: {probs_selection}")
-        
-    #     top2 = probs_selection.argsort()[::-1][:2]
-    #     print(f"top2: {top2}")
-
-    #     print(f"top1: {top2[0]}")
-    #     print(f"top2: {top2[1]}")
-        
-    #     text1_embs = all_text_embeds[top2[0]]
-    #     text2_embs = all_text_embeds[top2[1]]
-                                            
-    #     text1_count = self.count_similar(text1_embs, all_text_embeds)
-    #     print(f"text1_count: {text1_count}")
-    #     text_2_count = self.count_similar(text2_embs, all_text_embeds)       
-    #     print(f"text_2_count: {text_2_count}")
-
-    #     trials_count = text1_count + text_2_count
-        
-    #     # binom_test > alpha (non-significant): the difference in occurrences of text1 and text2 is not statistically significant         
-    #     # test if text1 and text2 are equally probable(h_0)
-    #     # h0 null hypothesis
-    #     # h1 alternative hypothesis(text1 shows different prob(p != 0.5))
-        
-    #     p = binom_test(text1_count, trials_count, p=0.5)
-    #     print(f"p_value: {p}")
-    #     if p > alpha:            
-    #         print('abstain')
-    #         return Smooth.ABSTAIN
-    #     else:
-    #         #statistically significant
-    #         #reject the null hypothesis
-    #         top = top2[0]
-    #         text = sample_for_estimation[top][0]
-    #         print(f'top answer: {text}')
-    #         return text
-    
+       
     def is_similiar(self, text1, text2):
         similarity_threshold = 0.9
         embp = self.sentence_transformer.encode(text1, convert_to_tensor=True)
@@ -119,6 +72,7 @@ class Smooth(object):
 
                 batch_question = question * this_batch_size
                 questions = self.prepare_texts(batch_question, conv_temp)
+                print(f"sample_noise: {question}")
                 max_tokens = self.config.run.max_new_tokens
 
                 # Removed `xla_amp.autocast` and used PyTorch's native autocast
