@@ -182,7 +182,7 @@ class Chat:
             
     def answer(self, conv):
                                        
-        output_text = self.model_smooth_generate()
+        output_text = self.model_smooth_generate(conv)
         if output_text == self.smoothing.ABSTAIN:
             return output_text, None
       
@@ -305,7 +305,7 @@ class Chat:
         output_text = self.model.llama_tokenizer.decode(output_token, skip_special_tokens=True)
         return [output_text.strip()]
     
-    def model_smooth_generate(self, chat):        
+    def model_smooth_generate(self, conv):        
 
         
         # CONV_VISION_Vicuna0 = Conversation(    
@@ -318,7 +318,9 @@ class Chat:
         #     sep="###",
         # )
 
-
+        prompt = conv.get_prompt()
+        print(f"prompt: {prompt}")
+        raise ValueError("stop")
         message = f"[vqa] Based on the image, respond to this question in English with with a short answer: {self.inner_text}"        
         instruction = "<Img><ImageHere></Img> {} ".format(message)        
         data = {
