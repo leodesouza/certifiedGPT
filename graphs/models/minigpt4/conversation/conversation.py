@@ -170,23 +170,18 @@ class Chat:
             self.stopping_criteria = StoppingCriteriaList([StoppingCriteriaSub(stops=stop_words_ids)])
 
     
-    def ask(self, text, conv):
-        if self.smoothing is not None:
-            print('asking with smoothing')
-            self.inner_text = text                
-            prediction = self.smooth_decoder()
-            if prediction == self.smoothing.ABSTAIN:
-                self._abstain = True                
-                return
-        
+    def ask(self, text, conv):        
         if len(conv.messages) > 0 and conv.messages[-1][0] == conv.roles[0] \
                 and conv.messages[-1][1][-6:] == '</Img>':  # last message is image.            
             conv.messages[-1][1] = ' '.join([conv.messages[-1][1], text])            
         else:
             conv.append_message(conv.roles[0], text)
 
+        if self.smoothing is not None:
+            self.inner_text = text
+        
     def answer_prepare(self, conv, img_list, max_new_tokens=300, num_beams=1, min_length=1, top_p=0.9,
-                       repetition_penalty=1.05, length_penalty=1, temperature=1.0, max_length=2000):
+                       repetition_penalty=1.05, length_penalty=1, temperature=1.0, max_length=2000, do_sample=False):
         conv.append_message(conv.roles[1], None)        
         prompt = conv.get_prompt()         
         embs = self.model.get_context_emb(prompt, img_list)
@@ -203,7 +198,7 @@ class Chat:
             max_new_tokens=max_new_tokens,
             stopping_criteria=self.stopping_criteria,
             num_beams=num_beams,
-            do_sample=True,
+            do_sample=do_sample,
             min_length=min_length,
             top_p=top_p,
             repetition_penalty=repetition_penalty,
@@ -214,21 +209,21 @@ class Chat:
         return generation_kwargs
 
     def answer(self, conv, img_list, **kargs):
-        if self.smoothing is not None:
-            if self._abstain:
-                self._abstain = False
-                print('abstain')
-                return "abstain", ""
-        
+               
         generation_dict = self.answer_prepare(conv, img_list, **kargs)
-        output_token = self.model_generate(**generation_dict)[0]
-        output_text = self.model.llama_tokenizer.decode(output_token, skip_special_tokens=True)
-
-        output_text = output_text.split('###')[0]  # remove the stop sign '###'
-        output_text = output_text.split('Assistant:')[-1].strip()
+        
+        if self.smoothing is not None:
+            output_text = self.model_smooth_generate()
+            if output_text == self.smoothing.ABSTAIN:
+                return output_text, None
+        else:                 
+            output_token = self.model_generate(**generation_dict)[0]
+            output_text = self.model.llama_tokenizer.decode(output_token, skip_special_tokens=True)
+            output_text = output_text.split('###')[0]  # remove the stop sign '###'
+            output_text = output_text.split('Assistant:')[-1].strip()
 
         conv.messages[-1][1] = output_text
-        return output_text, output_token.cpu().numpy()
+        return output_text, None if self.smoothing is not None else output_token.cpu().numpy()
 
     def stream_answer(self, conv, img_list, **kargs):
         generation_kwargs = self.answer_prepare(conv, img_list, **kargs)
@@ -238,7 +233,7 @@ class Chat:
         thread.start()
         return streamer
 
-    def model_generate(self, *args, **kwargs):
+    def model_generate(self, *args, **kwargs):        
         # for 8 bit and 16 bit compatibility
         with self.model.maybe_autocast():            
             output = self.model.llama_model.generate(*args, **kwargs)                   
@@ -327,7 +322,7 @@ class Chat:
         output_text = self.model.llama_tokenizer.decode(output_token, skip_special_tokens=True)
         return [output_text.strip()]
     
-    def smooth_decoder(self):        
+    def model_smooth_generate(self):        
         message = f"[vqa] Based on the image, respond to this question in English with with a short answer: {self.inner_text}"        
         instruction = "<Img><ImageHere></Img> {} ".format(message)        
         data = {
