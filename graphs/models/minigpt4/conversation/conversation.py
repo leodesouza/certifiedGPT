@@ -119,7 +119,7 @@ class StoppingCriteriaSub(StoppingCriteria):
 # )
 
 CONV_VISION_Vicuna0 = Conversation(    
-    system="You are given an image as follows: <Img>ImageContent</Img>. "
+    system="[vqa] You are given an image as follows: <Img>ImageContent</Img>. "
            "You can see the image and must answer questions about it clearly and accurately.",
     roles=("Human: ", "Assistant: "),
     messages=[],
@@ -320,14 +320,13 @@ class Chat:
         # )
 
         prompt = conv.get_prompt()
-        print(f"prompt: {prompt}")
-        raise ValueError("stop")
+        print(f"prompt: {prompt}")        
         message = f"[vqa] Based on the image, respond to this question in English with with a short answer: {self.inner_text}"        
         instruction = "<Img><ImageHere></Img> {} ".format(message)        
         data = {
             "image": self.inner_img_list[0],
             "question_id": 0,
-            "instruction_input": [instruction],
+            "instruction_input": [prompt],
             "answer": "",
             "image_id": 0
         }

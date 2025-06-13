@@ -73,6 +73,7 @@ class Smooth(object):
                 batch_question = question * this_batch_size
                 questions = self.prepare_texts(batch_question, conv_temp)
                 print(f"sample_noise: {question}")
+                raise ValueError("stop ")
                 max_tokens = self.config.run.max_new_tokens
 
                 # Removed `xla_amp.autocast` and used PyTorch's native autocast
