@@ -67,9 +67,7 @@ class MiniGPTBase(BaseModel):
 
     def get_context_emb(self, prompt, img_list):                
         device = img_list[0].device
-        prompt_segs = prompt.split('<ImageHere>') 
-        print(f"prompt: {prompt}")  
-        print(f"prompt_segs: {prompt_segs}")              
+        prompt_segs = prompt.split('<ImageHere>')         
         assert len(prompt_segs) == len(img_list) + 1, "Unmatched numbers of image placeholders and images."
         seg_tokens = [
             self.llama_tokenizer(
