@@ -161,7 +161,7 @@ class Chat:
 
     
     def ask(self, text, conv):        
-        text = f"Question: {text} "
+        text = f"Question: {text}\nAnswer: "
         if len(conv.messages) > 0 and conv.messages[-1][0] == conv.roles[0] \
                 and conv.messages[-1][1][-6:] == '</Img>':  # last message is image.            
             conv.messages[-1][1] = ' '.join([conv.messages[-1][1], text])            
@@ -300,6 +300,7 @@ class Chat:
     def model_smooth_generate(self, conv):        
                 
         prompt = f"{conv.get_prompt()}{conv.roles[1]}"                        
+        print(f"sending prompt: {prompt}")
         # prompt = conv.get_prompt()                
         data = {
             "image": self.inner_img_list[0],
