@@ -210,8 +210,7 @@ class Chat:
             output = self.model.llama_model.generate(*args, **kwargs)                   
         return output
 
-    def encode_img(self, img_list):
-        print('uploading image')
+    def encode_img(self, img_list):        
         image = img_list[0]
         img_list.pop(0)
         if self.inner_img_list:
