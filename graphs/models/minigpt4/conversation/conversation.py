@@ -174,7 +174,7 @@ class Chat:
     def answer(self, conv):                                       
         output_text = self.model_smooth_generate(conv)
         if output_text == self.smoothing.ABSTAIN:
-            print("abstain")                  
+            output_text = "inconclusive"            
         
         print(f"answer: {output_text}")
         conv.messages[-1][1] = output_text
