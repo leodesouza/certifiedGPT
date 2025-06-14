@@ -4,6 +4,8 @@
 # See LICENSE.md for the full license text or visit the repo at:
 # https://github.com/yunqing-me/AttackVLM/blob/main/LICENSE
 #
+import warnings
+warnings.filterwarnings("ignore", category=FutureWarning)
 
 import argparse
 import gc
