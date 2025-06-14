@@ -41,7 +41,7 @@ class Conversation:
             ret = self.system + self.sep
             for role, message in self.messages:
                 if message:
-                    ret += role + message + self.sep
+                    ret += role + "\n" + message + self.sep
                 else:
                     ret += role
             return ret
@@ -297,7 +297,7 @@ class Chat:
         return [output_text.strip()]
     
     def model_smooth_generate(self, conv):                        
-        prompt = f"{conv.get_prompt()}{conv.roles[1]}"                                
+        prompt = f"{conv.get_prompt()}\n{conv.roles[1]}"                                
         print(f"sending prompt: {prompt}")        
         data = {
             "image": self.inner_img_list[0],
