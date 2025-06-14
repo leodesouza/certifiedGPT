@@ -111,7 +111,7 @@ class StoppingCriteriaSub(StoppingCriteria):
 CONV_VISION_Vicuna0 = Conversation(    
     system="[vqa] You are given an image as follows: <Img>ImageContent</Img>. "
            "You can see the image and must answer questions about it clearly and accurately.",
-    roles=("Human: ", "Assistant: "),
+    roles=("Human:\n ", "Assistant: "),
     messages=[],
     offset=2,
     sep_style=SeparatorStyle.SINGLE,
@@ -161,7 +161,7 @@ class Chat:
 
     
     def ask(self, text, conv):        
-        # text = f"Question: {text}\nAnswer: "
+        text = f"{text}\n"
         if len(conv.messages) > 0 and conv.messages[-1][0] == conv.roles[0] \
                 and conv.messages[-1][1][-6:] == '</Img>':  # last message is image.            
             conv.messages[-1][1] = ' '.join([conv.messages[-1][1], text])            
@@ -297,7 +297,7 @@ class Chat:
         return [output_text.strip()]
     
     def model_smooth_generate(self, conv):                        
-        prompt = f"{conv.get_prompt()}\n{conv.roles[1]}"                                
+        prompt = f"{conv.get_prompt()}{conv.roles[1]}"                                
         print(f"sending prompt: {prompt}")        
         data = {
             "image": self.inner_img_list[0],
