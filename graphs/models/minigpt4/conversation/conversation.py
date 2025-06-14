@@ -175,6 +175,7 @@ class Chat:
                                        
         output_text = self.model_smooth_generate(conv)
         if output_text == self.smoothing.ABSTAIN:
+            print("abstain")
             return output_text, None
       
         conv.messages[-1][1] = output_text
@@ -311,7 +312,7 @@ class Chat:
         prediction = self.smoothing.predict(
             data, self._monte_carlo_size, self._alpha, batch_size=self._batch_size,chat_state=None
         )
-
+        
         return prediction
         
     

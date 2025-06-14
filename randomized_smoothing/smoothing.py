@@ -112,13 +112,9 @@ class Smooth(object):
                 noise = torch.randn_like(batch_image, device=self._device) * self.sigma
                 noisy_image_batch = batch_image + noise
 
-                questions = question * this_batch_size                
-                # questions = self.prepare_texts(batch_question, chat_state)                      
-                print(f'questions: {questions}')          
-                raise ValueError("stop")
+                questions = question * this_batch_size                                
                 max_tokens = self.config.run.max_new_tokens
-
-                # Removed `xla_amp.autocast` and used PyTorch's native autocast
+                                
                 with torch.cuda.amp.autocast(enabled=self.config.run.amp):
                     answers, probs = self.base_decoder.generate(
                             noisy_image_batch, 
