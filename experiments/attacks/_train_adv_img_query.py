@@ -132,8 +132,8 @@ def main():
     parser.add_argument("--query", default='What is in the image?', type=str)
     
     parser.add_argument("--delta", default="normal", type=str)
-    parser.add_argument("--steps", default=5, type=int)
-    parser.add_argument("--num_query", default=10, type=int)
+    parser.add_argument("--steps", default=1, type=int)
+    parser.add_argument("--num_query", default=1, type=int)
     parser.add_argument("--num_sub_query", default=5, type=int)
     parser.add_argument("--sigma", default=8, type=float)
     
