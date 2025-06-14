@@ -112,8 +112,9 @@ class Smooth(object):
                 noise = torch.randn_like(batch_image, device=self._device) * self.sigma
                 noisy_image_batch = batch_image + noise
 
-                batch_question = question * this_batch_size
-                questions = self.prepare_texts(batch_question, chat_state)      
+                batch_question = question * this_batch_size                
+                # questions = self.prepare_texts(batch_question, chat_state)      
+                questions = [chat_state.get_prompt()]
                 print(f'questions: {questions}')          
                 max_tokens = self.config.run.max_new_tokens
 
