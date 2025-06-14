@@ -74,13 +74,11 @@ class Smooth(object):
         # test if text1 and text2 are equally probable(h_0)
         # h0 null hypothesis
         # h1 alternative hypothesis(text1 shows different prob(p != 0.5))
-        if binom_test(text1_count, trials_count, p=0.5) > alpha:            
-            print('abstain')
+        if binom_test(text1_count, trials_count, p=0.5) > alpha:                        
             return Smooth.ABSTAIN
         else:
             #statistically significant
-            #reject the null hypothesis            
-            print(f'answer: {text1}')
+            #reject the null hypothesis                        
             return text1
        
     def is_similiar(self, text1, text2):
