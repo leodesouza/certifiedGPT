@@ -115,7 +115,7 @@ CONV_VISION_Vicuna0 = Conversation(
     messages=[],
     offset=2,
     sep_style=SeparatorStyle.SINGLE,
-    sep="###",
+    sep="### ",
 )
 
 CONV_VISION_LLama2 = Conversation(
