@@ -114,7 +114,7 @@ class Smooth(object):
 
                 batch_question = question * this_batch_size                
                 questions = self.prepare_texts(batch_question, chat_state)                      
-                print(f'questions: {questions}')          
+                # print(f'questions: {questions}')          
                 max_tokens = self.config.run.max_new_tokens
 
                 # Removed `xla_amp.autocast` and used PyTorch's native autocast
