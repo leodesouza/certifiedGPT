@@ -112,8 +112,8 @@ class Smooth(object):
                 noise = torch.randn_like(batch_image, device=self._device) * self.sigma
                 noisy_image_batch = batch_image + noise
 
-                batch_question = question * this_batch_size                
-                questions = self.prepare_texts(batch_question, chat_state)                      
+                questions = question * this_batch_size                
+                # questions = self.prepare_texts(batch_question, chat_state)                      
                 print(f'questions: {questions}')          
                 raise ValueError("stop")
                 max_tokens = self.config.run.max_new_tokens
@@ -154,6 +154,7 @@ class Smooth(object):
         [conv.append_message(conv.roles[1], None) for conv in convs]
         texts = [conv.get_prompt() for conv in convs]
         return texts
+        
 
     @property
     def logger(self):
