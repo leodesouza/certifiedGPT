@@ -299,7 +299,8 @@ class Chat:
     
     def model_smooth_generate(self, conv):        
                 
-        prompt = f"{conv.get_prompt()}{conv.roles[1]}"                        
+        # prompt = f"{conv.get_prompt()}{conv.roles[1]}"                        
+        prompt = conv.get_prompt()
         print(f"sending prompt: {prompt}")
         # prompt = conv.get_prompt()                
         data = {
