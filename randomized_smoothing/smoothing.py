@@ -113,8 +113,7 @@ class Smooth(object):
                 noisy_image_batch = batch_image + noise
 
                 batch_question = question * this_batch_size                
-                # questions = self.prepare_texts(batch_question, chat_state)      
-                questions = [chat_state.get_prompt()]
+                questions = self.prepare_texts(batch_question, chat_state)                      
                 print(f'questions: {questions}')          
                 max_tokens = self.config.run.max_new_tokens
 

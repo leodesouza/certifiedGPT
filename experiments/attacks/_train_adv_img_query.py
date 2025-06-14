@@ -103,12 +103,7 @@ def _i2t(args, chat, image_tensor):
     chat.ask(args.query, conv)            
     
     
-    captions, _  = chat.answer(conv, 
-                            img_list, 
-                            num_beams=num_beams, 
-                            temperature=temperature,
-                            max_new_tokens=20,
-                            max_length=2000)    
+    captions, _  = chat.answer(conv)    
     return captions
 
 def main():
