@@ -100,8 +100,8 @@ def _i2t(args, chat, image_tensor):
     chat.encode_img(img_list)  # img embeddings, size() = [bs, 32, 5120]                        
     chat.ask(args.query, conv)            
         
-    captions, _  = chat.answer(conv)    
-    return captions
+    answers = chat.answer(conv)    
+    return answers
 
 def main():
     seedEverything()
