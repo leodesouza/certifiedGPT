@@ -298,7 +298,8 @@ class Chat:
     
     def model_smooth_generate(self, conv):        
                 
-        prompt = f"{conv.get_prompt()} {conv.roles[1]}"                        
+        # prompt = f"{conv.get_prompt()} {conv.roles[1]}"                        
+        prompt = conv.get_prompt()        
         data = {
             "image": self.inner_img_list[0],
             "question_id": 0,
