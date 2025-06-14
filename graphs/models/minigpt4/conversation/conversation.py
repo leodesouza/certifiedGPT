@@ -108,16 +108,6 @@ class StoppingCriteriaSub(StoppingCriteria):
         return False
 
 
-# CONV_VISION_Vicuna0 = Conversation(    
-#     system="Give the following image: <Img>ImageContent</Img>. "
-#            "You will be able to see the image once I provide it to you. Please answer my questions.",
-#     roles=("Human: ", "Assistant: "),
-#     messages=[],
-#     offset=2,
-#     sep_style=SeparatorStyle.SINGLE,
-#     sep="###",
-# )
-
 CONV_VISION_Vicuna0 = Conversation(    
     system="[vqa] You are given an image as follows: <Img>ImageContent</Img>. "
            "You can see the image and must answer questions about it clearly and accurately.",
@@ -171,7 +161,7 @@ class Chat:
 
     
     def ask(self, text, conv):        
-        text = f"Question: {text}\n"
+        text = f"Question: {text} "
         if len(conv.messages) > 0 and conv.messages[-1][0] == conv.roles[0] \
                 and conv.messages[-1][1][-6:] == '</Img>':  # last message is image.            
             conv.messages[-1][1] = ' '.join([conv.messages[-1][1], text])            
