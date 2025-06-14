@@ -333,7 +333,7 @@ class Chat:
 
            
         prediction = self.smoothing.predict(
-            data, self._monte_carlo_size, self._alpha, batch_size=self._batch_size
+            data, self._monte_carlo_size, self._alpha, batch_size=self._batch_size,chat_state=conv
         )
 
         return prediction
