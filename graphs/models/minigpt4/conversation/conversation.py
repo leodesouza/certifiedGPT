@@ -307,22 +307,8 @@ class Chat:
         return [output_text.strip()]
     
     def model_smooth_generate(self, conv):        
-
-        
-        # CONV_VISION_Vicuna0 = Conversation(    
-        #     system="You are given an image as follows: <Img>ImageContent</Img>. "
-        #            "You can see the image and must answer questions about it clearly and accurately.",
-        #     roles=("Human: ", "Assistant: "),
-        #     messages=[],
-        #     offset=2,
-        #     sep_style=SeparatorStyle.SINGLE,
-        #     sep="###",
-        # )
-
-        prompt = f"{conv.get_prompt()} {conv.roles[1]}"
-        print(f"prompt: {prompt}")        
-        raise ValueError("stop")
-        
+                
+        prompt = f"{conv.get_prompt()} {conv.roles[1]}"                        
         data = {
             "image": self.inner_img_list[0],
             "question_id": 0,
@@ -330,7 +316,6 @@ class Chat:
             "answer": "",
             "image_id": 0
         }
-
            
         prediction = self.smoothing.predict(
             data, self._monte_carlo_size, self._alpha, batch_size=self._batch_size,chat_state=conv
