@@ -111,7 +111,7 @@ class StoppingCriteriaSub(StoppingCriteria):
 CONV_VISION_Vicuna0 = Conversation(    
     system="[vqa] You are given an image as follows: <Img>ImageContent</Img>. "
            "You can see the image and must answer questions about it clearly and accurately.",
-    roles=("Human: ", "Assistant: "),
+    roles=("USER: ", "ASSISTANT: "),
     messages=[],
     offset=2,
     sep_style=SeparatorStyle.SINGLE,
