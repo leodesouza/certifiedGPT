@@ -66,9 +66,9 @@ class Smooth(object):
                                         
         trials_count = text1_count + text_2_count
 
-        print(f'text1_count: {text1_count}')
-        print(f'text_2_count: {text_2_count}')
-        print(f'trials_count: {trials_count}')
+        # print(f'text1_count: {text1_count}')
+        # print(f'text_2_count: {text_2_count}')
+        # print(f'trials_count: {trials_count}')
         
         # binom_test > alpha (non-significant): the difference in occurrences of text1 and text2 is not statistically significant         
         # test if text1 and text2 are equally probable(h_0)
@@ -99,7 +99,7 @@ class Smooth(object):
 
         with torch.no_grad():
             predictions = []
-            self.logger.info(f"Generating sample for {sample_type}")
+            # self.logger.info(f"Generating sample for {sample_type}")
             step = 1            
             for _ in range(ceil(num / batch_size)):
                 this_batch_size = min(batch_size, num)

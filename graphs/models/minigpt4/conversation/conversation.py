@@ -175,10 +175,7 @@ class Chat:
         output_text = self.model_smooth_generate(conv)
         if output_text == self.smoothing.ABSTAIN:
             output_text = "inconclusive"            
-        
-        print(f"answer: {output_text}")
-        conv.messages[-1][1] = output_text
-        
+        conv.messages[-1][1] = output_text        
         return output_text
     
     def answer_prepare(self, conv, max_new_tokens=300, num_beams=1, min_length=1, top_p=0.9,
@@ -298,7 +295,7 @@ class Chat:
     
     def model_smooth_generate(self, conv):                        
         prompt = f"{conv.get_prompt()}{conv.roles[1]}"                                
-        print(f"sending prompt: {prompt}")        
+        # print(f"sending prompt: {prompt}")        
         data = {
             "image": self.inner_img_list[0],
             "question_id": 0,
