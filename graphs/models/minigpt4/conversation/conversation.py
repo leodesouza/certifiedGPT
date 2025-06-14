@@ -171,15 +171,14 @@ class Chat:
         if self.smoothing is not None:
             self.inner_text = text
             
-    def answer(self, conv):
-                                       
+    def answer(self, conv):                                       
         output_text = self.model_smooth_generate(conv)
         if output_text == self.smoothing.ABSTAIN:
-            print("abstain")
-            return output_text, None
-      
-        conv.messages[-1][1] = output_text
+            print("abstain")                  
+        
         print(f"answer: {output_text}")
+        conv.messages[-1][1] = output_text
+        
         return output_text
     
     def answer_prepare(self, conv, max_new_tokens=300, num_beams=1, min_length=1, top_p=0.9,
@@ -297,13 +296,9 @@ class Chat:
         output_text = self.model.llama_tokenizer.decode(output_token, skip_special_tokens=True)
         return [output_text.strip()]
     
-    def model_smooth_generate(self, conv):        
-                
-        # prompt = f"{conv.get_prompt()}{conv.roles[1]}"                        
-        prompt = conv.get_prompt()
-        prompt = prompt.replace("###"," ")
-        print(f"sending prompt: {prompt}")
-        # prompt = conv.get_prompt()                
+    def model_smooth_generate(self, conv):                        
+        prompt = f"{conv.get_prompt()}{conv.roles[1]}"                                
+        print(f"sending prompt: {prompt}")        
         data = {
             "image": self.inner_img_list[0],
             "question_id": 0,
