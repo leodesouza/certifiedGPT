@@ -161,7 +161,7 @@ class Chat:
 
     
     def ask(self, text, conv):        
-        text = f"{text}\n"
+        text = f"{text}\n "
         if len(conv.messages) > 0 and conv.messages[-1][0] == conv.roles[0] \
                 and conv.messages[-1][1][-6:] == '</Img>':  # last message is image.            
             conv.messages[-1][1] = ' '.join([conv.messages[-1][1], text])            
