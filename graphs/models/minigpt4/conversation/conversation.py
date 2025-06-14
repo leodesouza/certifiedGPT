@@ -125,7 +125,7 @@ CONV_VISION_Vicuna0 = Conversation(
     messages=[],
     offset=2,
     sep_style=SeparatorStyle.SINGLE,
-    sep="###",
+    sep="### ",
 )
 
 CONV_VISION_LLama2 = Conversation(
@@ -171,7 +171,7 @@ class Chat:
 
     
     def ask(self, text, conv):        
-        text = f"Question: {text}\nAnswer:"
+        text = f"Question: {text}\n"
         if len(conv.messages) > 0 and conv.messages[-1][0] == conv.roles[0] \
                 and conv.messages[-1][1][-6:] == '</Img>':  # last message is image.            
             conv.messages[-1][1] = ' '.join([conv.messages[-1][1], text])            
