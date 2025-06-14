@@ -319,10 +319,10 @@ class Chat:
         #     sep="###",
         # )
 
-        prompt = conv.get_prompt()
+        prompt = f"{conv.get_prompt()} {conv.roles[1]}"
         print(f"prompt: {prompt}")        
-        message = f"[vqa] Based on the image, respond to this question in English with with a short answer: {self.inner_text}"        
-        instruction = "<Img><ImageHere></Img> {} ".format(message)        
+        raise ValueError("stop")
+        
         data = {
             "image": self.inner_img_list[0],
             "question_id": 0,
