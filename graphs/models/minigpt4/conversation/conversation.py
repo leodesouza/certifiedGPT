@@ -301,6 +301,7 @@ class Chat:
                 
         # prompt = f"{conv.get_prompt()}{conv.roles[1]}"                        
         prompt = conv.get_prompt()
+        prompt = prompt.replace("###"," ")
         print(f"sending prompt: {prompt}")
         # prompt = conv.get_prompt()                
         data = {
