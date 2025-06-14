@@ -57,7 +57,7 @@ class Smooth(object):
 
         sub_sample_for_estimation = sample_for_estimation[sample_for_estimation[:, 0] != text1]
         if sub_sample_for_estimation is None or len(sub_sample_for_estimation) == 0:
-            print("text1 is predominant")
+            # print("text1 is predominant")
             return text1
         
         # print(f'sub_sample_for_estimation: {sub_sample_for_estimation}')
