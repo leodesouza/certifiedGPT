@@ -53,11 +53,12 @@ class Smooth(object):
         top1 = probs_selection.argsort()[::-1][:1]        
         text1 = sample_for_estimation[top1[0]][0]
         text1 = text1.strip()
-        text1_count = sum(1 for row in sample_for_estimation if row[0] == text1)
+        text1_count = sum(1 for row in sample_for_estimation if self.is_similiar(row[0], text1))
         print(f'text1: {text1}')
 
-        sub_sample_for_estimation = sample_for_estimation[sample_for_estimation[:, 0] != text1]
+        sub_sample_for_estimation = sample_for_estimation[not self.is_similiar(sample_for_estimation[:, 0], text1)]
         if sub_sample_for_estimation is None or len(sub_sample_for_estimation) == 0:            
+            print(f"predominant:{text1}")
             return text1
         
         #print(f'sub_sample_for_estimation: {sub_sample_for_estimation}')
