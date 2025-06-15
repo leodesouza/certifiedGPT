@@ -175,7 +175,7 @@ class Chat:
         output_text = self.model_smooth_generate(conv)
         if output_text == self.smoothing.ABSTAIN:
             output_text = "inconclusive"
-            
+
         output_text = output_text.split('###')[0]  # remove the stop sign '###'
         output_text = output_text.split('Assistant:')[-1].strip()            
         conv.messages[-1][1] = output_text        
@@ -293,8 +293,10 @@ class Chat:
         return [output_text.strip()]
     
     def model_smooth_generate(self, conv):                        
-        prompt = f"{conv.get_prompt()}{conv.roles[1]}"                                
-        # print(f"sending prompt: {prompt}")        
+        # prompt = f"{conv.get_prompt()}{conv.roles[1]}"                                
+
+        prompt  = f"[vqa] Based on the image, respond to this question with a short answer: Question: {self.inner_text}\nAnswer: "
+        print(f"sending prompt: {prompt}")        
         data = {
             "image": self.inner_img_list[0],
             "question_id": 0,
