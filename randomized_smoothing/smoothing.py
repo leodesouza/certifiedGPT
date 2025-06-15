@@ -52,12 +52,12 @@ class Smooth(object):
         
         top1 = probs_selection.argsort()[::-1][:1]        
         text1 = sample_for_estimation[top1[0]][0]
+        text1 = text1.strip()
         text1_count = sum(1 for row in sample_for_estimation if row[0] == text1)
         print(f'text1: {text1}')
 
         sub_sample_for_estimation = sample_for_estimation[sample_for_estimation[:, 0] != text1]
-        if sub_sample_for_estimation is None or len(sub_sample_for_estimation) == 0:
-            # print("text1 is predominant")
+        if sub_sample_for_estimation is None or len(sub_sample_for_estimation) == 0:            
             return text1
         
         print(f'sub_sample_for_estimation: {sub_sample_for_estimation}')
@@ -65,6 +65,7 @@ class Smooth(object):
         top2 = sub_probs_selection.argsort()[::-1][:1]    
 
         text2 = sub_sample_for_estimation[top2[0]][0]
+        text2 = text2.strip()
         print(f'text2: {text2}')
         text_2_count = sum(1 for row in sub_sample_for_estimation if row[0] == text2)
                                         
