@@ -296,8 +296,7 @@ class Chat:
         # prompt = f"{conv.get_prompt()}{conv.roles[1]}"                                
 
         prompt  = f"[vqa] Based on the image, respond to this question with a short answer: Question: {self.inner_text} Answer: "        
-        prompt = "<Img><ImageHere></Img> {} ".format(prompt)
-        print(f"sending prompt: {prompt}")        
+        prompt = "<Img><ImageHere></Img> {} ".format(prompt)        
         data = {
             "image": self.inner_img_list[0],
             "question_id": 0,
