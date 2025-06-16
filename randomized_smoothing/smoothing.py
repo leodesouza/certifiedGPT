@@ -56,7 +56,7 @@ class Smooth(object):
         text1_count = sum(1 for row in sample_for_estimation if self.is_similiar(row[0], text1))
         print(f'text1: {text1}')
 
-        sub_sample_for_estimation = sample_for_estimation[sample_for_estimation[:, 0] != text1]
+        sub_sample_for_estimation = sample_for_estimation[not self.is_similiar(sample_for_estimation[:, 0], text1)]
         if sub_sample_for_estimation is None or len(sub_sample_for_estimation) == 0:            
             return text1
         
@@ -87,7 +87,7 @@ class Smooth(object):
             return text1
        
     def is_similiar(self, text1, text2):
-        similarity_threshold = 0.9
+        similarity_threshold = 0.8
         embp = self.sentence_transformer.encode(text1, convert_to_tensor=True)
         embt = self.sentence_transformer.encode(text2, convert_to_tensor=True)                                                            
         similarity = util.cos_sim(embp, embt)
