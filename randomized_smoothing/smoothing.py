@@ -147,7 +147,7 @@ class Smooth(object):
             predictions = np.array(predictions, dtype=object)                
             return predictions
     
-    def remove_special_characters(text):    
+    def remove_special_characters(self, text):    
         return re.sub(r'[^A-Za-z0-9\s]', '', text)
 
     def _lower_confidence_bound(self, NA: int, N: int, alpha: float) -> float:
