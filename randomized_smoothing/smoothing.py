@@ -57,6 +57,7 @@ class Smooth(object):
         print(f'text1: {text1}')
 
         sub_sample_for_estimation = sample_for_estimation[not self.is_similiar(sample_for_estimation[:, 0], text1)]
+        print(f"sub_sample_for_estimation: {sub_sample_for_estimation}")
         if sub_sample_for_estimation is None or len(sub_sample_for_estimation) == 0:            
             return text1
         
