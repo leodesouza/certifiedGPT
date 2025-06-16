@@ -53,20 +53,21 @@ class Smooth(object):
         top1 = probs_selection.argsort()[::-1][:1]        
         text1 = sample_for_estimation[top1[0]][0]
         text1 = text1.strip()
+        if not text1:
+            return "inconclusive"
+                
         text1_count = sum(1 for row in sample_for_estimation if self.is_similar(row[0], text1))
+        
         print(f'text1: {text1}')
-
-        # sub_sample_for_estimation = sample_for_estimation[not self.is_similiar(sample_for_estimation[:, 0], text1)]
+        
         mask = np.array([not self.is_similar(row[0], text1) for row in sample_for_estimation])
         sub_sample_for_estimation = sample_for_estimation[mask]
-
-        #print(f"sub_sample_for_estimation: {sub_sample_for_estimation}")
+        
         if sub_sample_for_estimation is None or len(sub_sample_for_estimation) == 0:            
             return text1
         
         sub_sample_for_estimation = np.array(sub_sample_for_estimation, dtype=object)
-
-        #print(f'sub_sample_for_estimation: {sub_sample_for_estimation}')
+        
         sub_probs_selection = sub_sample_for_estimation[:, 1].astype(float)
         top2 = sub_probs_selection.argsort()[::-1][:1]    
 
