@@ -4,11 +4,10 @@ from scipy.stats import norm, binom_test
 import numpy as np
 from math import ceil
 from statsmodels.stats.proportion import proportion_confint
-
 from common.registry import registry
 from graphs.models.minigpt4.conversation.conversation import CONV_VISION_Vicuna0
-
 from sentence_transformers import SentenceTransformer, util
+import re
 
 
 class Smooth(object):
@@ -94,6 +93,8 @@ class Smooth(object):
             return text1
        
     def is_similar(self, text1, text2):
+        text1 = self.remove_special_characters(text1)
+        text2 = self.remove_special_characters(text2)
         similarity_threshold = 0.7
         embp = self.sentence_transformer.encode(text1, convert_to_tensor=True)
         embt = self.sentence_transformer.encode(text2, convert_to_tensor=True)                                                            
@@ -146,9 +147,8 @@ class Smooth(object):
             predictions = np.array(predictions, dtype=object)                
             return predictions
     
-    def count_similar(self, target_emb, all_embs, threshold=0.99):
-        sims = util.cos_sim(target_emb, all_embs)[0]
-        return (sims >= threshold).sum().item()
+    def remove_special_characters(text):    
+        return re.sub(r'[^A-Za-z0-9\s]', '', text)
 
     def _lower_confidence_bound(self, NA: int, N: int, alpha: float) -> float:
         #calculate lower level confidence
