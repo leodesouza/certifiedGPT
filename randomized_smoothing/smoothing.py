@@ -47,7 +47,7 @@ class Smooth(object):
         self.base_decoder.eval()        
                 
         sample_for_estimation = self._sample_noise(x, n, batch_size, chat_state)                
-        #print(f'predictions and probs: {sample_for_estimation}')
+        print(f'predictions and probs: {sample_for_estimation}')
         probs_selection = np.array(sample_for_estimation[:, 1], dtype=float)
         
         top1 = probs_selection.argsort()[::-1][:1]        
