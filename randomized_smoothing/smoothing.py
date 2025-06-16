@@ -54,7 +54,7 @@ class Smooth(object):
         text1 = sample_for_estimation[top1[0]][0]
         text1 = text1.strip()
         if not text1:
-            return "inconclusive"
+            return "It was not possible to identify an answer based on your question."
                 
         text1_count = sum(1 for row in sample_for_estimation if self.is_similar(row[0], text1))
         
