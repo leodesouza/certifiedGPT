@@ -100,10 +100,8 @@ def _i2t(args, chat, image_tensor):
     img_list = []                  
     chat.upload_img(image_tensor, conv, img_list)  # img embeddings, size() = [bs, 32, 5120]            
     chat.encode_img(img_list)  # img embeddings, size() = [bs, 32, 5120]                        
-    chat.ask(args.query, conv)            
-        
-    answers = chat.answer(conv) 
-    print(f"answer: {answers}")   
+    chat.ask(args.query, conv)                    
+    answers = chat.answer(conv)     
     return answers
 
 def main():
