@@ -139,7 +139,7 @@ def main():
     
     parser.add_argument("--wandb", action="store_true")
     parser.add_argument("--wandb_project_name", type=str, default='certifiedgpt')
-    parser.add_argument("--wandb_run_name", type=str, default='adv_img_query_attack_noise_0')
+    parser.add_argument("--wandb_run_name", type=str, default='test__adv_img_query_attack_noise_0.25')
     
     args = parser.parse_args()
 
@@ -225,8 +225,7 @@ def main():
     
     ## other arch
     with torch.no_grad():
-        # rn50
-        print ("Checking similarity rn50")
+        # rn50        
         adv_vit_text_features_rn50 = clip_img_model_rn50.encode_text(adv_vit_text_token)
         adv_vit_text_features_rn50 = adv_vit_text_features_rn50 / adv_vit_text_features_rn50.norm(dim=1, keepdim=True)
         adv_vit_text_features_rn50 = adv_vit_text_features_rn50.detach()
@@ -237,8 +236,7 @@ def main():
         query_attack_results_rn50  = torch.sum(adv_vit_text_features_rn50 * target_text_features_rn50, dim=1).squeeze().detach().cpu().numpy()
         assert (vit_attack_results_rn50 == query_attack_results_rn50).all()
         
-        # rn101
-        print ("Checking similarity rn101")
+        # rn101        
         adv_vit_text_features_rn101 = clip_img_model_rn101.encode_text(adv_vit_text_token)
         adv_vit_text_features_rn101 = adv_vit_text_features_rn101 / adv_vit_text_features_rn101.norm(dim=1, keepdim=True)
         adv_vit_text_features_rn101 = adv_vit_text_features_rn101.detach()
@@ -250,8 +248,7 @@ def main():
         assert (vit_attack_results_rn101 == query_attack_results_rn101).all()
         
 
-        # vitb16
-        print ("Checking similarity vitb16")
+        # vitb16        
         adv_vit_text_features_vitb16 = clip_img_model_vitb16.encode_text(adv_vit_text_token)
         adv_vit_text_features_vitb16 = adv_vit_text_features_vitb16 / adv_vit_text_features_vitb16.norm(dim=1, keepdim=True)
         adv_vit_text_features_vitb16 = adv_vit_text_features_vitb16.detach()
@@ -262,8 +259,7 @@ def main():
         query_attack_results_vitb16  = torch.sum(adv_vit_text_features_vitb16 * target_text_features_vitb16, dim=1).squeeze().detach().cpu().numpy()
         assert (vit_attack_results_vitb16 == query_attack_results_vitb16).all()
 
-        # vitl14
-        print ("Checking similarity vitl14")
+        # vitl14        
         adv_vit_text_features_vitl14 = clip_img_model_vitl14.encode_text(adv_vit_text_token)
         adv_vit_text_features_vitl14 = adv_vit_text_features_vitl14 / adv_vit_text_features_vitl14.norm(dim=1, keepdim=True)
         adv_vit_text_features_vitl14 = adv_vit_text_features_vitl14.detach()
@@ -303,8 +299,8 @@ def main():
         better_flag = 0
         
         # MF-tt
-        for step_idx in range(args.steps):      
-            print(f"step: {i}")      
+        for step_idx in range(args.steps):                  
+            print(f"{i}-th image. step: {i} ")                   
             # step 1. obtain purturbed images
             if step_idx == 0:
                 image_repeat      = image.repeat(num_query, 1, 1, 1)  # size = (num_query x batch_size, 3, args.input_res, args.input_res)                
