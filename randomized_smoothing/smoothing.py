@@ -53,11 +53,11 @@ class Smooth(object):
         top1 = probs_selection.argsort()[::-1][:1]        
         text1 = sample_for_estimation[top1[0]][0]
         text1 = text1.strip()
-        text1_count = sum(1 for row in sample_for_estimation if self.is_similiar(row[0], text1))
+        text1_count = sum(1 for row in sample_for_estimation if self.is_similar(row[0], text1))
         print(f'text1: {text1}')
 
         # sub_sample_for_estimation = sample_for_estimation[not self.is_similiar(sample_for_estimation[:, 0], text1)]
-        mask = np.array([not self.is_similiar(row[0], text1) for row in sample_for_estimation])
+        mask = np.array([not self.is_similar(row[0], text1) for row in sample_for_estimation])
         sub_sample_for_estimation = sample_for_estimation[mask]
 
         #print(f"sub_sample_for_estimation: {sub_sample_for_estimation}")
@@ -92,8 +92,8 @@ class Smooth(object):
             #reject the null hypothesis                        
             return text1
        
-    def is_similiar(self, text1, text2):
-        similarity_threshold = 0.8
+    def is_similar(self, text1, text2):
+        similarity_threshold = 0.7
         embp = self.sentence_transformer.encode(text1, convert_to_tensor=True)
         embt = self.sentence_transformer.encode(text2, convert_to_tensor=True)                                                            
         similarity = util.cos_sim(embp, embt)
