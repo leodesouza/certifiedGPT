@@ -137,7 +137,7 @@ def main():
     
     parser.add_argument("--wandb", action="store_true")
     parser.add_argument("--wandb_project_name", type=str, default='certifiedgpt')
-    parser.add_argument("--wandb_run_name", type=str, default='test__adv_img_query_attack_noise_0.25')
+    parser.add_argument("--wandb_run_name", type=str, default='query_attack_noise_0.25')
     
     args = parser.parse_args()
 
