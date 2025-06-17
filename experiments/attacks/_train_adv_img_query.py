@@ -284,8 +284,7 @@ def main():
         start_time_img = time.time()                
         if batch_size * (i+1) > args.num_samples:
             break
-
-        print(f"{i}-th image")                
+        
         image = image.to(device)  # size=(10, 3, args.input_res, args.input_res)
         image_clean = image_clean.to(device)  # size=(10, 3, 224, 224)
         
@@ -298,11 +297,10 @@ def main():
         torch.cuda.empty_cache()
         
         best_caption = adv_vit_text[i]
-        better_flag = 0
-        step_idx = 0
+        better_flag = 0        
         # MF-tt
         for step_idx in range(args.steps):                  
-            print(f"{i}-th image. step: {i} ")                   
+            print(f"{i}-th image. step: {step_idx} ")                   
             # step 1. obtain purturbed images
             if step_idx == 0:
                 image_repeat      = image.repeat(num_query, 1, 1, 1)  # size = (num_query x batch_size, 3, args.input_res, args.input_res)                
