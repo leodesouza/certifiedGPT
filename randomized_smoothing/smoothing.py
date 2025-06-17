@@ -105,6 +105,9 @@ class Smooth(object):
             chat_state = CONV_VISION_Vicuna0.copy()
             chat_state.system = ""
 
+        print(f"num:{num}")
+        print(f"batch_size:{batch_size}")
+        
         with torch.no_grad():
             predictions = []
             # self.logger.info(f"Generating sample for {sample_type}")
