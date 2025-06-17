@@ -438,9 +438,9 @@ def main():
         )
 
         end_time_img = time.time()
-        duration_img = (start_time_img - end_time_img) / 60
+        duration_img = (end_time_img - start_time_img) / 60
         print(f"image {i} attack ended. {duration_img:2f} minutes")    
-        
+
         # log text
         print("best caption of current image:", best_caption)
         with open(os.path.join(args.output), 'a') as f:

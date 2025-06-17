@@ -104,9 +104,6 @@ class Smooth(object):
         if chat_state is None:                               
             chat_state = CONV_VISION_Vicuna0.copy()
             chat_state.system = ""
-
-        print(f"num:{num}")
-        print(f"batch_size:{batch_size}")
         
         with torch.no_grad():
             predictions = []
