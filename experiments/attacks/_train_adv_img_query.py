@@ -299,7 +299,7 @@ def main():
         
         best_caption = adv_vit_text[i]
         better_flag = 0
-        
+        step_idx = 0
         # MF-tt
         for step_idx in range(args.steps):                  
             print(f"{i}-th image. step: {i} ")                   

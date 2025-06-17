@@ -109,8 +109,7 @@ class Smooth(object):
             predictions = []
             # self.logger.info(f"Generating sample for {sample_type}")
             step = 1             
-            for _ in range(ceil(num / batch_size)):
-                print(f"step: {step}")           
+            for _ in range(ceil(num / batch_size)):                
                 this_batch_size = min(batch_size, num)
                 num -= this_batch_size
 
