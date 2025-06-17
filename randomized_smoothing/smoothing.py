@@ -108,8 +108,9 @@ class Smooth(object):
         with torch.no_grad():
             predictions = []
             # self.logger.info(f"Generating sample for {sample_type}")
-            step = 1            
+            step = 1             
             for _ in range(ceil(num / batch_size)):
+                print(f"step: {step}")           
                 this_batch_size = min(batch_size, num)
                 num -= this_batch_size
 

@@ -130,7 +130,10 @@ def main():
     parser.add_argument("--query", default='What is in the image?', type=str)
     
     parser.add_argument("--delta", default="normal", type=str)
-    parser.add_argument("--steps", default=5, type=int)
+    # parser.add_argument("--steps", default=5, type=int)
+    # parser.add_argument("--num_query", default=10, type=int)
+    # parser.add_argument("--num_sub_query", default=5, type=int)
+    parser.add_argument("--steps", default=2, type=int)
     parser.add_argument("--num_query", default=10, type=int)
     parser.add_argument("--num_sub_query", default=5, type=int)
     parser.add_argument("--sigma", default=8, type=float)
@@ -278,6 +281,7 @@ def main():
     for i, ((image, _), (image_clean, _)) in enumerate(zip(data_loader, clean_data_loader)):
         # if i % 50 != 0:
         #     continue        
+        start_time_img = time.time()                
         if batch_size * (i+1) > args.num_samples:
             break
 
@@ -433,6 +437,9 @@ def main():
             }
         )
 
+        end_time_img = time.time()
+        duration_img = (start_time_img - end_time_img) / 60
+        print(f"image {i} attack ended. {duration_img:2f} minutes")    
         
         # log text
         print("best caption of current image:", best_caption)
@@ -443,6 +450,8 @@ def main():
             else:
                 f.write(best_caption)
         f.close()
+        
+
     end_time = time.time()
     duration = (end_time - start_time) / 60
     # print(f"{step_idx}-th step ended. {duration:2f} minutes")    
