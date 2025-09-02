@@ -12,11 +12,12 @@ class VQAEval:
             raise ValueError("annotation must be provided ")
                 
         self.preds = preds        
-        self.question_ids = question_ids                
-        self.annotations = json.load(open(annotation_path[0], 'r'))        
-        self.answers = {
-            ann["question_id"]:ann for ann in self.annotations["annotations"]            
-        }        
+        self.question_ids = question_ids    
+        if annotation_path[0] != "dummy_path":
+            self.annotations = json.load(open(annotation_path[0], 'r'))        
+            self.answers = {
+                ann["question_id"]:ann for ann in self.annotations["annotations"]            
+            }        
 
         self.accuracy = {}
         self.evalQA = {}
@@ -133,6 +134,7 @@ class VQAEval:
                 outText[wordId] = self.contractions[word]
         outText = " ".join(outText)
         return outText
+    
     
     def normalize_vqa_answer(self, ans):
         if not ans:
