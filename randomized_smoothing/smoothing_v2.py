@@ -157,18 +157,16 @@ class SmoothV2(object):
         """
         question = batch_sample["instruction_input"]
         conv_temp = CONV_VISION_LLama2.copy()
-        conv_temp.system = ""
-
-        remaining = num
+        conv_temp.system = ""        
         predictions = []
 
         with torch.no_grad():
             self.logger.info(f"Generating sample for {sample_type}")
             step = 1
-            while remaining > 0:
-                print(f"remaining {remaining}")
-                this_batch_size = min(batch_size, remaining)
-                remaining -= this_batch_size
+            for _ in range(ceil(num / batch_size)):
+                print(f"remaining {num}")
+                this_batch_size = min(batch_size, num)
+                num -= this_batch_size
 
                 print("batch_sample[image]")
                 image = batch_sample["image"].to(self._device)
@@ -178,7 +176,9 @@ class SmoothV2(object):
 
                 print("question * this_batch_size")
                 batch_question = question * this_batch_size
+                print("prepare_texts")
                 questions = self.prepare_texts(batch_question, conv_temp)
+                print(f"max_new_tokens: {self.config.run.max_new_tokens}")
                 max_tokens = self.config.run.max_new_tokens
                 
                 print("autocast")
