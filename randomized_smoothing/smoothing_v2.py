@@ -70,7 +70,7 @@ class SmoothV2(object):
     def _map_to_label(self, s: str) -> str:
         s_norm = self._normalize_vqa(s)
         print("_map_to_label:")
-        print(f"_map_to_label answer: {s}")        
+        print(f"_map_to_label answer: {s_norm}")        
         if s_norm in self.vocab_set:
             print("found") 
             return s_norm            
