@@ -126,6 +126,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
                     correct = similarity_score >= similarity_threshold
                     if correct:
                         break
+            abstain = prediction == self.smoothed_decoder.ABSTAIN
 
             # Alguns campos podem ser tensores: garantir .item() se necessário
             img_id_val = image_id.item() if torch.is_tensor(image_id) and image_id.numel() == 1 else image_id
@@ -133,7 +134,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
             q_text = question[0] if isinstance(question, (list, tuple)) else str(question)
 
             self.results.append(
-                f"{step}\t{img_id_val}\t{q_id_val}\t{q_text}\t{answers}\t{prediction}\t{radius:.3}\t{correct}\t{time_elapsed}\t{top1_is_unk}"
+                f"{step}\t{img_id_val}\t{q_id_val}\t{q_text}\t{answers}\t{prediction}\t{radius:.3}\t{correct}\t{abstain}\t{time_elapsed}\t{top1_is_unk}"
             )
             self.logger.info(f"Certify Step {step} ended in {time_elapsed}")
             self.save_certification_state(step, self.results)
@@ -143,7 +144,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
             file_exists = os.path.exists(file_path)
             with open(file_path, 'a', encoding="utf-8") as f:
                 if not file_exists:
-                    f.write("step\timageid\tquestion_id\tquestion\tanswer\tlabel\tradius\tcorrect\ttime\ttop1_is_unk\n")
+                    f.write("step\timageid\tquestion_id\tquestion\tanswer\tlabel\tradius\tcorrect\tabstain\ttime\ttop1_is_unk\n")
                 f.write("\n".join(self.results) + "\n")
 
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
