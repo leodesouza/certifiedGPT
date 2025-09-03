@@ -38,8 +38,7 @@ class SmoothV2(object):
         self.sigma = sigma
 
         # device: prefer registry's device if available
-        self._device = registry.get("device", torch.device("cuda" if torch.cuda.is_available() else "cpu"))
-
+        self._device =  torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.config = registry.get_configuration_class("configuration")
         self.UNK = "UNK"
         self.vocab_set, self.vocab_list = self._load_vocab(self.config.run.vocab_file_path)
@@ -178,7 +177,7 @@ class SmoothV2(object):
                 batch_question = question * this_batch_size
                 print("prepare_texts")
                 questions = self.prepare_texts(batch_question, conv_temp)
-                print(f"max_new_tokens: {self.config.run}")
+                print(f"max_new_tokens: {self.config.run.max_new_tokens}")
                 max_tokens = self.config.run.max_new_tokens
                 
                 print("autocast")
