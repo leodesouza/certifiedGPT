@@ -176,10 +176,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
         datasets = self._build_datasets()
         dataset_names = sorted(datasets.keys())
         dataloaders = dict()
-
-        world_size = _get_world_size()
-        rank = _get_rank()
-
+        
         for dataset_name in dataset_names:
             dataset = datasets[dataset_name]
 
@@ -194,11 +191,11 @@ class MiniGPT4CertifyAgent(BaseAgent):
                 is_train = True if split.split_name in self.config.run.train_splits else False
                 collate_fn = getattr(split, "collater", None)
 
-                use_distributed = bool(self.config.run.distributed) and world_size > 1
+                use_distributed = bool(self.config.run.distributed) and dist.world_size() > 1
                 sampler = DistributedSampler(
                     split,
-                    num_replicas=world_size,
-                    rank=rank,
+                    num_replicas=dist.world_size(),
+                    rank=dist.get_rank(),
                     shuffle=True if is_train else False,
                     drop_last=True
                 ) if use_distributed else None
