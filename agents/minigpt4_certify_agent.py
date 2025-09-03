@@ -57,7 +57,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
         except Exception as e:
             now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             msg = f"Error on agent run: {now}. Details: {e}"
-            if _is_master():
+            if self.is_main_process():
                 print(msg)
             self.logger.error(msg)
 
@@ -72,7 +72,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
             return float("inf")
 
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        if _is_master():
+        if self.is_main_process():
             print(f"Certification started: {now}")
         self.logger.info(f"Certification started: {now}")
         
@@ -236,22 +236,21 @@ class MiniGPT4CertifyAgent(BaseAgent):
         return model
 
     def save_certification_state(self, step, certification_results):
-        if _is_master():
-            print("saving state..")
+        
+        print("saving state..")
 
         state = dict()
         state["step"] = step
         state["certification_results"] = certification_results
 
-        rank = _get_rank()
+        rank = dist.get_rank() if dist.is_initialized() else 0
         file_path = os.path.join(self.config.run.output_dir, f"certification_output_r{rank}.pkl")
         os.makedirs(self.config.run.output_dir, exist_ok=True)
         with open(file_path, 'wb') as f:
             pickle.dump(state, f)
-
-        if _is_master():
-            print("state saved!")
-        _barrier()  # sincroniza entre processos
+        
+        print("state saved!")
+        
 
     def load_certification_state(self):
         rank = _get_rank()
