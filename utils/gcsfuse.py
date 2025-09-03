@@ -1,10 +1,10 @@
-import torch_xla.core.xla_model as xm
+
 import subprocess
 
 def mount_gcsfuse(bucket_name="certifiedgpt_storage", mount_point="~/storage"):    
     try:
         subprocess.run(["gcsfuse", bucket_name, mount_point], check=True)
-        xm.master_print(f"Successfully mounted {bucket_name} at {mount_point}")        
+        print(f"Successfully mounted {bucket_name} at {mount_point}")        
     except subprocess.CalledProcessError as e:        
         pass
 
