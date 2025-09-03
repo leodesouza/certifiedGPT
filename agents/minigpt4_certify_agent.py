@@ -38,7 +38,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
         self.annotations_paths = None        
         self.smoothed_decoder = SmoothV2(self.model, self.config.run.noise_level)        
         self.sentence_transformer = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2", device=str(self.device))
-        self.results = []
+        self.results = []        
 
     def run(self):
         try:

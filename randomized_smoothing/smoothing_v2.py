@@ -18,6 +18,7 @@ from statsmodels.stats.proportion import proportion_confint
 from common.registry import registry
 from graphs.models.minigpt4.conversation.conversation import CONV_VISION_LLama2
 from common.vqa_tools.vqa_eval import VQAEval
+from sentence_transformers import SentenceTransformer, util
 
 # GPU autocast
 from torch.cuda.amp import autocast
@@ -41,7 +42,7 @@ class SmoothV2(object):
         self.UNK = "UNK"
         self.vocab_set, self.vocab_list = self._load_vocab(self.config.run.vocab_file_path)
         self._vqa_normalizer = VQAEval(preds=["dummy"], question_ids=[0], annotation_path=["dummy_path"])
-        
+        self.sentence_transformer = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2", device=str(self.device))        
 
     def _load_vocab(self, vocab_path, add_unk=True):
         if not os.path.exists(vocab_path):
@@ -67,18 +68,44 @@ class SmoothV2(object):
     def _normalize_vqa(self, s: str) -> str:
         return self._vqa_normalizer.normalize_vqa_answer(s)         
 
+    # def _map_to_label(self, s: str) -> str:
+    #     s_norm = self._normalize_vqa(s)
+    #     print("_map_to_label:")
+    #     print(f"_map_to_label answer: {s_norm}")        
+    #     if s_norm in self.vocab_set:
+    #         print("found") 
+    #         return s_norm            
+    #     else: 
+    #         print("not found") 
+    #         return self.UNK
+    
     def _map_to_label(self, s: str) -> str:
         s_norm = self._normalize_vqa(s)
-        print("_map_to_label:")
-        print(f"_map_to_label answer: {s_norm}")        
+                
         if s_norm in self.vocab_set:
+            return s_norm                
+        
+        max_similarity = 0.0
+        best_match = None
+        
+        s_embedding = self.sentence_transformer.encode(s_norm, convert_to_tensor=True)
+        
+        for vocab_answer in self.vocab_set:
+            vocab_embedding = self.sentence_transformer.encode(vocab_answer, convert_to_tensor=True)
+            similarity = util.cos_sim(s_embedding, vocab_embedding).item()
+            
+            if similarity > max_similarity and similarity >= self.config.run.similarity_threshold:
+                max_similarity = similarity
+                best_match = vocab_answer
+        
+        # return best_match if best_match else self.UNK
+        if best_match:
             print("found") 
-            return s_norm            
+            return best_match            
         else: 
             print("not found") 
             return self.UNK
-        
-        # return s_norm if s_norm in self.vocab_set else self.UNK
+                    
 
     def certify(self, x: torch.Tensor, n0: int, n: int, alpha: float, batch_size: int):
         """
