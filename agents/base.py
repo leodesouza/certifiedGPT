@@ -322,3 +322,7 @@ class BaseAgent:
 
         except Exception as e:
             xm.master_print(f"Error on ploting loss history {e}.")
+
+
+    def is_main_process(self):
+        return not dist.is_initialized() or dist.get_rank() == 0

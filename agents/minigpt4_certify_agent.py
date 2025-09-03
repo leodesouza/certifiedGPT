@@ -25,61 +25,18 @@ from randomized_smoothing.smoothing_v2 import SmoothV2
 from bert_score import score
 from sentence_transformers import SentenceTransformer, util
 
-# =========================
-# Utilidades para GPU/DDP
-# =========================
-def _distributed_available() -> bool:
-    return dist.is_available() and dist.is_initialized() and dist.get_world_size() > 1
-
-def _get_world_size() -> int:
-    return dist.get_world_size() if _distributed_available() else 1
-
-def _get_rank() -> int:
-    return dist.get_rank() if _distributed_available() else 0
-
-def _is_master() -> bool:
-    return _get_rank() == 0
-
-def _barrier():
-    if _distributed_available():
-        dist.barrier()
-
-def _init_distributed_if_needed():    
-    if dist.is_available() and not dist.is_initialized():
-        # Se LOCAL_RANK existir, assumimos torchrun.
-        backend = "nccl" if torch.cuda.is_available() else "gloo"
-        dist.init_process_group(backend=backend, init_method="env://")
-
-def _get_device():
-    if torch.cuda.is_available():
-        local_rank = int(os.environ.get("LOCAL_RANK", "0"))
-        torch.cuda.set_device(local_rank)
-        return torch.device(f"cuda:{local_rank}")
-    return torch.device("cpu")
-
 
 @registry.register_agent("image_text_eval")
 class MiniGPT4CertifyAgent(BaseAgent):
     def __init__(self):
         super().__init__()
-
-        # Distribuído / dispositivos
-        _init_distributed_if_needed()
-        self.device = _get_device()
-
-        # Modelo
-        self.model = self.build_model()
-
-        # Métricas (opcional; mantido para compatibilidade caso usado em outro ponto)
+        
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")        
+        self.model = self.build_model()        
         self._tpu_metrics = TPUMetrics()
-
         self.questions_paths = None
-        self.annotations_paths = None
-
-        # Smoothing (usa o modelo já no device)
-        self.smoothed_decoder = SmoothV2(self.model, self.config.run.noise_level)
-
-        # SentenceTransformer para similaridade, movido para o mesmo device
+        self.annotations_paths = None        
+        self.smoothed_decoder = SmoothV2(self.model, self.config.run.noise_level)        
         self.sentence_transformer = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2", device=str(self.device))
         self.results = []
 
@@ -88,7 +45,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
             self.logger.info("Creating the dataloaders")
             self._dataloaders = self.create_dataloaders()
 
-            if _is_master():
+            if self.is_main_process():
                 if self.config.run.noise_level > 0:
                     print(f"[Master] Noise level: {self.config.run.noise_level} will be applied to the image inputs")
                 else:
@@ -118,15 +75,14 @@ class MiniGPT4CertifyAgent(BaseAgent):
         if _is_master():
             print(f"Certification started: {now}")
         self.logger.info(f"Certification started: {now}")
-
-        total = 0
+        
         saved_step = 0        
         state = self.load_certification_state()
         if state is not None:
             saved_step = state.get("step", 0)
             self.results = state.get("certification_results", [])
             saved_step += 1
-            if _is_master():
+            if self.is_main_process():
                 print(f"Certification will be resumed from step: {saved_step}")
 
         self.model.eval()
@@ -182,7 +138,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
             self.logger.info(f"Certify Step {step} ended in {time_elapsed}")
             self.save_certification_state(step, self.results)
 
-        if _is_master():
+        if self.is_main_process():
             file_path = os.path.join(self.config.run.output_dir, "certify_output.txt")
             file_exists = os.path.exists(file_path)
             with open(file_path, 'a', encoding="utf-8") as f:
@@ -191,7 +147,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
                 f.write("\n".join(self.results) + "\n")
 
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        if _is_master():
+        if self.is_main_process():
             print(f"Certification ended: {now}")
         self.logger.info(f"Certification ended: {now}")
 
