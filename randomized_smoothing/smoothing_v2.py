@@ -35,9 +35,7 @@ class SmoothV2(object):
         :param sigma: the noise level hyperparameter
         """
         self.base_decoder = base_decoder
-        self.sigma = sigma
-
-        # device: prefer registry's device if available
+        self.sigma = sigma        
         self._device =  torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.config = registry.get_configuration_class("configuration")
         self.UNK = "UNK"
@@ -170,8 +168,10 @@ class SmoothV2(object):
                 noise = torch.randn_like(batch_image, device=self._device) * self.sigma
                 noisy_image_batch = batch_image + noise                
                 batch_question = question * this_batch_size                
-                questions = self.prepare_texts(batch_question, conv_temp)                
+                questions = self.prepare_texts(batch_question, conv_temp)    
+                print(f"config: {self.config.run}")            
                 max_tokens = self.config.run.max_new_tokens
+                print("run.max_new_tokens")            
                                 
                 with autocast(enabled=bool(getattr(self.config.run, "amp", False))):
                     answers, probs = self.base_decoder.generate(
