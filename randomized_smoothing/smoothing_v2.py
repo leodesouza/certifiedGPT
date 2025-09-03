@@ -211,7 +211,7 @@ class SmoothV2(object):
             conv.append_message(conv.roles, text)
             conv.append_message(conv.roles[1], None)
         print(3)
-        print(f"convs: {convs} ")
+        # print(f"convs: {convs} ")
         print(f"conv.get_prompt(): {conv.get_prompt()} ")
         
         texts = [conv.get_prompt() for conv in convs]
