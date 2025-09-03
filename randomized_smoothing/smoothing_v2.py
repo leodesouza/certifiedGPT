@@ -175,8 +175,7 @@ class SmoothV2(object):
                 batch_question = question * this_batch_size
                 questions = self.prepare_texts(batch_question, conv_temp)
                 max_tokens = self.config.run.max_new_tokens
-
-                # AMP (CUDA)
+                
                 with autocast(enabled=bool(getattr(self.config.run, "amp", False))):
                     answers, probs = self.base_decoder.generate(
                         noisy_image_batch,

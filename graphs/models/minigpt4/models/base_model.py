@@ -191,7 +191,7 @@ class BaseModel(nn.Module):
             llama_tokenizer.pad_token = "$$"
 
              # Properly detect TPU
-            is_tpu = True # torch.device("xla") if "xla" in str(torch.device(type='xla')) else False
+            is_tpu = False # torch.device("xla") if "xla" in str(torch.device(type='xla')) else False
 
             if low_resource:
                 if is_tpu:
@@ -237,13 +237,13 @@ class BaseModel(nn.Module):
             else:
                 for name, param in llama_model.named_parameters():
                     param.requires_grad = False                
-                xm.master_print('freeze LLM Done')
+                print('freeze LLM Done')
             
-            xm.master_print('Loading LLM Done')
+            print('Loading LLM Done')
             return llama_model, llama_tokenizer
         except Exception as e:
             logging.error("Error on loading the LLM(LLAMA or VICUNA.", exc_info=True)
-            xm.master_print(f"Error on loading the LLM(LLAMA or VICUNA. {e}")
+            print(f"Error on loading the LLM(LLAMA or VICUNA. {e}")
             raise
 
     def load_from_pretrained(self, url_or_filename):

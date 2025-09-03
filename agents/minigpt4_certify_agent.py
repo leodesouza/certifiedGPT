@@ -1,230 +1,208 @@
 # SPDX-License-Identifier: BSD-3-Clause
-# Portions derived from MiniGPT-4 (see LICENSE)
+#
+# Portions of this file are derived from the "MiniGPT-4" project.
+# See LICENSE.md for the full license text or visit the repo at:
+# https://github.com/Vision-CAIR/MiniGPT-4
+#
 
 import os
-import time
+import datetime
+from time import time
 from pathlib import Path
-from datetime import timedelta
 import numpy as np
 import pickle
-import logging
-
-import transformers
-transformers.logging.set_verbosity_error()
 
 # Torch
 import torch
 import torch.distributed as dist
 from torch.utils.data import DataLoader, DistributedSampler
 
-from common.vqa_tools.vqa import VQA
-from common.vqa_tools.vqa_eval import VQAEval
+# Projeto
 from agents.base import BaseAgent
+from common.metrics import TPUMetrics  # se não usar, pode remover
 from common.registry import registry
-
-from graphs.models.minigpt4.conversation.conversation import CONV_VISION_LLama2
-
+from randomized_smoothing.smoothing_v2 import SmoothV2
 from bert_score import score
-from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
-from nltk.tokenize import word_tokenize
-import nltk
-nltk.download('punkt_tab', quiet=True)
+from sentence_transformers import SentenceTransformer, util
 
+# =========================
+# Utilidades para GPU/DDP
+# =========================
+def _distributed_available() -> bool:
+    return dist.is_available() and dist.is_initialized() and dist.get_world_size() > 1
 
-def is_dist():
-    return dist.is_available() and dist.is_initialized()
+def _get_world_size() -> int:
+    return dist.get_world_size() if _distributed_available() else 1
 
+def _get_rank() -> int:
+    return dist.get_rank() if _distributed_available() else 0
 
-def get_rank():
-    return dist.get_rank() if is_dist() else 0
+def _is_master() -> bool:
+    return _get_rank() == 0
 
+def _barrier():
+    if _distributed_available():
+        dist.barrier()
 
-def is_master():
-    return get_rank() == 0
+def _init_distributed_if_needed():    
+    if dist.is_available() and not dist.is_initialized():
+        # Se LOCAL_RANK existir, assumimos torchrun.
+        backend = "nccl" if torch.cuda.is_available() else "gloo"
+        dist.init_process_group(backend=backend, init_method="env://")
+
+def _get_device():
+    if torch.cuda.is_available():
+        local_rank = int(os.environ.get("LOCAL_RANK", "0"))
+        torch.cuda.set_device(local_rank)
+        return torch.device(f"cuda:{local_rank}")
+    return torch.device("cpu")
 
 
 @registry.register_agent("image_text_eval")
-class MiniGPT4EvalAgent(BaseAgent):
+class MiniGPT4CertifyAgent(BaseAgent):
     def __init__(self):
         super().__init__()
-        self.start_step = 0
 
-        # device e ranks vindos do registry (setados no launch.py GPU)
-        self.device = registry.get("device", torch.device("cuda" if torch.cuda.is_available() else "cpu"))
-        self.rank = registry.get("rank", 0)
-        self.world_size = registry.get("world_size", 1)
+        # Distribuído / dispositivos
+        _init_distributed_if_needed()
+        self.device = _get_device()
 
-        self._model = self.build_model()
-        self._questions_paths = None
-        self._annotations_paths = None
-        self._log = []
-        self._smooth_fn = SmoothingFunction().method1
-        self._predictions = []
-        self._ground_truths = []
-        self._question_ids = []
+        # Modelo
+        self.model = self.build_model()
+
+        # Métricas (opcional; mantido para compatibilidade caso usado em outro ponto)
+        self._tpu_metrics = TPUMetrics()
+
+        self.questions_paths = None
+        self.annotations_paths = None
+
+        # Smoothing (usa o modelo já no device)
+        self.smoothed_decoder = SmoothV2(self.model, self.config.run.noise_level)
+
+        # SentenceTransformer para similaridade, movido para o mesmo device
+        self.sentence_transformer = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2", device=str(self.device))
+        self.results = []
 
     def run(self):
         try:
             self.logger.info("Creating the dataloaders")
             self._dataloaders = self.create_dataloaders()
 
-            if is_master():
+            if _is_master():
                 if self.config.run.noise_level > 0:
-                    self.logger.info(f"Noise level: {self.config.run.noise_level} will be applied to the image inputs")
+                    print(f"[Master] Noise level: {self.config.run.noise_level} will be applied to the image inputs")
                 else:
-                    self.logger.info("No noise will be applied to the image inputs")
+                    print("[Master] No noise will be applied to the image inputs")
 
-            self.load_finetuned_model(self._model)
-            self.eval(self._dataloaders)
+            self.load_finetuned_model(self.model)
+            self.certify()
+
         except Exception as e:
-            self.logger.exception(f"Error on agent run: {e}")
+            now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            msg = f"Error on agent run: {now}. Details: {e}"
+            if _is_master():
+                print(msg)
+            self.logger.error(msg)
 
     @torch.no_grad()
-    def eval(self, dataloader):
-        val_loader = dataloader["val"]
+    def certify(self):
+        val_loader = self._dataloaders["val"]
+
+        n0 = self.config.run.number_monte_carlo_samples_for_selection
+        n = self.config.run.number_monte_carlo_samples_for_estimation
+
         if len(val_loader) == 0:
             return float("inf")
 
-        conv_temp = CONV_VISION_LLama2.copy()
-        conv_temp.system = ""
-
-        if is_master():
-            self.logger.info("Eval started")
-
-        before_time = time.time()
-        self.model.eval()
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        if _is_master():
+            print(f"Certification started: {now}")
+        self.logger.info(f"Certification started: {now}")
 
         saved_step = 0
-        state = self.load_eval_state()
+        state = self.load_certification_state()
         if state is not None:
             saved_step = state.get("step", 0)
-            self._predictions = state.get("predictions", [])
-            self._ground_truths = state.get("ground_truths", [])
-            self._question_ids = state.get("question_ids", [])
+            self.results = state.get("certification_results", [])
             saved_step += 1
-            if is_master():
-                self.logger.info(f"Eval will be resumed from step: {saved_step}")
+            if _is_master():
+                print(f"Certification will be resumed from step: {saved_step}")
+
+        self.model.eval()
 
         for step, batch_sample in enumerate(val_loader):
-            # manter o mesmo comportamento original (avaliar de 10 em 10)
-            if step % 10 != 0:
+
+            # certificar a cada 'skip' exemplos
+            if step % self.config.run.skip != 0:
                 continue
+
             if step < saved_step:
                 continue
 
-            if is_master():
-                self.logger.info(f"Eval step: {step}")
-
-            self.maybe_add_noise(batch_sample, self.config.run.noise_level)
-
-            image = batch_sample["image"].to(self.device, non_blocking=True)
-            image_ids = batch_sample["image_id"].tolist()
-            question_ids = batch_sample["question_id"].tolist()
-            questions = batch_sample["instruction_input"]
+            image_id = batch_sample["image_id"]
+            question_id = batch_sample["question_id"]
+            question = batch_sample["instruction_input"]
             answers = batch_sample["answer"]
 
-            texts = self.prepare_texts(questions, conv_temp)
+            # Certificação
+            self.logger.info(f"Certify Step {step} started")
+            before_time = time()
 
-            predicted_answers, _ = self.model.generate(
-                image,
-                texts,
-                max_new_tokens=self.config.run.max_new_tokens,
-                do_sample=False,
-                calc_probs=False
+            prediction, radius = self.smoothed_decoder.certify(
+                batch_sample, n0, n, self.config.run.alpha, batch_size=self.config.run.batch_size
             )
 
-            for p_answer, question_id, ans in zip(predicted_answers, question_ids, answers):
-                if not isinstance(p_answer, str):
-                    p_answer = str(p_answer)
-                clean_answer = p_answer.replace('#', '')
-                p_answer = clean_answer.lower().strip()
+            after_time = time()
+            time_elapsed = str(datetime.timedelta(seconds=(after_time - before_time)))
 
-                if not isinstance(ans, str):
-                    ans = str(ans)
-                clean_gt = ans.replace('#', '')
-                ans = clean_gt
+            correct = False
+            if prediction != self.smoothed_decoder.ABSTAIN:
+                for a in answers:
+                    text = a[0]
+                    similarity_threshold = self.config.run.similarity_threshold
 
-                self.prepare_for_compute_scores(p_answer, question_id, ans)
+                    # Embeddings no device correto
+                    embp = self.sentence_transformer.encode(prediction, convert_to_tensor=True, device=self.device)
+                    embt = self.sentence_transformer.encode(text, convert_to_tensor=True, device=self.device)
+                    similarity = util.cos_sim(embp, embt)
+                    similarity_score = similarity.item()
+                    correct = similarity_score >= similarity_threshold
+                    if correct:
+                        break
 
-            self.save_eval_state(step, self._predictions, self._question_ids, self._ground_truths)
-            if is_master():
-                self.logger.info(f"Eval step ended: {step}")
+            # Alguns campos podem ser tensores: garantir .item() se necessário
+            img_id_val = image_id.item() if torch.is_tensor(image_id) and image_id.numel() == 1 else image_id
+            q_id_val = question_id.item() if torch.is_tensor(question_id) and question_id.numel() == 1 else question_id
+            q_text = question[0] if isinstance(question, (list, tuple)) else str(question)
 
-        overall_acc, acc_yes_no, acc_number, acc_other = self.compute_vqa_accuracy()
-        precision, recall, f1 = self.compute_bertscore()
-        bleu = self.compute_bleuscore()
-
-        if is_master():
-            after_time = time.time()
-            elapsed_time = str(timedelta(seconds=(after_time - before_time)))
-            self._log.append(
-                f"{precision.item():.6f}\t{recall.item():.6f}\t{f1.item():.6f}\t{bleu.item():.6f}\t"
-                f"{overall_acc.item():.6f}\t{acc_yes_no.item():.6f}\t{acc_number.item():.6f}\t{acc_other.item():.6f}\t{elapsed_time}"
+            self.results.append(
+                f"{step}\t{img_id_val}\t{q_id_val}\t{q_text}\t{answers}\t{prediction}\t{radius:.3}\t{correct}\t{time_elapsed}"
             )
-            file_path = os.path.join(self.config.run.output_dir, "eval_output.txt")
+            self.logger.info(f"Certify Step {step} ended in {time_elapsed}")
+            self.save_certification_state(step, self.results)
+
+        if _is_master():
+            file_path = os.path.join(self.config.run.output_dir, "certify_output.txt")
             file_exists = os.path.exists(file_path)
-            os.makedirs(os.path.dirname(file_path), exist_ok=True)
-            with open(file_path, 'a') as f:
+            with open(file_path, 'a', encoding="utf-8") as f:
                 if not file_exists:
-                    f.write("precision\trecall\tf1\tbleu\toverall_acc\tacc_yes_no\tacc_number\tacc_other\ttime\n")
-                f.write("\n".join(self._log) + "\n")
-            self.logger.info("Eval ended")
+                    f.write("step\timageid\tquestion_id\tquestion\tanswer\tpredicted\tradius\tcorrect\ttime\n")
+                f.write("\n".join(self.results) + "\n")
 
-        if is_dist():
-            dist.barrier()
-
-    def prepare_for_compute_scores(self, prediction, question_id, answer):
-        if prediction.strip() == "":
-            prediction = "[EMPTY]"
-            if is_master():
-                self.logger.info("empty detected")
-        self._predictions.append(prediction)
-        self._ground_truths.append(answer)
-        self._question_ids.append(question_id)
-
-    def compute_vqa_accuracy(self):
-        evaluator = VQAEval(self._predictions, self._question_ids, self._annotations_paths)
-        accuracy, acc_yes_no, acc_number, acc_other = evaluator.evaluate()
-        # Tensores no device para consistência
-        accuracy = torch.tensor(accuracy, device=self.device)
-        acc_yes_no = torch.tensor(acc_yes_no, device=self.device)
-        acc_number = torch.tensor(acc_number, device=self.device)
-        acc_other = torch.tensor(acc_other, device=self.device)
-        return accuracy, acc_yes_no, acc_number, acc_other
-
-    def clean_text(self, text):
-        return text.replace("#", "").lower().strip()
-
-    def compute_bertscore(self):
-        p, r, f1 = score(self._predictions, self._ground_truths, lang="en")
-        # mover para device se necessário
-        if p.device.type != self.device.type:
-            p = p.to(self.device)
-            r = r.to(self.device)
-            f1 = f1.to(self.device)
-        return p.mean(), r.mean(), f1.mean()
-
-    def compute_bleuscore(self):
-        tokens_predictions = [word_tokenize(p) for p in self._predictions]
-        tokens_ground_truths = [[word_tokenize(g)] for g in self._ground_truths]
-        weights_bleu_1 = (1, 0, 0, 0)
-        sc = corpus_bleu(tokens_ground_truths, tokens_predictions, weights=weights_bleu_1, smoothing_function=self._smooth_fn)
-        sc = torch.tensor(sc, device=self.device)
-        return sc
-
-    def finalize(self):
-        pass
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        if _is_master():
+            print(f"Certification ended: {now}")
+        self.logger.info(f"Certification ended: {now}")
 
     @classmethod
     def setup_agent(cls, **kwargs):
         return cls()
 
     @staticmethod
-    def maybe_add_noise(batch_sample, noise_level):
-        if noise_level > 0:
-            image = batch_sample["image"]
-            noise = torch.randn_like(image) * noise_level  # GAUSSIAN
-            batch_sample["image"] = image + noise
+    def add_noise(batch_sample, noise_level):
+        image = batch_sample["image"]
+        noise = torch.rand_like(image) * noise_level
+        batch_sample["image"] = image + noise
 
     def _build_datasets(self):
         datasets = dict()
@@ -242,95 +220,95 @@ class MiniGPT4EvalAgent(BaseAgent):
         dataset_names = sorted(datasets.keys())
         dataloaders = dict()
 
+        world_size = _get_world_size()
+        rank = _get_rank()
+
         for dataset_name in dataset_names:
             dataset = datasets[dataset_name]
+
             for split in dataset.values():
                 num_records = len(split)
                 if num_records >= 0:
                     self.logger.info(f"Loaded {num_records} records for split {split.split_name}")
 
-                self._questions_paths = split.questions_paths
-                self._annotations_paths = split.annotations_paths
+                self.questions_paths = getattr(split, "questions_paths", None)
+                self.annotations_paths = getattr(split, "annotations_paths", None)
 
                 is_train = True if split.split_name in self.config.run.train_splits else False
                 collate_fn = getattr(split, "collater", None)
 
-                sampler = None
-                if self.config.run.distributed and torch.cuda.is_available() and torch.cuda.device_count() > 1 and is_dist():
-                    sampler = DistributedSampler(
-                        split,
-                        num_replicas=registry.get("world_size", 1),
-                        rank=registry.get("rank", 0),
-                        shuffle=is_train
-                    )
+                use_distributed = bool(self.config.run.distributed) and world_size > 1
+                sampler = DistributedSampler(
+                    split,
+                    num_replicas=world_size,
+                    rank=rank,
+                    shuffle=True if is_train else False,
+                    drop_last=True
+                ) if use_distributed else None
 
                 loader = DataLoader(
                     split,
-                    batch_size=batch_size if batch_size > 0 else self.config.datasets[dataset_name].batch_size,
+                    batch_size=(batch_size if batch_size > 0 else self.config.datasets[dataset_name].batch_size),
                     num_workers=self.config.run.num_workers,
-                    pin_memory=True,
-                    shuffle=(is_train and sampler is None),
+                    pin_memory=torch.cuda.is_available(),
+                    shuffle=(True if is_train and not use_distributed else False),
                     sampler=sampler,
                     collate_fn=collate_fn,
                     drop_last=True
                 )
-
                 dataloaders[split.split_name] = loader
 
         return dataloaders
-
-    def create_optimizer(self):
-        self.logger.info("Creating the optimizer")
-        beta1 = self.config.run.beta1
-        beta2 = self.config.run.beta2
-        return torch.optim.AdamW(
-            self.model.parameters(),
-            lr=float(self.config.run.init_lr),
-            weight_decay=float(self.config.run.weight_decay),
-            betas=(beta1, beta2),
-        )
 
     def build_model(self):
         self.logger.info("Start building the model")
         model_type = registry.get_model_class(self.config.arch)
         model = model_type.from_config(self.config.model)
         model.to(self.device)
-        # DDP (se for o caso, deixe para agentes de treinamento)
+
+        # Se distribuído, usar DDP
+        if bool(self.config.run.distributed) and _get_world_size() > 1:
+            # Encontrar device_id local para o processo
+            local_rank = int(os.environ.get("LOCAL_RANK", "0")) if torch.cuda.is_available() else None
+            model = torch.nn.parallel.DistributedDataParallel(
+                model,
+                device_ids=[local_rank] if local_rank is not None else None,
+                output_device=local_rank if local_rank is not None else None,
+                find_unused_parameters=False
+            )
         return model
 
-    def prepare_texts(self, texts, conv_temp):
-        convs = [conv_temp.copy() for _ in range(len(texts))]
-        for conv, text in zip(convs, texts):
-            conv.append_message(conv.roles, text)
-            conv.append_message(conv.roles[1], None)
-        texts = [conv.get_prompt() for conv in convs]
-        return texts
+    def save_certification_state(self, step, certification_results):
+        if _is_master():
+            print("saving state..")
 
-    def save_eval_state(self, step, predictions, question_ids, ground_truths):
-        if is_master():
-            self.logger.info("saving state..")
-        state = dict(step=step, predictions=predictions, question_ids=question_ids, ground_truths=ground_truths)
-        rank = get_rank()
+        state = dict()
+        state["step"] = step
+        state["certification_results"] = certification_results
+
+        rank = _get_rank()
+        file_path = os.path.join(self.config.run.output_dir, f"certification_output_r{rank}.pkl")
         os.makedirs(self.config.run.output_dir, exist_ok=True)
-        file_path = os.path.join(self.config.run.output_dir, f"eval_output_r{rank}.pkl")
         with open(file_path, 'wb') as f:
             pickle.dump(state, f)
-        if is_master():
-            self.logger.info("state saved!")
-        if is_dist():
-            dist.barrier()
 
-    def load_eval_state(self):
-        rank = get_rank()
-        file_path = os.path.join(self.config.run.output_dir, f"eval_output_r{rank}.pkl")
+        if _is_master():
+            print("state saved!")
+        _barrier()  # sincroniza entre processos
+
+    def load_certification_state(self):
+        rank = _get_rank()
+        file_path = os.path.join(self.config.run.output_dir, f"certification_output_r{rank}.pkl")
+
         if not os.path.exists(file_path):
-            if is_master():
-                self.logger.info(f'file not found: {file_path}')
+            if _is_master():
+                print(f'file not found: {file_path}')
             return None
+
         with open(file_path, 'rb') as f:
             state = pickle.load(f)
-        if is_master():
-            self.logger.info("eval_state_loaded")
-        if is_dist():
-            dist.barrier()
+
+        if _is_master():
+            print("certification_state_loaded")
+        _barrier()
         return state
