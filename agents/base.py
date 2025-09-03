@@ -80,21 +80,21 @@ class BaseAgent:
 
     def load_finetuned_model(self, model):
 
-        xm.master_print("Loading finetuned VQAv2")
+        print("Loading finetuned VQAv2")
         checkpoint = self.config.model.vqa_finetuned
 
-        xm.master_print("Synchronize checkpoint loading with all process")
-        xm.rendezvous("Loading Checkpoint")
+        print("Synchronize checkpoint loading with all process")
+        print("Loading Checkpoint")
 
-        xm.master_print(f"Loading checkpoint from {checkpoint}")
+        print(f"Loading checkpoint from {checkpoint}")
         checkpoint = torch.load(checkpoint, map_location=torch.device('cpu'))
-        xm.rendezvous("Checkpoint loaded")
+        print("Checkpoint loaded")
 
-        xm.master_print("Loading model state")
+        print("Loading model state")
         model.load_state_dict(checkpoint['model_state_dict'], strict=False)
-        xm.master_print("Loading model state. Done!")
+        print("Loading model state. Done!")
         
-        xm.master_print(f"Numbers of treinable parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
+        print(f"Numbers of treinable parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
 
     def save_checkpoint(self, model, optimizer, epoch, loss, file_name="checkpoint.pth.bar", is_best=False):
         """

@@ -2,9 +2,6 @@ import torch
 # from torchvision.transforms import ToPILImage
 from torchvision.transforms.functional import to_pil_image
 
-import torch_xla
-import torch_xla.core.xla_model as xm
-
 def unnormalize(image, mean, std):
     mean = torch.tensor(mean).view(-1,1,1) # reshape
     std = torch.tensor(std).view(-1,1,1)
