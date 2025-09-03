@@ -156,12 +156,7 @@ class SmoothV2(object):
         conv_temp = CONV_VISION_LLama2.copy()
         conv_temp.system = ""        
         predictions = []
-        self.instruction_template = "[vqa] Based on the image, respond to this question with a short answer: {}",
-        instruction = question
-        instruction = "<Img><ImageHere></Img> {} ".format(instruction)
-
         
-
         with torch.no_grad():
             self.logger.info(f"Generating sample for {sample_type}")
             step = 1
@@ -172,16 +167,14 @@ class SmoothV2(object):
                 batch_image = image.repeat((this_batch_size, 1, 1, 1))
                 noise = torch.randn_like(batch_image, device=self._device) * self.sigma
                 noisy_image_batch = batch_image + noise                
-                batch_question = instruction * this_batch_size
-                print(f"batch_question: {batch_question}")
-                raise ValueError("teste")
+                batch_question = question * this_batch_size                
                 max_tokens = self.config.run.max_new_tokens
                 
                                 
                 with autocast(enabled=bool(getattr(self.config.run, "amp", False))):
                     answers, probs = self.base_decoder.generate(
                         noisy_image_batch,
-                        questions,
+                        batch_question,
                         max_new_tokens=max_tokens,
                         do_sample=False
                     )                
