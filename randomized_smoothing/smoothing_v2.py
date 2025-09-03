@@ -70,9 +70,15 @@ class SmoothV2(object):
     def _map_to_label(self, s: str) -> str:
         s_norm = self._normalize_vqa(s)
         print("_map_to_label:")
-        print(f"_map_to_label answer: {s}")
-        print(f"_map_to_label self.vocab_set: {self.vocab_set}")
-        return s_norm if s_norm in self.vocab_set else self.UNK
+        print(f"_map_to_label answer: {s}")        
+        if s_norm in self.vocab_set:
+            print("found") 
+            return s_norm            
+        else: 
+            print("not found") 
+            return self.UNK
+        
+        # return s_norm if s_norm in self.vocab_set else self.UNK
 
     def certify(self, x: torch.Tensor, n0: int, n: int, alpha: float, batch_size: int):
         """
