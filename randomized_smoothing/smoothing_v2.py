@@ -169,6 +169,8 @@ class SmoothV2(object):
                 noisy_image_batch = batch_image + noise                
                 batch_question = question * this_batch_size                
                 print("prepare_texts:")   
+                print(f"batch_question: {batch_question}")
+                print(f"conv_temp: {conv_temp}")
                 questions = self.prepare_texts(batch_question, conv_temp)    
                 print("config:")            
                 print(f"config: {self.config}")            
