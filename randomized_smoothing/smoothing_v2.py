@@ -42,7 +42,7 @@ class SmoothV2(object):
         self.UNK = "UNK"
         self.vocab_set, self.vocab_list = self._load_vocab(self.config.run.vocab_file_path)
         self._vqa_normalizer = VQAEval(preds=["dummy"], question_ids=[0], annotation_path=["dummy_path"])
-        self.sentence_transformer = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2", device=str(self.device))        
+        self.sentence_transformer = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2", device=str(self._device))        
 
     def _load_vocab(self, vocab_path, add_unk=True):
         if not os.path.exists(vocab_path):
