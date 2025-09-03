@@ -12,7 +12,6 @@ from torch.utils.data import Dataset
 from datasets.datasets.base_dataset import BaseDataset
 from PIL import Image
 from common.registry import registry
-import torch_xla.core.xla_model as xm
 import collections
 
 
@@ -40,7 +39,7 @@ class VQAv2Dataset(BaseDataset):
             "[vqa] Based on the image, respond to this question with a short answer: {}",
         ]
 
-        xm.master_print(f'Loading {split} split')
+        print(f'Loading {split} split')
         self.split = split
         questions_dict = {q["question_id"]: q for q in self.questions}
 
@@ -52,7 +51,7 @@ class VQAv2Dataset(BaseDataset):
 
             self.questions = []
 
-            xm.master_print(f'Loading annotations...')
+            print(f'Loading annotations...')
             
             for annotation in self.annotations:
                 question_id = annotation.get("question_id")
@@ -72,12 +71,12 @@ class VQAv2Dataset(BaseDataset):
                 self.questions.append(question)
                             
             self.logger.info("Loading annotations. Done!")
-            xm.master_print(f"Loading {split} annotations. Done!")
+            print(f"Loading {split} annotations. Done!")
 
             self.questions_dict = {q["question_id"]: q for q in self.questions}            
 
         except Exception as e:            
-            xm.master_print(f"error on loading the dataset. Details: {e}")
+            print(f"error on loading the dataset. Details: {e}")
 
     def get_data(self, index):
 
@@ -243,7 +242,7 @@ class VQAv2EvalForCertificationDataset(BaseDataset):
             "[vqa] Based on the image, respond to this question with a short answer: {}",
         ]
 
-        xm.master_print(f'Loading {split} split')
+        print(f'Loading {split} split')
         self.split = split
         questions_dict = {q["question_id"]: q for q in self.questions}
 
@@ -255,7 +254,7 @@ class VQAv2EvalForCertificationDataset(BaseDataset):
 
             self.questions = []
 
-            xm.master_print(f'Loading annotations...')
+            print(f'Loading annotations...')
             
             for annotation in self.annotations:
                 question_id = annotation.get("question_id")
@@ -275,12 +274,12 @@ class VQAv2EvalForCertificationDataset(BaseDataset):
                 self.questions.append(question)
                             
             self.logger.info("Loading annotations. Done!")
-            xm.master_print(f"Loading {split} annotations. Done!")
+            print(f"Loading {split} annotations. Done!")
 
             self.questions_dict = {q["question_id"]: q for q in self.questions}            
 
         except Exception as e:            
-            xm.master_print(f"error on loading the dataset. Details: {e}")
+            print(f"error on loading the dataset. Details: {e}")
 
     def get_data(self, index):
 
