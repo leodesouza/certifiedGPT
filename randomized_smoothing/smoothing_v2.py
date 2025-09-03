@@ -112,17 +112,14 @@ class SmoothV2(object):
         if len(labels_sel) == 0:
             return SmoothV2.ABSTAIN, 0.0, False
 
-        tA = Counter(labels_sel).most_common(1)[0][0]
-        print(f"tA: {tA}")
+        tA = Counter(labels_sel).most_common(1)[0][0]        
         top1_is_unk = (tA == self.UNK)
-        print(f"top1_is_unk: {top1_is_unk}")
-
+        
         # Estimation counts
         sample_for_estimation = self._sample_noise(x, n, batch_size, "estimation")
         labels_est = [lab for lab, _ in sample_for_estimation]
         counts = Counter(labels_est)
-        nA = counts.get(tA, 0)
-        print(f"nA: {nA}")
+        nA = counts.get(tA, 0)        
 
         # Clopper-Pearson bounds (LCB/UCB)
         def LCB(k, N, a):
