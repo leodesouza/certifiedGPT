@@ -156,6 +156,11 @@ class SmoothV2(object):
         conv_temp = CONV_VISION_LLama2.copy()
         conv_temp.system = ""        
         predictions = []
+        self.instruction_template = "[vqa] Based on the image, respond to this question with a short answer: {}",
+        instruction = question
+        instruction = "<Img><ImageHere></Img> {} ".format(instruction)
+
+        
 
         with torch.no_grad():
             self.logger.info(f"Generating sample for {sample_type}")
@@ -167,15 +172,11 @@ class SmoothV2(object):
                 batch_image = image.repeat((this_batch_size, 1, 1, 1))
                 noise = torch.randn_like(batch_image, device=self._device) * self.sigma
                 noisy_image_batch = batch_image + noise                
-                batch_question = question * this_batch_size                
-                print("prepare_texts:")   
+                batch_question = instruction * this_batch_size
                 print(f"batch_question: {batch_question}")
-                print(f"conv_temp: {conv_temp}")
-                questions = self.prepare_texts(batch_question, conv_temp)    
-                print("config:")            
-                print(f"config: {self.config}")            
+                raise ValueError("teste")
                 max_tokens = self.config.run.max_new_tokens
-                print("run.max_new_tokens")            
+                
                                 
                 with autocast(enabled=bool(getattr(self.config.run, "amp", False))):
                     answers, probs = self.base_decoder.generate(
@@ -205,17 +206,11 @@ class SmoothV2(object):
         return proportion_confint(NA, N, alpha=2 * alpha, method="beta")
 
     def prepare_texts(self, texts, conv_temp):
-        convs = [conv_temp.copy() for _ in range(len(texts))]
-        print(1)
+        convs = [conv_temp.copy() for _ in range(len(texts))]        
         for conv, text in zip(convs, texts):            
             conv.append_message(conv.roles, text)
-            conv.append_message(conv.roles[1], None)
-        print(3)
-        # print(f"convs: {convs} ")
-        print(f"conv.get_prompt(): {conv.get_prompt()} ")
-        
-        texts = [conv.get_prompt() for conv in convs]
-        print(4)
+            conv.append_message(conv.roles[1], None)                        
+        texts = [conv.get_prompt() for conv in convs]        
         return texts
 
     @property
