@@ -105,19 +105,35 @@ class MiniGPT4CertifyAgent(BaseAgent):
             self.logger.info(f"Certify Step {step} started")
             before_time = time()
 
-            label, radius, top1_is_unk = self.smoothed_decoder.certify(
+            prediction, radius, top1_is_unk = self.smoothed_decoder.certify(
                 batch_sample, n0, n, self.config.run.alpha, batch_size=self.config.run.batch_size
             )
 
             after_time = time()
             time_elapsed = str(datetime.timedelta(seconds=(after_time - before_time)))
-                       
+
+            correct = False
+            if prediction != self.smoothed_decoder.ABSTAIN:
+                for a in answers:
+                    text = a[0]
+                    text = self.smoothed_decoder._normalize_vqa(text)
+                    similarity_threshold = self.config.run.similarity_threshold
+                    
+                    embp = self.sentence_transformer.encode(prediction, convert_to_tensor=True, device=self.device)
+                    embt = self.sentence_transformer.encode(text, convert_to_tensor=True, device=self.device)
+                    similarity = util.cos_sim(embp, embt)
+                    similarity_score = similarity.item()
+                    correct = similarity_score >= similarity_threshold
+                    if correct:
+                        break
+
+            # Alguns campos podem ser tensores: garantir .item() se necessário
             img_id_val = image_id.item() if torch.is_tensor(image_id) and image_id.numel() == 1 else image_id
             q_id_val = question_id.item() if torch.is_tensor(question_id) and question_id.numel() == 1 else question_id
             q_text = question[0] if isinstance(question, (list, tuple)) else str(question)
 
             self.results.append(
-                f"{step}\t{img_id_val}\t{q_id_val}\t{q_text}\t{answers}\t{label}\t{radius:.3}\t{time_elapsed}\t{top1_is_unk}"
+                f"{step}\t{img_id_val}\t{q_id_val}\t{q_text}\t{answers}\t{prediction}\t{radius:.3}\t{correct}\t{time_elapsed}\t{top1_is_unk}"
             )
             self.logger.info(f"Certify Step {step} ended in {time_elapsed}")
             self.save_certification_state(step, self.results)
@@ -127,7 +143,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
             file_exists = os.path.exists(file_path)
             with open(file_path, 'a', encoding="utf-8") as f:
                 if not file_exists:
-                    f.write("step\timageid\tquestion_id\tquestion\tanswer\tlabel\tradius\ttime\ttop1_is_unk\n")
+                    f.write("step\timageid\tquestion_id\tquestion\tanswer\tlabel\tradius\tcorrect\ttime\ttop1_is_unk\n")
                 f.write("\n".join(self.results) + "\n")
 
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
