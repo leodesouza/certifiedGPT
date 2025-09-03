@@ -119,7 +119,8 @@ class MiniGPT4CertifyAgent(BaseAgent):
             print(f"Certification started: {now}")
         self.logger.info(f"Certification started: {now}")
 
-        saved_step = 0
+        total = 0
+        saved_step = 0        
         state = self.load_certification_state()
         if state is not None:
             saved_step = state.get("step", 0)
@@ -148,7 +149,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
             self.logger.info(f"Certify Step {step} started")
             before_time = time()
 
-            prediction, radius = self.smoothed_decoder.certify(
+            prediction, radius, top1_is_unk = self.smoothed_decoder.certify(
                 batch_sample, n0, n, self.config.run.alpha, batch_size=self.config.run.batch_size
             )
 
@@ -176,7 +177,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
             q_text = question[0] if isinstance(question, (list, tuple)) else str(question)
 
             self.results.append(
-                f"{step}\t{img_id_val}\t{q_id_val}\t{q_text}\t{answers}\t{prediction}\t{radius:.3}\t{correct}\t{time_elapsed}"
+                f"{step}\t{img_id_val}\t{q_id_val}\t{q_text}\t{answers}\t{prediction}\t{radius:.3}\t{correct}\t{time_elapsed}\t{top1_is_unk}"
             )
             self.logger.info(f"Certify Step {step} ended in {time_elapsed}")
             self.save_certification_state(step, self.results)
@@ -186,7 +187,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
             file_exists = os.path.exists(file_path)
             with open(file_path, 'a', encoding="utf-8") as f:
                 if not file_exists:
-                    f.write("step\timageid\tquestion_id\tquestion\tanswer\tpredicted\tradius\tcorrect\ttime\n")
+                    f.write("step\timageid\tquestion_id\tquestion\tanswer\tpredicted\tradius\tcorrect\ttime\ttop1_is_unk\n")
                 f.write("\n".join(self.results) + "\n")
 
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
