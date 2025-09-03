@@ -170,15 +170,18 @@ class SmoothV2(object):
                 this_batch_size = min(batch_size, remaining)
                 remaining -= this_batch_size
 
-                image = batch_sample["image"].to(self._device, non_blocking=True)
+                print("batch_sample[image]")
+                image = batch_sample["image"].to(self._device)
                 batch_image = image.repeat((this_batch_size, 1, 1, 1))
                 noise = torch.randn_like(batch_image, device=self._device) * self.sigma
                 noisy_image_batch = batch_image + noise
 
+                print("question * this_batch_size")
                 batch_question = question * this_batch_size
                 questions = self.prepare_texts(batch_question, conv_temp)
                 max_tokens = self.config.run.max_new_tokens
                 
+                print("autocast")
                 with autocast(enabled=bool(getattr(self.config.run, "amp", False))):
                     answers, probs = self.base_decoder.generate(
                         noisy_image_batch,
