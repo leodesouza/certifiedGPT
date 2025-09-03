@@ -168,8 +168,10 @@ class SmoothV2(object):
                 noise = torch.randn_like(batch_image, device=self._device) * self.sigma
                 noisy_image_batch = batch_image + noise                
                 batch_question = question * this_batch_size                
+                print("prepare_texts:")   
                 questions = self.prepare_texts(batch_question, conv_temp)    
-                print(f"config: {self.config.run}")            
+                print("config:")            
+                print(f"config: {self.config}")            
                 max_tokens = self.config.run.max_new_tokens
                 print("run.max_new_tokens")            
                                 
