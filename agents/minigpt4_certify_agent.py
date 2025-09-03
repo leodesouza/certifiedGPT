@@ -32,7 +32,7 @@ class MiniGPT4CertifyAgent(BaseAgent):
         super().__init__()
         
         self._device = torch.device("cuda" if torch.cuda.is_available() else "cpu")        
-        self.model = self.build_model()        
+        self._model = self.build_model()        
         self._tpu_metrics = TPUMetrics()
         self.questions_paths = None
         self.annotations_paths = None        
