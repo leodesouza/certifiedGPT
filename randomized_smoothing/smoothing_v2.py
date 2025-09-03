@@ -178,7 +178,7 @@ class SmoothV2(object):
                 batch_question = question * this_batch_size
                 print("prepare_texts")
                 questions = self.prepare_texts(batch_question, conv_temp)
-                print(f"max_new_tokens: {self.config.run.max_new_tokens}")
+                print(f"max_new_tokens: {self.config.run}")
                 max_tokens = self.config.run.max_new_tokens
                 
                 print("autocast")
