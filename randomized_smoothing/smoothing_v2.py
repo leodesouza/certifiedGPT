@@ -147,7 +147,7 @@ class SmoothV2(object):
             return SmoothV2.ABSTAIN
         return lab1
 
-    def _sample_noise(self, batch_sample: dict, num: int, batch_size: int, sample_type: str = "estimation") -> np.ndarray:
+    def _sample_noise(self, batch_sample: dict, num: int, batch_size: int, sample_type: str = "estimation"):
         """
         Sample the base decoder's prediction under noisy corruptions of the input x.
         :param batch_sample: dict with keys ["image","instruction_input"]
@@ -166,6 +166,7 @@ class SmoothV2(object):
             self.logger.info(f"Generating sample for {sample_type}")
             step = 1
             while remaining > 0:
+                print(f"remaining {remaining}")
                 this_batch_size = min(batch_size, remaining)
                 remaining -= this_batch_size
 
@@ -185,7 +186,7 @@ class SmoothV2(object):
                         max_new_tokens=max_tokens,
                         do_sample=False
                     )
-
+                print(f"_map_to_label {answer}")
                 for answer, prob in zip(answers, probs):
                     label = self._map_to_label(answer)
                     predictions.append((label, float(prob)))
