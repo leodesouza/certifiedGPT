@@ -162,33 +162,24 @@ class SmoothV2(object):
         with torch.no_grad():
             self.logger.info(f"Generating sample for {sample_type}")
             step = 1
-            for _ in range(ceil(num / batch_size)):
-                print(f"remaining {num}")
+            for _ in range(ceil(num / batch_size)):                
                 this_batch_size = min(batch_size, num)
-                num -= this_batch_size
-
-                print("batch_sample[image]")
+                num -= this_batch_size                
                 image = batch_sample["image"].to(self._device)
                 batch_image = image.repeat((this_batch_size, 1, 1, 1))
                 noise = torch.randn_like(batch_image, device=self._device) * self.sigma
-                noisy_image_batch = batch_image + noise
-
-                print("question * this_batch_size")
-                batch_question = question * this_batch_size
-                print("prepare_texts")
-                questions = self.prepare_texts(batch_question, conv_temp)
-                print(f"max_new_tokens: {self.config.run.max_new_tokens}")
+                noisy_image_batch = batch_image + noise                
+                batch_question = question * this_batch_size                
+                questions = self.prepare_texts(batch_question, conv_temp)                
                 max_tokens = self.config.run.max_new_tokens
-                
-                print("autocast")
+                                
                 with autocast(enabled=bool(getattr(self.config.run, "amp", False))):
                     answers, probs = self.base_decoder.generate(
                         noisy_image_batch,
                         questions,
                         max_new_tokens=max_tokens,
                         do_sample=False
-                    )
-                print(f"_map_to_label {answer}")
+                    )                
                 for answer, prob in zip(answers, probs):
                     label = self._map_to_label(answer)
                     predictions.append((label, float(prob)))
