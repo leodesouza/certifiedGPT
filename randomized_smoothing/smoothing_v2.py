@@ -207,12 +207,13 @@ class SmoothV2(object):
     def prepare_texts(self, texts, conv_temp):
         convs = [conv_temp.copy() for _ in range(len(texts))]
         print(1)
-        for conv, text in zip(convs, texts):
-            print(2)
-            print(text)
+        for conv, text in zip(convs, texts):            
             conv.append_message(conv.roles, text)
             conv.append_message(conv.roles[1], None)
         print(3)
+        print(f"convs: {convs} ")
+        print(f"conv.get_prompt(): {conv.get_prompt()} ")
+        
         texts = [conv.get_prompt() for conv in convs]
         print(4)
         return texts
