@@ -8,14 +8,16 @@
 import shutil
 import logging
 import torch
-import torch_xla.core.xla_model as xm
 import common
 from common.registry import registry
-import torch_xla.debug.profiler as xp
-import torch_xla.test.test_utils as test_utils
 import os
 import json
 import matplotlib.pyplot as plt
+from datetime import datetime
+import torch.distributed as dist
+
+
+
 
 
 class BaseAgent:
@@ -46,33 +48,31 @@ class BaseAgent:
         local_dir = "/tmp"
         local_resume_path = os.path.join(local_dir, "finetuning_resume.pth")
         os.makedirs(local_dir, exist_ok=True)
-        if xm.is_master_ordinal() and os.path.exists(file_and_path):
+        if self.is_main_process() and os.path.exists(file_and_path):
             if use_cache:
                 if not os.path.exists(local_resume_path):
-                    xm.master_print(f"Copying checkpoint from {file_and_path} to {local_resume_path}")
+                    print(f"Copying checkpoint from {file_and_path} to {local_resume_path}")
                     shutil.copy(file_and_path, local_resume_path)
-                    xm.master_print("Checkpoint copied")
+                    print("Checkpoint copied")
             else:
                 local_resume_path = file_and_path
 
-        xm.master_print("Synchronize checkpoint loading with all process")
-        xm.rendezvous("Loading Checkpoint")  # sync all process
+        print("Synchronize checkpoint loading with all process")        
 
         if os.path.exists(local_resume_path):
-            xm.master_print(f"Loading checkpoint from {local_resume_path}")
-            checkpoint = torch.load(local_resume_path, map_location=torch.device('cpu'))
-            xm.rendezvous("Checkpoint loaded")  # sync all process
+            print(f"Loading checkpoint from {local_resume_path}")
+            checkpoint = torch.load(local_resume_path, map_location=torch.device('cpu'))            
 
-            xm.master_print("Loading model state")
+            print("Loading model state")
             model.load_state_dict(checkpoint['model_state_dict'], strict=False)
 
-            xm.master_print("Loading optimizer state")
+            print("Loading optimizer state")
             load_state_dict = checkpoint['optimizer_state_dict']
             optimizer.load_state_dict({k: v for k, v in load_state_dict.items()})
 
             start_epoch = checkpoint['epoch'] + 1
 
-            xm.master_print(f"Resume Training from Start_Epoch:{start_epoch}")
+            print(f"Resume Training from Start_Epoch:{start_epoch}")
 
             return start_epoch
         else:
