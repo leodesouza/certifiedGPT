@@ -133,10 +133,11 @@ class SmoothV2(object):
         self.base_decoder.eval()
 
         sample_for_estimation = self._sample_noise(x, n, batch_size, "estimation")
+        print(f"sample_for_estimation: {sample_for_estimation}")
         labels = [lab for lab, _ in sample_for_estimation]
         if len(labels) == 0:
             return SmoothV2.ABSTAIN
-
+        print(f"labels: {labels}")
         counts = Counter(labels).most_common(2)
         if len(counts) == 1:
             return counts
