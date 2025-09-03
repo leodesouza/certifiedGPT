@@ -67,18 +67,7 @@ class SmoothV2(object):
 
     def _normalize_vqa(self, s: str) -> str:
         return self._vqa_normalizer.normalize_vqa_answer(s)         
-
-    # def _map_to_label(self, s: str) -> str:
-    #     s_norm = self._normalize_vqa(s)
-    #     print("_map_to_label:")
-    #     print(f"_map_to_label answer: {s_norm}")        
-    #     if s_norm in self.vocab_set:
-    #         print("found") 
-    #         return s_norm            
-    #     else: 
-    #         print("not found") 
-    #         return self.UNK
-    
+        
     def _map_to_label(self, s: str) -> str:
         s_norm = self._normalize_vqa(s)
                 
@@ -97,14 +86,8 @@ class SmoothV2(object):
             if similarity > max_similarity and similarity >= self.config.run.similarity_threshold:
                 max_similarity = similarity
                 best_match = vocab_answer
-        
-        # return best_match if best_match else self.UNK
-        if best_match:
-            print("found") 
-            return best_match            
-        else: 
-            print("not found") 
-            return self.UNK
+
+        return best_match if best_match else self.UNK
                     
 
     def certify(self, x: torch.Tensor, n0: int, n: int, alpha: float, batch_size: int):
@@ -130,13 +113,16 @@ class SmoothV2(object):
             return SmoothV2.ABSTAIN, 0.0, False
 
         tA = Counter(labels_sel).most_common(1)[0][0]
+        print(f"tA: {tA}")
         top1_is_unk = (tA == self.UNK)
+        print(f"top1_is_unk: {top1_is_unk}")
 
         # Estimation counts
         sample_for_estimation = self._sample_noise(x, n, batch_size, "estimation")
         labels_est = [lab for lab, _ in sample_for_estimation]
         counts = Counter(labels_est)
         nA = counts.get(tA, 0)
+        print(f"nA: {nA}")
 
         # Clopper-Pearson bounds (LCB/UCB)
         def LCB(k, N, a):
@@ -205,8 +191,7 @@ class SmoothV2(object):
                 noisy_image_batch = batch_image + noise                
                 batch_question = question * this_batch_size                
                 max_tokens = self.config.run.max_new_tokens
-                
-                                
+                                                
                 with torch.cuda.amp.autocast(enabled=self.config.run.amp):
                     answers, probs = self.base_decoder.generate(
                         noisy_image_batch,
