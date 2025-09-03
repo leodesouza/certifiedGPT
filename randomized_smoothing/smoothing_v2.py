@@ -124,7 +124,7 @@ class SmoothV2(object):
 
         return tA, float(radius), top1_is_unk
 
-    def predict(self, x: torch.Tensor, n: int, alpha: float, batch_size: int) -> str | int:
+    def predict(self, x: torch.Tensor, n: int, alpha: float, batch_size: int) -> Union[str, int]:
         """
         Monte Carlo algorithm for evaluating the prediction of g at x. With probability at least 1 - alpha,
         the answer returned by this method will equal g(x).
