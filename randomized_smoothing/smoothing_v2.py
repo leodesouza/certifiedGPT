@@ -74,7 +74,7 @@ class SmoothV2(object):
         s_norm = self._normalize_vqa(s)
         return s_norm if s_norm in self.vocab_set else self.UNK
 
-    def certify(self, x: torch.Tensor, n0: int, n: int, alpha: float, batch_size: int) -> tuple[Union[str, int], float, bool]:
+    def certify(self, x: torch.Tensor, n0: int, n: int, alpha: float, batch_size: int):
         """
         Monte Carlo algorithm for certifying that g's prediction around x is constant within some L2 radius.
         With probability at least 1 - alpha, the answer returned by this method will equal g(x), and g's prediction will
@@ -91,6 +91,7 @@ class SmoothV2(object):
 
         # Selection by majority label
         sample_for_selection = self._sample_noise(x, n0, batch_size, "selection")
+        print(f"sample_for_selection: {sample_for_selection}")
         labels_sel = [lab for lab, _ in sample_for_selection]
         if len(labels_sel) == 0:
             return SmoothV2.ABSTAIN, 0.0, False
@@ -133,11 +134,10 @@ class SmoothV2(object):
         self.base_decoder.eval()
 
         sample_for_estimation = self._sample_noise(x, n, batch_size, "estimation")
-        print(f"sample_for_estimation: {sample_for_estimation}")
         labels = [lab for lab, _ in sample_for_estimation]
         if len(labels) == 0:
             return SmoothV2.ABSTAIN
-        print(f"labels: {labels}")
+
         counts = Counter(labels).most_common(2)
         if len(counts) == 1:
             return counts
