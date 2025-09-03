@@ -79,7 +79,7 @@ class SmoothV2(object):
         
         s_embedding = self.sentence_transformer.encode(s_norm, convert_to_tensor=True)
         
-        for vocab_answer in self.vocab_set:
+        for vocab_answer in self.vocab_list:
             vocab_embedding = self.sentence_transformer.encode(vocab_answer, convert_to_tensor=True)
             similarity = util.cos_sim(s_embedding, vocab_embedding).item()
             
@@ -181,11 +181,13 @@ class SmoothV2(object):
             step = 1
             for _ in range(ceil(num / batch_size)):                
                 this_batch_size = min(batch_size, num)
-                num -= this_batch_size                
+                num -= this_batch_size     
+
                 image = batch_sample["image"].to(self._device)
                 batch_image = image.repeat((this_batch_size, 1, 1, 1))
                 noise = torch.randn_like(batch_image, device=self._device) * self.sigma
                 noisy_image_batch = batch_image + noise                
+
                 batch_question = question * this_batch_size                
                 max_tokens = self.config.run.max_new_tokens
                                                 
