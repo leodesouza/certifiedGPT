@@ -16,6 +16,7 @@ from statsmodels.stats.proportion import proportion_confint
 
 from common.registry import registry
 from graphs.models.minigpt4.conversation.conversation import CONV_VISION_LLama2
+from common.vqa_tools.vqa_eval import VQAEval
 
 # GPU autocast
 from torch.cuda.amp import autocast
@@ -40,7 +41,9 @@ class SmoothV2(object):
 
         self.config = registry.get_configuration_class("configuration")
         self.UNK = "UNK"
-        self.vocab_set, self.vocab_list = self._load_vocab(self.config.run.vocab_path)
+        self.vocab_set, self.vocab_list = self._load_vocab(self.config.run.vocab_file_path)
+        self._vqa_normalizer = VQAEval(preds=["dummy"], question_ids=[0], annotation_path=["dummy_path"])
+        
 
     def _load_vocab(self, vocab_path, add_unk=True):
         if not os.path.exists(vocab_path):
@@ -64,22 +67,7 @@ class SmoothV2(object):
         return set(dedup), dedup
 
     def _normalize_vqa(self, s: str) -> str:
-        s = s.strip().lower()
-        # strip punctuation
-        s = re.sub(r"[^\w\s]", " ", s)
-        # collapse spaces
-        s = re.sub(r"\s+", " ", s).strip()
-        # remove articles
-        s = re.sub(r"\b(a|an|the)\b", " ", s)
-        # number words to digits
-        num_map = {
-            "zero": "0", "one": "1", "two": "2", "three": "3", "four": "4", "five": "5",
-            "six": "6", "seven": "7", "eight": "8", "nine": "9", "ten": "10",
-            "eleven": "11", "twelve": "12", "thirteen": "13", "fourteen": "14", "fifteen": "15",
-            "sixteen": "16", "seventeen": "17", "eighteen": "18", "nineteen": "19", "twenty": "20",
-        }
-        tokens = [num_map.get(tok, tok) for tok in s.split()]
-        return " ".join(tokens)
+        return self._vqa_normalizer.normalize_vqa_answer(s)         
 
     def _map_to_label(self, s: str) -> str:
         s_norm = self._normalize_vqa(s)
@@ -106,7 +94,7 @@ class SmoothV2(object):
         if len(labels_sel) == 0:
             return SmoothV2.ABSTAIN, 0.0, False
 
-        tA = Counter(labels_sel).most_common(1)
+        tA = Counter(labels_sel).most_common(1)[0][0]
         top1_is_unk = (tA == self.UNK)
 
         # Estimation counts
@@ -117,7 +105,7 @@ class SmoothV2(object):
 
         # Clopper-Pearson bounds (LCB/UCB)
         def LCB(k, N, a):
-            return proportion_confint(k, N, alpha=2 * a, method="beta") if N > 0 else 0.0
+            return proportion_confint(k, N, alpha=2 * a, method="beta")[0] if N > 0 else 0.0
 
         def UCB(k, N, a):
             return proportion_confint(k, N, alpha=2 * a, method="beta")[1] if N > 0 else 1.0
