@@ -136,10 +136,30 @@ class VQAEval:
         return outText
     
     
+    # def normalize_vqa_answer(self, ans):
+    #     if not ans:
+    #         return ""
+    #     ans = ans.replace('\n', ' ').replace('\t', ' ').strip().lower()
+    #     ans = self.processPunctuation(ans)
+    #     ans = self.processDigitArticle(ans)
+    #     ans = ans.strip()
+
+    #     words = ans.split()
+    #     cleaned = []
+    #     seen = set()
+    #     for w in words:
+    #         if w not in seen:
+    #             cleaned.append(w)
+    #             seen.add(w)
+        
+    #     return " ".join(cleaned)
+
     def normalize_vqa_answer(self, ans):
         if not ans:
             return ""
         ans = ans.replace('\n', ' ').replace('\t', ' ').strip().lower()
+        ans = re.sub(r'[#*@$%^&+=~`|\\<>{}[\]_]', '', ans)
+        
         ans = self.processPunctuation(ans)
         ans = self.processDigitArticle(ans)
         ans = ans.strip()
