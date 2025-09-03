@@ -3,7 +3,7 @@ import random
 
 import torch
 
-torch.serialization.add_safe_globals(['numpy.core.multiarray._reconstruct'])
+# torch.serialization.add_safe_globals(['numpy.core.multiarray._reconstruct'])
 
 from common.registry import registry
 from graphs.models.minigpt4.models.base_model import BaseModel
@@ -400,8 +400,8 @@ class MiniGPTBase(BaseModel):
             attn_mask[i, -emb_len:] = 1
         
         with self.maybe_autocast():
-            embs = embs.to(xm.xla_device())
-            attn_mask = attn_mask.to(xm.xla_device())
+            embs = embs.to("cuda" if torch.cuda.is_available() else "cpu")
+            attn_mask = attn_mask.to("cuda" if torch.cuda.is_available() else "cpu")
             outputs = self.llama_model.generate(
                 inputs_embeds=embs,
                 attention_mask=attn_mask,
