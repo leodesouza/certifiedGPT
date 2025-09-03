@@ -171,7 +171,7 @@ class SmoothV2(object):
                 max_tokens = self.config.run.max_new_tokens
                 
                                 
-                with autocast(enabled=bool(getattr(self.config.run, "amp", False))):
+                with torch.cuda.amp.autocast(enabled=self.config.run.amp):
                     answers, probs = self.base_decoder.generate(
                         noisy_image_batch,
                         batch_question,
