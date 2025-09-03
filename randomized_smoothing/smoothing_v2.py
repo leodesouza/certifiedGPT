@@ -8,6 +8,7 @@
 import os, json, re
 from collections import Counter
 from math import ceil
+from typing import Union
 
 import numpy as np
 import torch
@@ -73,7 +74,7 @@ class SmoothV2(object):
         s_norm = self._normalize_vqa(s)
         return s_norm if s_norm in self.vocab_set else self.UNK
 
-    def certify(self, x: torch.Tensor, n0: int, n: int, alpha: float, batch_size: int) -> tuple[str | int, float, bool]:
+    def certify(self, x: torch.Tensor, n0: int, n: int, alpha: float, batch_size: int) -> tuple[Union[str, int], float, bool]:
         """
         Monte Carlo algorithm for certifying that g's prediction around x is constant within some L2 radius.
         With probability at least 1 - alpha, the answer returned by this method will equal g(x), and g's prediction will
