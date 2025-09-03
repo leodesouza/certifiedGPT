@@ -253,18 +253,14 @@ class MiniGPT4CertifyAgent(BaseAgent):
         
 
     def load_certification_state(self):
-        rank = _get_rank()
+        rank = dist.get_rank() if dist.is_initialized() else 0
         file_path = os.path.join(self.config.run.output_dir, f"certification_output_r{rank}.pkl")
 
-        if not os.path.exists(file_path):
-            if _is_master():
-                print(f'file not found: {file_path}')
+        if not os.path.exists(file_path):            
+            print(f'file not found: {file_path}')
             return None
 
         with open(file_path, 'rb') as f:
-            state = pickle.load(f)
-
-        if _is_master():
-            print("certification_state_loaded")
-        _barrier()
+            state = pickle.load(f)        
+        print("certification_state_loaded")        
         return state
