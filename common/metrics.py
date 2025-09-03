@@ -54,8 +54,8 @@ class TPUMetrics:
         ])
 
         path = self.config.run.output_dir
-        if not os.path.exists(path):
-            mount_gcsfuse()
+        # if not os.path.exists(path):
+        #     mount_gcsfuse()
 
         file_and_path = os.path.join(path, f'{self.config.run.checkpoint_name}.txt')
 
