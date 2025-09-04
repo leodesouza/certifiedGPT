@@ -55,10 +55,10 @@ run:
   wandb_name: "certify_noise_0.5"
   
   number_monte_carlo_samples_for_selection: 48 
-  number_monte_carlo_samples_for_estimation: 100
+  number_monte_carlo_samples_for_estimation: 250
   batch_size: 48 # for certification
   
-  skip: 100 # certify every skip examples
+  skip: 50 # certify every skip examples
   max: 5000 # and break when step == max
   alpha: 0.001 # the failure probability
   
