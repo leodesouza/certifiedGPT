@@ -159,9 +159,9 @@ class SmoothV2(object):
 
         counts = Counter(labels).most_common(2)
         if len(counts) == 1:
-            return counts
+            return counts[0][0]
 
-        (lab1, count1), (lab2, count2) = counts, counts[1]
+        (lab1, count1), (lab2, count2) = counts[0], counts[1]
         if binomtest(count1, count1 + count2, p=0.5).pvalue > alpha:
             return SmoothV2.ABSTAIN
         return lab1
