@@ -43,6 +43,7 @@ class SmoothV2(object):
         self.vocab_set, self.vocab_list = self._load_vocab(self.config.run.vocab_file_path)
         print(f"vocab_set size: {len(self.vocab_set)}")
         print(f"vocab_list size: {len(self.vocab_list)}")        
+        raise ValueError("teste")
         self._vqa_normalizer = VQAEval(preds=["dummy"], question_ids=[0], annotation_path=["dummy_path"])
         self.sentence_transformer = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2", device=str(self._device))        
 
