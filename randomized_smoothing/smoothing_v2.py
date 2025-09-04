@@ -41,11 +41,16 @@ class SmoothV2(object):
         self.config = registry.get_configuration_class("configuration")
         self.UNK = "UNK"
         self.vocab_set, self.vocab_list = self._load_vocab(self.config.run.vocab_file_path)
-        print(f"vocab_set size: {len(self.vocab_set)}")
-        print(f"vocab_list size: {len(self.vocab_list)}")        
-        raise ValueError("teste")
+        print(f"vocab_set size: {len(self.vocab_set)}")                        
         self._vqa_normalizer = VQAEval(preds=["dummy"], question_ids=[0], annotation_path=["dummy_path"])
         self.sentence_transformer = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2", device=str(self._device))        
+        self.vocab_embeddings = self.sentence_transformer.encode(
+            self.vocab_list,
+            convert_to_tensor=True,
+            device = self._device,
+            batch_size = 128,
+            show_progress_bar=True
+        )
 
     def _load_vocab(self, vocab_path, add_unk=True):
         if not os.path.exists(vocab_path):
@@ -77,21 +82,29 @@ class SmoothV2(object):
         if s_norm in self.vocab_set:
             return s_norm                
         
-        max_similarity = 0.0
-        best_match = None
+        # max_similarity = 0.0
+        # best_match = None
         
-        s_embedding = self.sentence_transformer.encode(s_norm, convert_to_tensor=True)
+        s_embedding = self.sentence_transformer.encode(s_norm, convert_to_tensor=True, device=self._device)
+        similarities = util.cos_sim(s_embedding, self.vocab_embeddings)
+        similarities = similarities.squeeze(0) # shape (vocab_size, )
+        max_sim, max_idx = similarities.max(dim=0)
+        
+        if max_sim.item() >= self.config.run.similarity_threshold:
+            return self.vocab_list[max_idx.item()]
+        
+        return self.UNK
         
         
-        for vocab_answer in self.vocab_list[:100]:
-            vocab_embedding = self.sentence_transformer.encode(vocab_answer, convert_to_tensor=True)
-            similarity = util.cos_sim(s_embedding, vocab_embedding).item()
+        # for vocab_answer in self.vocab_list[:100]:
+        #     vocab_embedding = self.sentence_transformer.encode(vocab_answer, convert_to_tensor=True)
+        #     similarity = util.cos_sim(s_embedding, vocab_embedding).item()
             
-            if similarity > max_similarity and similarity >= self.config.run.similarity_threshold:
-                max_similarity = similarity
-                best_match = vocab_answer
+        #     if similarity > max_similarity and similarity >= self.config.run.similarity_threshold:
+        #         max_similarity = similarity
+        #         best_match = vocab_answer
 
-        return best_match if best_match else self.UNK
+        # return best_match if best_match else self.UNK
                     
 
     def certify(self, x: torch.Tensor, n0: int, n: int, alpha: float, batch_size: int):
