@@ -81,31 +81,17 @@ class SmoothV2(object):
                 
         if s_norm in self.vocab_set:
             return s_norm                
-        
-        # max_similarity = 0.0
-        # best_match = None
-        
+                
         s_embedding = self.sentence_transformer.encode(s_norm, convert_to_tensor=True, device=self._device)
         similarities = util.cos_sim(s_embedding, self.vocab_embeddings)
         similarities = similarities.squeeze(0) # shape (vocab_size, )
         max_sim, max_idx = similarities.max(dim=0)
-        
+
         if max_sim.item() >= self.config.run.similarity_threshold:
             return self.vocab_list[max_idx.item()]
         
         return self.UNK
-        
-        
-        # for vocab_answer in self.vocab_list[:100]:
-        #     vocab_embedding = self.sentence_transformer.encode(vocab_answer, convert_to_tensor=True)
-        #     similarity = util.cos_sim(s_embedding, vocab_embedding).item()
-            
-        #     if similarity > max_similarity and similarity >= self.config.run.similarity_threshold:
-        #         max_similarity = similarity
-        #         best_match = vocab_answer
-
-        # return best_match if best_match else self.UNK
-                    
+                                           
 
     def certify(self, x: torch.Tensor, n0: int, n: int, alpha: float, batch_size: int):
         """
