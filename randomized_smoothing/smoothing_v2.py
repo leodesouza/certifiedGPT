@@ -79,7 +79,7 @@ class SmoothV2(object):
         
         s_embedding = self.sentence_transformer.encode(s_norm, convert_to_tensor=True)
         
-        for vocab_answer in self.vocab_list:
+        for vocab_answer in self.vocab_list[:100]:
             vocab_embedding = self.sentence_transformer.encode(vocab_answer, convert_to_tensor=True)
             similarity = util.cos_sim(s_embedding, vocab_embedding).item()
             
