@@ -41,6 +41,8 @@ class SmoothV2(object):
         self.config = registry.get_configuration_class("configuration")
         self.UNK = "UNK"
         self.vocab_set, self.vocab_list = self._load_vocab(self.config.run.vocab_file_path)
+        print(f"vocab_set size: {len(self.vocab_set)}")
+        print(f"vocab_list size: {len(self.vocab_list)}")        
         self._vqa_normalizer = VQAEval(preds=["dummy"], question_ids=[0], annotation_path=["dummy_path"])
         self.sentence_transformer = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2", device=str(self._device))        
 
@@ -78,6 +80,7 @@ class SmoothV2(object):
         best_match = None
         
         s_embedding = self.sentence_transformer.encode(s_norm, convert_to_tensor=True)
+        
         
         for vocab_answer in self.vocab_list[:100]:
             vocab_embedding = self.sentence_transformer.encode(vocab_answer, convert_to_tensor=True)
