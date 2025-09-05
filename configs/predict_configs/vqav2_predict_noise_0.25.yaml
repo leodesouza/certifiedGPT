@@ -63,6 +63,7 @@ run:
   similarity_threshold: 0.85
 
   dataset_config_name: predict_vqa.yaml
+  vocab_file_path: ${env:VOCAB_FILE_PATH}
   
 
 # DataLoader
