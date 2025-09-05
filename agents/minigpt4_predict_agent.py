@@ -7,45 +7,44 @@
 
 import os
 from time import time
-import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 import numpy as np
 
 # Torch
 import torch
+
+
+from torch.utils.data import DataLoader
+from torch.utils.data.distributed import DistributedSampler
 import torch.distributed as dist
-from torch.utils.data import DataLoader, DistributedSampler
+
 
 # Pytorch XLA
-from torch_xla import runtime as xr
-import torch_xla.core.xla_model as xm
-import torch_xla.distributed.parallel_loader as pl
+# from torch_xla import runtime as xr
+# import torch_xla.core.xla_model as xm
+# import torch_xla.distributed.parallel_loader as pl
+
 from agents.base import BaseAgent
 from common.metrics import TPUMetrics
 from common.registry import registry
-import torch_xla.test.test_utils as test_utils
-from randomized_smoothing.smoothing import Smooth
+from randomized_smoothing.smoothing_v2 import SmoothV2
 from bert_score import score
-import torch_xla.amp as xla_amp
 from sentence_transformers import SentenceTransformer, util
-from time import time
 import pickle
 
-# rank and world size are inferred from XLA Device
-# source: https://github.com/pytorch/xla/
-dist.init_process_group(backend='xla', init_method='xla://')
 
 @registry.register_agent("image_text_eval")
 class MiniGPT4PredictionAgent(BaseAgent):
     def __init__(self):
         super().__init__()
         self.start_step = 0
-        self._device = xm.xla_device()
+        self._device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self._model = self.build_model()
         self._tpu_metrics = TPUMetrics()
         self.questions_paths = None
         self.annotations_paths = None
-        self.smoothed_decoder = Smooth(self._model, self.config.run.noise_level)                
+        self.smoothed_decoder = SmoothV2(self._model, self.config.run.noise_level)                
         self.sentence_transformer = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
         self.results = []
             
@@ -56,31 +55,30 @@ class MiniGPT4PredictionAgent(BaseAgent):
             self.logger.info("Creating the dataloaders")
             self._dataloaders = self.create_dataloaders()
 
-            if xm.is_master_ordinal():
+            if self.is_main_process():
                 if self.config.run.noise_level > 0:
-                    xm.master_print(f"Noise level: {self.config.run.noise_level} will be applied to the image inputs")
+                    print(f"Noise level: {self.config.run.noise_level} will be applied to the image inputs")
                 else:
-                    xm.master_print("No noise will be applied to the image inputs")
+                    print("No noise will be applied to the image inputs")
 
             self.load_finetuned_model(self._model)
             self.predict()
 
-        except Exception as e:
-            xm.master_print(f"Error on agent run: {test_utils.now()}. Details: {e}")
-            self.logger.error(f"Error on agent run: {test_utils.now()}. Details: {e}")
+        except Exception as e:            
+            msg = f"Error on agent run: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}. Details: {e}"
+            print(msg)
+            self.logger.error(msg)
 
     @torch.no_grad()
     def predict(self):        
         val_loader = self._dataloaders["val"]
-        val_loader = pl.MpDeviceLoader(val_loader, self.device)
-        
+                
         n = self.config.run.number_monte_carlo_samples_for_estimation
 
         if len(val_loader) == 0:
             return float("inf")
-
-        xm.master_print(f"Prediction started: {(test_utils.now())}")   
-        self.logger.info(f"Prediction started: {(test_utils.now())}")                   
+        
+        self.logger.info(f"Prediction started: {(self.formated_datetime())}")                   
 
         saved_step = 0
         state = self.load_prediction_state()
@@ -88,7 +86,7 @@ class MiniGPT4PredictionAgent(BaseAgent):
             saved_step = state.get("step", 0)                     
             self.results = state.get("prediction_results", [])            
             saved_step += 1 
-            xm.master_print(f"Prediction will be resumed from step: {saved_step}")
+            print(f"Prediction will be resumed from step: {saved_step}")
 
         before_time = time()        
 
@@ -104,48 +102,56 @@ class MiniGPT4PredictionAgent(BaseAgent):
                                                               
             image_id = batch_sample["image_id"]            
             question_id = batch_sample["question_id"]
-            question = batch_sample["instruction_input"]
+            question = batch_sample["instruction_input"]            
             answers = batch_sample["answer"]                                             
                         
             # eval prediction of smoothed decoder around images
             self.logger.info(f"Prediction Step {step} started") 
             before_time = time()            
-            prediction = self.smoothed_decoder.predict(
+            prediction, is_top_label_unk = self.smoothed_decoder.predict(
                 batch_sample, n, self.config.run.alpha, batch_size=self.config.run.batch_size
             )
-            
-            after_time = time()                        
-            time_elapsed = str(datetime.timedelta(seconds=(after_time - before_time)))            
-            
 
+            self.logger.info(f"image_id -- {image_id.item()}")
+            self.logger.info(f"question_id -- {question}")
+            self.logger.info(f"prediction -- {prediction}")
+            self.logger.info(f"true answers -- {answers}")
+
+            after_time = time()                        
+            time_elapsed = str(timedelta(seconds=(after_time - before_time)))            
+            
             correct = False
-            if prediction != self.smoothed_decoder.ABSTAIN:                                                                    
-                for a in answers: 
-                    text = a[0]                                        
-                    similarity_threshold = self.config.run.similarity_threshold            
-                    embp = self.sentence_transformer.encode(prediction)
-                    embt = self.sentence_transformer.encode(text)                                        
-                    similarity = util.cos_sim(embp, embt)
+            
+            if prediction != self.smoothed_decoder.ABSTAIN:                                                                                                    
+                for a in answers:                     
+                    text = a[0]                                                            
+                    text = self.smoothed_decoder._normalize_vqa(text)
+                    similarity_threshold = self.config.run.similarity_threshold                                
+                    embp = self.sentence_transformer.encode(prediction, convert_to_tensor=True, device=self._device)
+                    embt = self.sentence_transformer.encode(text, convert_to_tensor=True, device=self._device)                                                            
+                    similarity = util.cos_sim(embp, embt)                    
                     similarity_score = similarity.item()                    
                     correct  = similarity_score >= similarity_threshold
                     if correct:
                         break
-
-            self.results.append(f"{step}\t{image_id.item()}\t{question_id.item()}\t{question[0]}\t{answers}\t{prediction}\t{correct}\t{time_elapsed}")                
+                    
+            abstain = prediction == self.smoothed_decoder.ABSTAIN                   
+            self.logger.info("writing results..")
+            self.results.append(f"{step}\t{image_id.item()}\t{question_id.item()}\t{question[0]}\t{answers}\t{prediction}\t{correct}\t{abstain}\t{time_elapsed}")                
             self.logger.info(f"Prediction Step {step} ended in {time_elapsed}")
             self.save_prediction_state(step, self.results)
 
-        if xm.is_master_ordinal():
-            file_path = os.path.join(self.config.run.output_dir,"predict_output.txt")
+        if self.is_main_process():
+            file_path = os.path.join(self.config.run.output_dir,f"predict_output_n{n}.txt")
             file_exists = os.path.exists(file_path)
 
             with open(file_path, 'a') as f:
                 if not file_exists:
-                    f.write("step\timageid\tquestion_id\tquestion\tanswer\tpredicted\tcorrect\ttime\n")
+                    f.write("step\timageid\tquestion_id\tquestion\tanswer\tpredicted\tcorrect\tabstain\ttime\n")
                 f.write("\n".join(self.results) + "\n")            
 
-        xm.master_print(f"Prediction ended: {(test_utils.now())}")
-        self.logger.info(f"Prediction ended: {(test_utils.now())}")                   
+        print(f"Prediction ended: {(self.formated_datetime())}")
+        self.logger.info(f"Prediction ended: {(self.formated_datetime())}")                   
     
     @classmethod
     def setup_agent(cls, **kwargs):
@@ -193,13 +199,18 @@ class MiniGPT4PredictionAgent(BaseAgent):
                 )
 
                 collate_fn = getattr(split, "collater", None)
+              
 
-                sampler = DistributedSampler(
-                    split,
-                    num_replicas=xr.world_size(),
-                    rank=xm.runtime.global_ordinal(),
-                    shuffle=True if is_train else False
-                ) if self.config.run.distributed and xr.world_size() > 1 else None
+                if self.config.run.distributed and dist.is_initialized() and dist.get_world_size() > 1:
+                    sampler = DistributedSampler(
+                        split,
+                        num_replicas=dist.get_world_size(),
+                        rank=dist.get_rank(),
+                        shuffle=is_train
+                    )
+                else:
+                    sampler = None
+                
 
                 loader = DataLoader(
                     split,
@@ -223,29 +234,28 @@ class MiniGPT4PredictionAgent(BaseAgent):
         return model
     
     def save_prediction_state(self, step, certification_results):        
-        xm.master_print("saving state..")   
+        print("saving state..")   
     
         state = dict()                
         state["step"] = step
         state["prediction_results"] = certification_results                
 
-        rank = xm.runtime.global_ordinal()
+        rank = dist.get_rank() if dist.is_initialized() else 0
         file_path = os.path.join(self.config.run.output_dir,f"prediction_output_r{rank}.pkl")
         with open(file_path, 'wb') as f:
             pickle.dump(state, f)
-        xm.master_print("state saved!")   
-        xm.rendezvous("prediction_state_saved")                   
+        print("state saved!")   
+        
 
     def load_prediction_state(self):
-        rank = xm.runtime.global_ordinal()
+        rank = dist.get_rank() if dist.is_initialized() else 0
         file_path = os.path.join(self.config.run.output_dir, f"prediction_output_r{rank}.pkl")
 
         if not os.path.exists(file_path):
-            xm.master_print(f'file not found: {file_path}')
+            print(f'file not found: {file_path}')
             return None
         
         with open(file_path, 'rb') as f:
             state = pickle.load(f)
-        xm.master_print("prediction_state_loaded")   
-        xm.rendezvous("prediction_state_loaded")
-        return state
+        print("prediction_state_loaded")           
+        return state       

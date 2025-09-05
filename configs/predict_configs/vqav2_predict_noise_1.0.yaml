@@ -41,7 +41,7 @@ datasets:
 
 run:
   agent: image_text_eval
-  max_new_tokens: 8 
+  max_new_tokens: 20 
   noise_level: 1.0
   seed: 42  
   output_dir: ${env:OUTPUT_DIR}          
@@ -53,14 +53,14 @@ run:
   wandb: True
   wandb_api_key: ${env:WANDB_API_KEY}
   wandb_name: "vqav2_eval_batch52_noise_0.5"    
-  number_monte_carlo_samples_for_estimation: 100
+  number_monte_carlo_samples_for_estimation: 250
   batch_size: 48 # for prediction
   
-  skip: 250 # certify every skip examples
+  skip: 50 # certify every skip examples
   max: 5000 # and break when step == max
   alpha: 0.001 # the failure probability
   
-  similarity_threshold: 0.6
+  similarity_threshold: 0.85
 
   dataset_config_name: predict_vqa.yaml
   

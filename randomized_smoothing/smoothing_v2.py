@@ -144,7 +144,7 @@ class SmoothV2(object):
 
         return tA, float(radius), top1_is_unk
 
-    def predict(self, x: torch.Tensor, n: int, alpha: float, batch_size: int) -> Union[str, int]:
+    def predict(self, x: torch.Tensor, n: int, alpha: float, batch_size: int):
         """
         Monte Carlo algorithm for evaluating the prediction of g at x. With probability at least 1 - alpha,
         the answer returned by this method will equal g(x).
@@ -155,16 +155,20 @@ class SmoothV2(object):
         sample_for_estimation = self._sample_noise(x, n, batch_size, "estimation")
         labels = [lab for lab, _ in sample_for_estimation]
         if len(labels) == 0:
-            return SmoothV2.ABSTAIN
-
+            return SmoothV2.ABSTAIN, False
+        
+        top_label = Counter(labels).most_common(1)[0][0]        
+        if top_label == self.UNK:
+            return SmoothV2.ABSTAIN, 0.0, True
+                
         counts = Counter(labels).most_common(2)
         if len(counts) == 1:
             return counts[0][0]
 
         (lab1, count1), (lab2, count2) = counts[0], counts[1]
         if binomtest(count1, count1 + count2, p=0.5).pvalue > alpha:
-            return SmoothV2.ABSTAIN
-        return lab1
+            return SmoothV2.ABSTAIN, False
+        return lab1, False
 
     def _sample_noise(self, batch_sample: dict, num: int, batch_size: int, sample_type: str = "estimation"):
         """
