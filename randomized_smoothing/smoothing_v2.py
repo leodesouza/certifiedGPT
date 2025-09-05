@@ -159,11 +159,11 @@ class SmoothV2(object):
         
         top_label = Counter(labels).most_common(1)[0][0]        
         if top_label == self.UNK:
-            return SmoothV2.ABSTAIN, 0.0, True
+            return SmoothV2.ABSTAIN, True
                 
         counts = Counter(labels).most_common(2)
         if len(counts) == 1:
-            return counts[0][0]
+            return counts[0][0], False
 
         (lab1, count1), (lab2, count2) = counts[0], counts[1]
         if binomtest(count1, count1 + count2, p=0.5).pvalue > alpha:
