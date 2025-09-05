@@ -326,3 +326,5 @@ class BaseAgent:
 
     def is_main_process(self):
         return not dist.is_initialized() or dist.get_rank() == 0
+    def formated_datetime(self):
+        return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
