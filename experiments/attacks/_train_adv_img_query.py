@@ -314,7 +314,17 @@ def main():
                 adv_text_features     = adv_vit_text_features_in_current_step
                 torch.cuda.empty_cache()
                 
-            # Rademacher noise distribution
+            # **** Rademacher noise distribution ****
+            # Randomly assigns each element to +1 or -1 with equal probability, 
+            # generating perturbations that are not biased toward any particular direction. This preserves symmetry, 
+            # preventing systematic drift and making the search over the pixel space maximally varied.
+            # In adversarial attacks (especially query-based or gradient-free attacks), 
+            # the optimizer does not have access to the true gradient of the loss with respect to the input. 
+            # Rademacher noise provides a cheap and effective way to test the response of the model in multiple random directions, 
+            # helping estimate a gradient sign or direction to update the image toward adversariality
+            # Rademacher noise is computationally efficient (just +1 or -1 values, implemented by torch.randn_like(...).sign()). 
+            # It is easier to handle and faster to compute than using more complex continuous noise like Gaussian, and is standard practice in black-box adversarial examples and score estimation.
+            # Maximal Spread: Since each pixel is perturbed by an independent random sign, it can maximally impact all possible dimensions of an image without redundancy that could come from a skewed or correlated noise source.
             query_noise = torch.randn_like(image_repeat).sign()
 
             # limits the values in a tensor to a specified range.
