@@ -1,4 +1,4 @@
-# CertifiedGPT: Adversarial Robustness of Vision And Language Models Against Targeted Black Box Attacks
+# CertifiedGPT: Adversarial Robustness Evaluation of Vision And Language Models Against Targeted Black Box Attacks
 
 This repository contains the code for CertifiedGPT, a strategy to improve the **Adversarial Robustness of Vision and Language Models Against Targeted Black Box Attacks**, developed by Leonardo Souza under the supervision of **Pedro Nuno de Souza Moura** and **Maíra Gatti de Bayser** from the **Universidade Federal do Estado do Rio de Janeiro (UNIRIO)**.
 
