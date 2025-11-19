@@ -70,7 +70,8 @@ The attack part of the pipeline, as demonstrated in the below image, summarizes 
 
 Regularized learning curves: training and validation loss across epochs for Gaussian noise levels σ ∈ {0, 0.25, 0.5, 1.0} show rapid convergenceand closely tracked reduction in error, indicating improved generalization with moderate noise and minimal overfitting across settings.
 
-VQA performance under Gaussian noise: overall accuracy and category-wise scores (Yes/No, Number, Other) for noise levels
+### VQA performance
+Overall accuracy and category-wise scores (Yes/No, Number, Other) for noise levels
 σ ∈ 0, 0.25, 0.5, 1.0, showing an initial drop at 0.25 and partial recovery at higher σ
 
 | Noise Level | Overall | Yes/No | Number | Other |
@@ -81,6 +82,7 @@ VQA performance under Gaussian noise: overall accuracy and category-wise scores 
 | **1.0**     | 29.86   | 42.74  | 27.60  | 19.87 |
 
 
+### Certification Results
 Certified and standard accuracy across ℓ2 radius for the proposed VQA randomized smoothing setup. For each target radius r, the table reports the best-performing noise level σ (among the evaluated values) and the corresponding certified top-1 accuracy, alongside the standard (r = 0) accuracy for the same σ. Results illustrate the expected trade-off, where larger σ yields stronger guarantees at higher radius while potentially affecting natural accuracy
 
 | ℓ₂ radius | Best σ | Cert. Acc (%) | Std. Acc (%) |
@@ -91,6 +93,7 @@ Certified and standard accuracy across ℓ2 radius for the proposed VQA randomiz
 | **3.0**   | 0.25   | 25.0           | 41.0          |
 
 
+### Adversarial Attacks
 Targeted black-box attack success rates (lower is better) for AttackVLM evaluated on MiniGPT-4 fine-tuned with different
 Gaussian noise levels (σ) under the randomized smoothing setup. Lower values indicate greater adversarial robustness.
 
