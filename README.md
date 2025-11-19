@@ -57,6 +57,10 @@ upper confidence bound over all competitors ctA. Otherwise, the model abstains.
 The complementary smoothed prediction procedure performs repeated noisy sampling, identifies the top-2 labels, and applies a binomial test at level α to decide between returning the top label or abstaining. 
 
 
+![Alt text](utils/assets/pipeline_attack.png)
+
+
+
 
 ## Project Status
 This research is associated with a master's dissertation defended at UNIRIO in 2025. The official version of the dissertation will be made available on the UNIRIO institutional digital library and the Sucupira Platform once the publication process is complete. The corresponding research article has been submitted for peer review but is not yet published.
