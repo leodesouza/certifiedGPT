@@ -3,9 +3,9 @@
 This repository contains the code for CertifiedGPT, a pipeline that can be used to certify the adversarial robustness of a multimodal model (Vision and Language) against
 visual perturbations in the input images. 
 
-This work is inspired by and builds upon concepts from the paper [*Certified Adversarial Robustness via Randomized Smoothing*](https://arxiv.org/pdf/1902.02918) by Jeremy Cohen, Elan Rosenfeld, and Zico Kolter.
+This work is inspired by and builds upon concepts from the paper [*Certified Adversarial Robustness via Randomized Smoothing*](https://arxiv.org/pdf/1902.02918) by [*Jeremy Cohen*](https://jmcohen.github.io/), Elan Rosenfeld, and [*Zico Kolter*](https://zicokolter.com/).
 
-Developed by Leonardo Souza under the supervision of **Pedro Nuno de Souza Moura** and **Maíra Gatti de Bayser** from the **Universidade Federal do Estado do Rio de Janeiro (UNIRIO)**.
+Pipeline Developed by Leonardo Souza under the supervision of **Pedro Nuno de Souza Moura** and **Maíra Gatti de Bayser** from the **Universidade Federal do Estado do Rio de Janeiro (UNIRIO)**.
 
 
 ## Dataset
