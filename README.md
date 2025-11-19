@@ -81,6 +81,28 @@ VQA performance under Gaussian noise: overall accuracy and category-wise scores 
 | **1.0**     | 29.86   | 42.74  | 27.60  | 19.87 |
 
 
+Certified and standard accuracy across ℓ2 radius for the proposed VQA randomized smoothing setup. For each target radius r, the table reports the best-performing noise level σ (among the evaluated values) and the corresponding certified top-1 accuracy, alongside the standard (r = 0) accuracy for the same σ. Results illustrate the expected trade-off, where larger σ yields stronger guarantees at higher radius while potentially affecting natural accuracy
+
+| ℓ₂ radius | Best σ | Cert. Acc (%) | Std. Acc (%) |
+|-----------|--------|----------------|---------------|
+| **0.5**   | 1.00   | 35.0           | 38.0          |
+| **1.0**   | 1.00   | 33.0           | 38.0          |
+| **2.0**   | 0.25   | 25.0           | 41.0          |
+| **3.0**   | 0.25   | 25.0           | 41.0          |
+
+
+Targeted black-box attack success rates (lower is better) for AttackVLM evaluated on MiniGPT-4 fine-tuned with different
+Gaussian noise levels (σ) under the randomized smoothing setup. Lower values indicate greater adversarial robustness.
+
+| Backbone   | σ = 0 | σ = 0.25 | σ = 0.5 | σ = 1.0 |
+|------------|-------|----------|---------|---------|
+| **RN50**   | 0.585 | 0.583    | 0.579   | 0.579   |
+| **RN101**  | 0.562 | 0.554    | 0.551   | 0.552   |
+| **ViT-B/16** | 0.595 | 0.587  | 0.583   | 0.581   |
+| **ViT-B/32** | 0.620 | 0.623  | 0.620   | 0.620   |
+| **ViT-L/14** | 0.470 | 0.454  | 0.449   | 0.448   |
+
+
 ## Project Status
 This research is associated with a master's dissertation defended at UNIRIO in 2025. The official version of the dissertation will be made available on the UNIRIO institutional digital library and the Sucupira Platform once the publication process is complete. The corresponding research article has been submitted for peer review but is not yet published.
 
