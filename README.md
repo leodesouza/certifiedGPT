@@ -143,6 +143,9 @@ Statistics of the coefficients estimated by the ANCOVA hypothesis test. Positive
 | CoefNoiseLevel:Backbone[T.ViT-B/32]     | 0.0067  | 4.732    | 0.000           | [0.004, 0.010]         |
 | CoefNoiseLevel:Backbone[T.ViT-L/14]     | -0.0108 | -6.221   | 0.000           | [-0.014, -0.007]       |
 
+In summary, by analyzing results for different backbones and adjustment methods, the study shows that:
+The RN50, ViT-B/16, and ViT-B/32 backbones exhibit higher attack success rates compared to the reference backbone (RN101), while ViT-L/14 achieves a lower rate than RN101, indicating higher robustness.Increasing the Gaussian noise level tends to reduce attack success rates for some models, with negative coefficients indicating an inverse relationship between noise and attack success. The greatest reduction in attack success is observed when noise is combined with ViT-L/14, though this backbone already shows an advantage even without noise. For the reference model RN101, increasing noise leads to a significant and statistically relevant decrease in attack success rates, whereas for other backbones, the benefit is smaller or nonexistent
+
 
 #### Analysis by Smoothing
 Statistics of the coefficients estimated by the ANCOVA hypothesis test. Positive coefficients are associated with attack success rates (greater vulnerability), while negative values, such as observed in the ViT-L/14 backbone, indicate a lower attack success rate under smoothing (noise). Additionally, it is noted that the RN101 backbone, despite serving as the reference, suffers a considerable drop in attack success rate as the noise level increases.
@@ -159,6 +162,8 @@ Statistics of the coefficients estimated by the ANCOVA hypothesis test. Positive
 | CoefSmoothing:Backbone[T.ViT-B/16]          | -0.0037 | 0.019           | [-0.007, -0.001]         |
 | CoefSmoothing:Backbone[T.ViT-B/32]          | 0.0101  | 0.000           | [0.009, 0.011]           |
 | CoefSmoothing:Backbone[T.ViT-L/14]          | -0.0103 | 0.000           | [-0.012, -0.009]         |
+
+The analysis of the ANCOVA test results for smoothing and backbone closely follows the same reasoning as the noise level analysis. That is, the above table  presents the reference coefficients (RN101), which demonstrate the influence of random smoothing on the attack success rates by backbone. In this case, an increase in robustness is observed for the certified and randomly smoothed model (MiniGPT-4) when attacked by an RN101 backbone, since the coefficient -0.0090 indicates that the presence of smoothing reduced the attack success rate compared to the same backbone attacking the unsmoothed model (coefficient: 0.5613), both with p-values < 0.001 and statistically significant results. The remaining coefficients (other groups: backbones) and p-values suggest some impact on attack success rates, but these effects are not statistically significant in those cases.
 
 In summary, the results presented provide sufficient empirical evidence to reject the null hypothesis (H<sub>0</sub>) and accept the alternative hypothesis H<sub>1</sub> for QP2: There is a statistically significant relationship between the application of random smoothing and the success rate of adversarial attacks for at least one of the groups. Although the attacks were conducted with reduced hyperparameters due to limited access to high-performance GPUs, the results demonstrate that, statistically, both noise and the presence of random smoothing contribute to mitigating the success of the attacks.
 
