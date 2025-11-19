@@ -154,11 +154,6 @@ Statistics of the coefficients estimated by the ANCOVA hypothesis test. Positive
 In summary, the results presented provide sufficient empirical evidence to reject the null hypothesis (H<sub>0</sub>) and accept the alternative hypothesis H<sub>1</sub> for QP2: There is a statistically significant relationship between the application of random smoothing and the success rate of adversarial attacks for at least one of the groups. Although the attacks were conducted with reduced hyperparameters due to limited access to high-performance GPUs, the results demonstrate that, statistically, both noise and the presence of random smoothing contribute to mitigating the success of the attacks.
 
 
-
-## Project Status
-This research is associated with a master's dissertation defended at UNIRIO in 2025. The official version of the dissertation will be made available on the UNIRIO institutional digital library and the Sucupira Platform once the publication process is complete. The corresponding research article has been submitted for peer review but is not yet published.
-
-
 ## Dataset
 https://huggingface.co/LeoSouza/certifiedgpt/tree/main
 ...
