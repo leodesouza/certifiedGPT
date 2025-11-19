@@ -151,7 +151,7 @@ Statistics of the coefficients estimated by the ANCOVA hypothesis test. Positive
 | CoefSmoothing:Backbone[T.ViT-B/32]          | 0.0101  | 0.000           | [0.009, 0.011]           |
 | CoefSmoothing:Backbone[T.ViT-L/14]          | -0.0103 | 0.000           | [-0.012, -0.009]         |
 
-
+In summary, the results presented provide sufficient empirical evidence to reject the null hypothesis (H<sub>0</sub>) and accept the alternative hypothesis H<sub>1</sub> for QP2: There is a statistically significant relationship between the application of random smoothing and the success rate of adversarial attacks for at least one of the groups. Although the attacks were conducted with reduced hyperparameters due to limited access to high-performance GPUs, the results demonstrate that, statistically, both noise and the presence of random smoothing contribute to mitigating the success of the attacks.
 
 
 
