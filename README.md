@@ -11,7 +11,7 @@ CertifiedGPT was Developed by Leonardo Souza under the supervision of [*Pedro Nu
 This research is associated with a master's dissertation defended at UNIRIO in 2025. The official version of the dissertation will be made available on the UNIRIO institutional digital library and the Sucupira Platform once the publication process is complete. The corresponding research article has been submitted for peer review but is not yet published.
 
 
-## Methodoly
+## Methodology
 This research is associated with a master's dissertation defended at UNIRIO in 2025. The official version of the dissertation will be made available on the UNIRIO institutional digital library and the Sucupira Platform once the publication process is complete. The corresponding research article has been submitted for peer review but is not yet published.
 
 ## Project Status
