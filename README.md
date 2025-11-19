@@ -1,11 +1,11 @@
 # CertifiedGPT: Adversarial Robustness Evaluation of Vision And Language Models Against Targeted Black Box Attacks
 
-This repository contains the code for CertifiedGPT, a pipeline that can be used to certify the adversarial robustness of a multimodal model (Vision and Language) against
-visual perturbations in the input images. 
+This repository contains the code for CertifiedGPT, a pipeline to certify the adversarial robustness of multimodal vision and language model against
+visual perturbations in input images. 
 
-This work is inspired by and builds upon concepts from the paper [*Certified Adversarial Robustness via Randomized Smoothing*](https://arxiv.org/pdf/1902.02918) by [*Jeremy Cohen*](https://jmcohen.github.io/), Elan Rosenfeld, and [*Zico Kolter*](https://zicokolter.com/).
+This work is inspired by, and builds upon, concepts from the paper [*Certified Adversarial Robustness via Randomized Smoothing*](https://arxiv.org/pdf/1902.02918) by [*Jeremy Cohen*](https://jmcohen.github.io/), Elan Rosenfeld, and [*Zico Kolter*](https://zicokolter.com/).
 
-CertifiedGPT was Developed by Leonardo Souza under the supervision of [*Pedro Nuno de Souza Moura*](https://ppgi.uniriotec.br/professores-do-ppgi/pedro-moura/) and [*Maíra Athanázio de Cerqueira Gatti*](https://ppgi.uniriotec.br/professores-do-ppgi/mgdebayser/) from the [*The Graduate Program in Computer Science (PPGI) (UNIRIO)*](https://ppgi.uniriotec.br/).
+CertifiedGPT was Developed by Leonardo Souza under the supervision of [*Pedro Nuno de Souza Moura*](https://ppgi.uniriotec.br/professores-do-ppgi/pedro-moura/) and [*Maíra Athanázio de Cerqueira Gatti*](https://ppgi.uniriotec.br/professores-do-ppgi/mgdebayser/) from the [*The Graduate Program in Computer Science (PPGI)*](https://ppgi.uniriotec.br/) at [*UNIRIO*](https://www.unirio.br/).
 
 
 ## Dataset
