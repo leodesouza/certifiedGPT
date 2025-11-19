@@ -73,8 +73,6 @@ In order to determine whether there is a statistically significant relationship 
 The main rationale for using the ANCOVA test is that it allows evaluating whether there are statistically significant differences between groups, which applies to this research, whose objective is to assess the performance of the certified model under different noise levels and in the presence of adversarial attacks conducted by different backbones (e.g., ViT/16 and ViT/32).
 
 
-
-
 ## Empirical findings
 
 <img src="utils/assets/train_loss.png" alt="Alt text" width="70%"/>
@@ -122,7 +120,10 @@ Gaussian noise levels (σ) under the randomized smoothing setup. Lower values in
 Across the CLIP backbones, as shown in above Table, introducing Gaussian noise during fine-tuning modestly reduces targeted black-box attack success rates (lower is better), with sharper reductions for ViT-L/14 and smaller but consistent reductions for RN50/RN101 and ViT-B/32 variants. The ViT-L/14 backbone shows the largest performance drop as σ increases; the rate declines from 0.470 to 0.448 at σ = 1.0, demonstrating adversarial robustness among the tested backbones. RN50 and RN101 exhibit gradual drops (e.g., RN50: 0.585 → 0.579; RN101: 0.562 → 0.551−0.552), while ViT-B/16 decreases from 0.595 to 0.581 and ViT-B/32 remains essentially unchanged near 0.620, suggesting architecture-dependent sensitivity to smoothing. In summary, noise-sensitive fine-tuning yields small yet consistent improvements in adversarial robustness (lower success rates), indicating that the effectiveness of smoothing against adversarial attacks is highly backbone-dependent.
 
 
-## Hypothesis Evaluation
+### Hypothesis Evaluation
+In summary, our proposal in this research is to answer questions regarding the performance of the certified model and the increase of certified robustness against targeted black-box adversarial attacks. In this sense, the methodology adopted in this research is based on a set of hypotheses as already presented in the Methodology.
+
+The ANCOVA aplied in this research test estimates coefficients, allowing quantification of the extent to which each independent variable (noise level, smoothing, and backbone) influences the dependent variable (attack success rate). Thus, based on the hypothesis test results, the impact of random smoothing and increasing the noise level on the robustness of the certified model is assessed.
 
 Statistics of the coefficients estimated by the ANCOVA hypothesis test. Positive coefficients are associated with attack success rates (greater vulnerability). Negative relationships indicate a lower attack success rate as noise level increases.
 
