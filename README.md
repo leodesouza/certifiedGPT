@@ -5,7 +5,7 @@ visual perturbations in the input images.
 
 This work is inspired by and builds upon concepts from the paper [*Certified Adversarial Robustness via Randomized Smoothing*](https://arxiv.org/pdf/1902.02918) by [*Jeremy Cohen*](https://jmcohen.github.io/), Elan Rosenfeld, and [*Zico Kolter*](https://zicokolter.com/).
 
-Pipeline Developed by Leonardo Souza under the supervision of **Pedro Nuno de Souza Moura** and **Maíra Gatti de Bayser** from the **Universidade Federal do Estado do Rio de Janeiro (UNIRIO)**.
+CertifiedGPT was Developed by Leonardo Souza under the supervision of [*Pedro Nuno de Souza Moura*](https://ppgi.uniriotec.br/professores-do-ppgi/pedro-moura/) and [*Maíra Athanázio de Cerqueira Gatti*](https://ppgi.uniriotec.br/professores-do-ppgi/mgdebayser/) from the [*The Graduate Program in Computer Science (PPGI) (UNIRIO)*](https://ppgi.uniriotec.br/).
 
 
 ## Dataset
