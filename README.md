@@ -64,7 +64,7 @@ The complementary smoothed prediction procedure performs repeated noisy sampling
 The attack part of the pipeline, as demonstrated in the below image, summarizes the three-stage adversarial evaluation protocol. The top section illustrates white-box attack initialization, where learnable noise is optimized to match the target image features using visual encoders and cosine similarity. The middle section demonstrates black-box attack initiation using adversarial images and MiniGPT-4 certification, followed by CLIP-based feature extraction. The bottom stage presents the iterative black-box attack process, where clean images are perturbed, textual and visual features are compared across multiple backbone encoders, and attack parameters are updated over multiple steps.
 
 ### Hypotheses
-In order to determine whether there is a statistically significant relationship between the variables, the ANCOVA test, as presented in Section 2.20, is applied with the following hypotheses:
+In order to determine whether there is a statistically significant relationship between the variables, the ANCOVA test  is applied with the following hypotheses:
 
 **H<sub>0</sub> for QP2:** There is no statistically significant relationship between the application of random smoothing and the success rate of adversarial attacks.
 
