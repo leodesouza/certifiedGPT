@@ -47,10 +47,15 @@ The pipeline integrates noise-augmented fine-tuning, randomized smoothing for st
 
 ![Alt text](utils/assets/robustness_pipeline.png)
 
-
-The pipeline integrates noise-augmented fine-tuning, randomized smoothing for statistical robustness certification, and adversarial attack evaluation using both white-box and black-box strategies. Parameter choices for noise, sampling, and computational resources are explicitly reported to support experimental rigor and facilitate future validation.
+The certification procedure, illustrated in the above image, consists of using a Monte Carlo to estimate the
+most frequent answer (top-1), and a lower confidence bound for its probability. If this bound exceeds the certification
+threshold (pA > 0.5), the robustness radius is computed as: R = σ 2 (Φ−1(pA) − Φ−1(pB)) where pB is the maximum
+upper confidence bound over all competitors ctA. Otherwise, the model abstains. 
 
 ![Alt text](utils/assets/robustness_pipeline_2.png)
+
+The complementary smoothed prediction procedure performs repeated noisy sampling, identifies the top-2 labels, and applies a binomial test at level α to decide between returning the top label or abstaining. 
+
 
 
 ## Project Status
