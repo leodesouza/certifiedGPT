@@ -103,6 +103,9 @@ Certified and standard accuracy across ℓ2 radius for the proposed VQA randomiz
 | **2.0**   | 0.25   | 25.0           | 41.0          |
 | **3.0**   | 0.25   | 25.0           | 41.0          |
 
+For larger radii (ℓ₂ = 2.0–3.0), the best available guarantees come from σ = 0.25 and stabilize at 25% certified accuracy despite higher standard accuracy (41%), showing that mild smoothing preserves nominal accuracy but does not sustain large certified neighborhoods. In summary, the table quantifies the classical trade-off: increasing σ improves the certifiable radius for small to medium *r*, whereas targeting excessive radius requires accepting lower certified coverage even when clean accuracy is higher, thereby guiding the choice of σ according to the desired robustness hyperparameter.
+
+
 
 ### Adversarial Attacks
 Targeted black-box attack success rates (lower is better) for AttackVLM evaluated on MiniGPT-4 fine-tuned with different
