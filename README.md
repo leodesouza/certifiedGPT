@@ -37,6 +37,13 @@ manner, forcing the model to produce an attacker specified answer while keeping 
 
 - Practical Scalability: We demonstrate a computationally feasible approach that operates with limited GPU resources.
 
+## Research Questions
+**RQ1:** What is the performance gain of incorporating robustness certification through Randomized Smoothing to a VLM predictor?
+
+**RQ2:** To what extent does incorporating randomized smoothing improve a VLM’s empirical robustness to targeted adversarial attacks that induce predefined question outputs in a black-box setting?
+
+
+
 
 ## Methodology
 This research is associated with a master's dissertation defended at UNIRIO in 2025. The official version of the dissertation will be made available on the UNIRIO institutional digital library and the Sucupira Platform once the publication process is complete. The corresponding research article has been submitted for peer review but is not yet published.
