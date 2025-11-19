@@ -116,6 +116,8 @@ Gaussian noise levels (σ) under the randomized smoothing setup. Lower values in
 | **ViT-B/32** | 0.620 | 0.623  | 0.620   | 0.620   |
 | **ViT-L/14** | 0.470 | 0.454  | 0.449   | 0.448   |
 
+Across the CLIP backbones, as shown in above Table, introducing Gaussian noise during fine-tuning modestly reduces targeted black-box attack success rates (lower is better), with sharper reductions for ViT-L/14 and smaller but consistent reductions for RN50/RN101 and ViT-B/32 variants. The ViT-L/14 backbone shows the largest performance drop as σ increases; the rate declines from 0.470 to 0.448 at σ = 1.0, demonstrating adversarial robustness among the tested backbones. RN50 and RN101 exhibit gradual drops (e.g., RN50: 0.585 → 0.579; RN101: 0.562 → 0.551−0.552), while ViT-B/16 decreases from 0.595 to 0.581 and ViT-B/32 remains essentially unchanged near 0.620, suggesting architecture-dependent sensitivity to smoothing. In summary, noise-sensitive fine-tuning yields small yet consistent improvements in adversarial robustness (lower success rates), indicating that the effectiveness of smoothing against adversarial attacks is highly backbone-dependent.
+
 
 ## Hypothesis Evaluation
 
