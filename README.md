@@ -3,13 +3,11 @@
 This repository contains the code for CertifiedGPT, a pipeline to certify the adversarial robustness of multimodal vision and language model(VLM) against
 visual perturbations in input images. 
 
-In this work, we explored the concept of robustness certification in order to make a VLM robust against targeted black-box attacks through the use of a randomized smoothing technique. First, we fine-tuned the MiniGPT-4 model on a small subset of VQAv2 and applied Gaussian noise to the input images.
+In this work, we explored the concept of robustness certification in order to make a VLM robust against targeted black-box attacks through the use of a randomized smoothing technique. 
 
-We also adapted a smoothed method that encapsulates the original decoder and generates the most probable answer,
-even with the noise in the input images. Finally, we evaluated the model against targeted black-box attacks. Our
-certified version of MiniGPT-4, when evaluated on a small VQAv2 subset, produced statistically significant results,
-demonstrating that randomized smoothing is a feasible approach to certifying the robustness of VLMs, especially
-in scenarios where access to high-performance GPU is limited.
+*First*, we fine-tuned the MiniGPT-4 model on a small subset of VQAv2 and applied Gaussian noise to the input images.We also adapted a smoothed method that encapsulates the original decoder and generates the most probable answer, even with the noise in the input images. 
+
+*Finally*, we evaluated the model against targeted black-box attacks. Our certified version of MiniGPT-4, when evaluated on a small VQAv2 subset, produced statistically significant results, demonstrating that randomized smoothing is a feasible approach to certifying the robustness of VLMs, especially in scenarios where access to high-performance GPU is limited.
 
 This work is inspired by, and builds upon, concepts from the paper [*Certified Adversarial Robustness via Randomized Smoothing*](https://arxiv.org/pdf/1902.02918) by [*Jeremy Cohen*](https://jmcohen.github.io/), Elan Rosenfeld, and [*Zico Kolter*](https://zicokolter.com/).
 
