@@ -10,7 +10,7 @@ CertifiedGPT was Developed by Leonardo Souza under the supervision of [*Pedro Nu
 ## How does it work?
 This research is associated with a master's dissertation defended at UNIRIO in 2025. The official version of the dissertation will be made available on the UNIRIO institutional digital library and the Sucupira Platform once the publication process is complete. The corresponding research article has been submitted for peer review but is not yet published.
 
-![Alt text]([relative/path/to/image.png](utils/assets/image_noise.png))
+![Alt text](utils/assets/image_noise.png)
 
 
 
