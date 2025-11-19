@@ -125,6 +125,8 @@ In summary, our proposal in this research is to answer questions regarding the p
 
 The ANCOVA aplied in this research test estimates coefficients, allowing quantification of the extent to which each independent variable (noise level, smoothing, and backbone) influences the dependent variable (attack success rate). Thus, based on the hypothesis test results, the impact of random smoothing and increasing the noise level on the robustness of the certified model is assessed.
 
+
+#### Analysis by Noise Level
 Statistics of the coefficients estimated by the ANCOVA hypothesis test. Positive coefficients are associated with attack success rates (greater vulnerability). Negative relationships indicate a lower attack success rate as noise level increases.
 
 
@@ -142,6 +144,7 @@ Statistics of the coefficients estimated by the ANCOVA hypothesis test. Positive
 | CoefNoiseLevel:Backbone[T.ViT-L/14]     | -0.0108 | -6.221   | 0.000           | [-0.014, -0.007]       |
 
 
+#### Analysis by Smoothing
 Statistics of the coefficients estimated by the ANCOVA hypothesis test. Positive coefficients are associated with attack success rates (greater vulnerability), while negative values, such as observed in the ViT-L/14 backbone, indicate a lower attack success rate under smoothing (noise). Additionally, it is noted that the RN101 backbone, despite serving as the reference, suffers a considerable drop in attack success rate as the noise level increases.
 
 |                                              | coef    | P>&#124;z&#124; | [0.025, 0.975]         |
