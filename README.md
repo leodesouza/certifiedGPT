@@ -45,6 +45,9 @@ manner, forcing the model to produce an attacker specified answer while keeping 
 ## Methodology
 The pipeline integrates noise-augmented fine-tuning, randomized smoothing for statistical robustness certification, and adversarial attack evaluation using both white-box and black-box strategies. Parameter choices for noise, sampling, and computational resources are explicitly reported to support experimental rigor and facilitate future validation.
 
+![Alt text](utils/assets/robustness_pipeline.png)
+
+
 ## Project Status
 This research is associated with a master's dissertation defended at UNIRIO in 2025. The official version of the dissertation will be made available on the UNIRIO institutional digital library and the Sucupira Platform once the publication process is complete. The corresponding research article has been submitted for peer review but is not yet published.
 
