@@ -121,6 +121,8 @@ Gaussian noise levels (σ) under the randomized smoothing setup. Lower values in
 
 Statistics of the coefficients estimated by the ANCOVA hypothesis test. Positive coefficients are associated with attack success rates (greater vulnerability). Negative relationships indicate a lower attack success rate as noise level increases.
 
+
+
 |                                         | coef     | z        | P>|z|  | [0.025, 0.975]        |
 |-----------------------------------------|----------|----------|-------|------------------------|
 | Backbone[T.RN101] (Intercept)           | **0.5581** | 719.131  | 0.000 | [0.557, 0.560]         |
