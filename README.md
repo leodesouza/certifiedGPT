@@ -123,7 +123,7 @@ Statistics of the coefficients estimated by the ANCOVA hypothesis test. Positive
 
 
 
-|                                         | coef     | z        | P>|z|  | [0.025, 0.975]        |
+| Termo                                   | coef     | z        | P>|z|  | [0.025, 0.975]        |
 |-----------------------------------------|----------|----------|-------|------------------------|
 | Backbone[T.RN101] (Intercept)           | **0.5581** | 719.131  | 0.000 | [0.557, 0.560]         |
 | Backbone[T.RN50]                        | 0.0255   | 17.410   | 0.000 | [0.023, 0.028]         |
@@ -135,6 +135,7 @@ Statistics of the coefficients estimated by the ANCOVA hypothesis test. Positive
 | CoefNivelRuido:Backbone[T.ViT-B/16]     | -0.0066  | -2.669   | 0.008 | [-0.011, -0.002]       |
 | CoefNivelRuido:Backbone[T.ViT-B/32]     | 0.0067   | 4.732    | 0.000 | [0.004, 0.010]         |
 | CoefNivelRuido:Backbone[T.ViT-L/14]     | -0.0108  | -6.221   | 0.000 | [-0.014, -0.007]       |
+
 
 
 ## Project Status
