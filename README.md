@@ -122,19 +122,19 @@ Gaussian noise levels (σ) under the randomized smoothing setup. Lower values in
 Statistics of the coefficients estimated by the ANCOVA hypothesis test. Positive coefficients are associated with attack success rates (greater vulnerability). Negative relationships indicate a lower attack success rate as noise level increases.
 
 
+| Termo                                   | coef    | z        | P>&#124;z&#124; | [0.025, 0.975]        |
+|-----------------------------------------|---------|----------|-----------------|------------------------|
+| Backbone[T.RN101] (Intercept)           | 0.5581  | 719.131  | 0.000           | [0.557, 0.560]         |
+| Backbone[T.RN50]                        | 0.0255  | 17.410   | 0.000           | [0.023, 0.028]         |
+| Backbone[T.ViT-B/16]                    | 0.0358  | 28.222   | 0.000           | [0.033, 0.038]         |
+| Backbone[T.ViT-B/32]                    | 0.0637  | 73.421   | 0.000           | [0.062, 0.065]         |
+| Backbone[T.ViT-L/14]                    | -0.0945 | -87.413  | 0.000           | [-0.097, -0.092]       |
+| CoefNivelRuido:Backbone[T.RN101]        | -0.0080 | -7.256   | 0.000           | [-0.010, -0.006]       |
+| CoefNivelRuido:Backbone[T.RN50]         | 0.0026  | 1.492    | 0.136           | [0.001, 0.006]         |
+| CoefNivelRuido:Backbone[T.ViT-B/16]     | -0.0066 | -2.669   | 0.008           | [-0.011, -0.002]       |
+| CoefNivelRuido:Backbone[T.ViT-B/32]     | 0.0067  | 4.732    | 0.000           | [0.004, 0.010]         |
+| CoefNivelRuido:Backbone[T.ViT-L/14]     | -0.0108 | -6.221   | 0.000           | [-0.014, -0.007]       |
 
-| Termo                                   | coef        | z        | P>|z|  | [0.025, 0.975]    |
-|-----------------------------------------|-------------|----------|--------|-------------------|
-| Backbone[T.RN101] (Intercept)           | **0.5581**  | 719.131  | 0.000  | [0.557, 0.560]    |
-| Backbone[T.RN50]                        | 0.0255      | 17.410   | 0.000  | [0.023, 0.028]    |
-| Backbone[T.ViT-B/16]                    | 0.0358      | 28.222   | 0.000  | [0.033, 0.038]    |
-| Backbone[T.ViT-B/32]                    | 0.0637      | 73.421   | 0.000  | [0.062, 0.065]    |
-| Backbone[T.ViT-L/14]                    | -0.0945     | -87.413  | 0.000  | [-0.097, -0.092]  |
-| CoefNivelRuido:Backbone[T.RN101]        | **-0.0080** | -7.256   | 0.000  | [-0.010, -0.006]  |
-| CoefNivelRuido:Backbone[T.RN50]         | 0.0026   | 1.492    | 0.136     | [0.001, 0.006]    |
-| CoefNivelRuido:Backbone[T.ViT-B/16]     | -0.0066  | -2.669   | 0.008     | [-0.011, -0.002]  |
-| CoefNivelRuido:Backbone[T.ViT-B/32]     | 0.0067   | 4.732    | 0.000     | [0.004, 0.010]    |
-| CoefNivelRuido:Backbone[T.ViT-L/14]     | -0.0108  | -6.221   | 0.000     | [-0.014, -0.007]  |
 
 
 
