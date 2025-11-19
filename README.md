@@ -64,9 +64,33 @@ The complementary smoothed prediction procedure performs repeated noisy sampling
 The attack part of the pipeline, as demonstrated in the below image, summarizes the three-stage adversarial evaluation protocol. The top section illustrates white-box attack initialization, where learnable noise is optimized to match the target image features using visual encoders and cosine similarity. The middle section demonstrates black-box attack initiation using adversarial images and MiniGPT-4 certification, followed by CLIP-based feature extraction. The bottom stage presents the iterative black-box attack process, where clean images are perturbed, textual and visual features are compared across multiple backbone encoders, and attack parameters are updated over multiple steps.
 
 
+## Empirical findings
+
 <img src="utils/assets/train_loss.png" alt="Alt text" width="70%"/>
 
 Regularized learning curves: training and validation loss across epochs for Gaussian noise levels σ ∈ {0, 0.25, 0.5, 1.0} show rapid convergenceand closely tracked reduction in error, indicating improved generalization with moderate noise and minimal overfitting across settings.
+
+VQA Performance Under Gaussian Noise
+
+Overall accuracy and category-wise scores (Yes/No, Number, Other) for different noise levels (σ ∈ {0, 0.25, 0.5, 1.0}).
+
+Table 3 — Accuracy by Noise Level
+Noise Level	Overall	Yes/No	Number	Other
+0	32.39	48.17	23.44	21.70
+0.25	27.84	38.44	17.71	21.70
+0.5	29.04	42.26	26.56	18.82
+1.0	29.86	42.74	27.60	19.87
+Summary
+
+Pequena queda inicial de desempenho em σ = 0.25.
+
+Recuperação parcial em σ ≥ 0.5.
+
+Aumento modesto em previsões confidentes, porém incorretas (0.29 → 0.31).
+
+Categorias “Inaccurate” permanecem em 0.00, indicando boa filtragem de baixa confiança.
+
+σ = 0.50 com N = 500 oferece o melhor equilíbrio geral.
 
 
 
