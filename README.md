@@ -21,6 +21,23 @@ The left panel shows the clean image; the right panel applies additive Gaussian
 manner, forcing the model to produce an attacker specified answer while keeping the perturbation visually subtle.
 
 
+## Key Contributions
+- Certified VLM Framework: We present an adaptation of randomized smoothing certification specifically for VLMs performing VQAv2 tasks.
+
+- Decoder-to-Label Certification: We provide a procedure that maps the MiniGPT-4 decoder’s textual outputs to discrete labels and apply the certification algorithm of
+  Cohen et al. [2019] with proper confidence bounds, preserving theoretical guarantees while operating on generated answers.
+
+- Robustness Guarantees: The certified model ensures that small, imperceptible perturbations on input images do not change the predicted answer within an ℓ2 radius
+  determined by the smoothing parameters.
+
+- Evaluation Protocol for VQA: We establish an evaluation protocol for VQA under certification that reports
+  certified accuracy, coverage, and abstention over the normalized answer set, providing a reproducible setup for future studies.
+
+- Targeted Black-Box Evaluation: We evaluate robustness under targeted black-box adversarial attacks, reporting attack success rate.
+
+- Practical Scalability: We demonstrate a computationally feasible approach that operates with limited GPU resources.
+
+
 ## Methodology
 This research is associated with a master's dissertation defended at UNIRIO in 2025. The official version of the dissertation will be made available on the UNIRIO institutional digital library and the Sucupira Platform once the publication process is complete. The corresponding research article has been submitted for peer review but is not yet published.
 
