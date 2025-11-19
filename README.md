@@ -16,6 +16,7 @@ CertifiedGPT was Developed by Leonardo Souza under the supervision of [*Pedro Nu
 
 ## Original vs Noise Image(σ=0.5)
 ![Alt text](utils/assets/image_noise.png)
+
 The left panel shows the clean image; the right panel applies additive Gaussian noise with variance σ = 0.5, which is used during finetuning, certification, and smoothed prediction under the randomized smoothing technique. For adversarial attacks, this clean–noisy pair can initialize an iterative image-space optimization that learns a perturbation to alter a model’s output, including VLMs such as MiniGPT-4, for specified tasks. Experiments demonstrate that a VQA task can be attacked in a targeted
 manner, forcing the model to produce an attacker specified answer while keeping the perturbation visually subtle.
 
